@@ -1,0 +1,46 @@
+### Project resources excluded from Git ###
+Resources/
+
+### macOS ###
+.DS_Store
+**/.DS_Store
+
+### JetBrains IDEs: IntelliJ IDEA / WebStorm ###
+.idea/
+**/.idea/
+*.iws
+*.iml
+*.ipr
+out/
+**/out/
+
+### Maven / Java ###
+target/
+**/target/
+*.class
+*.jar.original
+*.war
+*.ear
+
+### Frontend / Node ###
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.vite/
+**/.vite/
+.next/
+**/.next/
+coverage/
+**/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### VS Code ###
+.vscode/
+**/.vscode/
+!.vscode/extensions.json
