@@ -1,5 +1,5 @@
 ### Project resources excluded from Git ###
-Resources/
+/Resources/
 
 ### macOS ###
 .DS_Store
@@ -21,6 +21,12 @@ target/
 *.jar.original
 *.war
 *.ear
+
+### JADE runtime output ###
+APDescription.txt
+MTPs-Main-Container.txt
+**/APDescription.txt
+**/MTPs-Main-Container.txt
 
 ### Frontend / Node ###
 node_modules/

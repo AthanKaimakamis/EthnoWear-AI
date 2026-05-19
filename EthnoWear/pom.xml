@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>uni.fmi</groupId>
+    <groupId>fmi</groupId>
     <artifactId>ethnowear</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>EthnoWear</name>
@@ -20,6 +20,7 @@
     <properties>
         <java.version>21</java.version>
         <jena.version>6.1.0</jena.version>
+        <owlapi.version>5.5.1</owlapi.version>
         <sqlite-jdbc.version>3.53.0.0</sqlite-jdbc.version>
         <jade.version>4.6.0</jade.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -52,6 +53,12 @@
             <artifactId>apache-jena-libs</artifactId>
             <version>${jena.version}</version>
             <type>pom</type>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-distribution</artifactId>
+            <version>${owlapi.version}</version>
         </dependency>
 
         <dependency>

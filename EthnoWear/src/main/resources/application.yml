@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: ethnowear
+
+  datasource:
+    url: jdbc:sqlite:${ETHNOWEAR_DB_PATH:Database/ethnowear.sqlite}
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+      connection-init-sql: PRAGMA foreign_keys=ON
+
+  sql:
+    init:
+      mode: never
+
+ethnowear:
+  ontology:
+    path: ${ETHNOWEAR_ONTOLOGY_PATH:Ontology/EthnoWear.owx}
+    namespace: ${ETHNOWEAR_ONTOLOGY_NAMESPACE:http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#}
