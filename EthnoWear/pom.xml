@@ -15,16 +15,40 @@
     <artifactId>ethnowear</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>EthnoWear</name>
-    <description>Ontology-driven Spring Boot and JADE app for Bulgarian embroidery analysis</description>
+    <description>Ontology-driven Spring Boot and JADE app for Bulgarian embroidery</description>
 
     <properties>
         <java.version>21</java.version>
-        <jena.version>6.1.0</jena.version>
-        <owlapi.version>5.5.1</owlapi.version>
+        <jena.version>4.10.0</jena.version>
+        <commons-compress.version>1.26.0</commons-compress.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <protobuf-java.version>4.28.2</protobuf-java.version>
         <sqlite-jdbc.version>3.53.0.0</sqlite-jdbc.version>
         <jade.version>4.6.0</jade.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf-java.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -56,12 +80,6 @@
         </dependency>
 
         <dependency>
-            <groupId>net.sourceforge.owlapi</groupId>
-            <artifactId>owlapi-distribution</artifactId>
-            <version>${owlapi.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.tilab.jade</groupId>
             <artifactId>jade</artifactId>
             <version>${jade.version}</version>
@@ -71,6 +89,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>annotationProcessor</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-docker-compose</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 

@@ -1,1607 +1,499 @@
 <?xml version="1.0"?>
-<Ontology xmlns="http://www.w3.org/2002/07/owl#"
-     xml:base="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear"
-     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-     xmlns:xml="http://www.w3.org/XML/1998/namespace"
-     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-     ontologyIRI="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear">
-    <Prefix name="" IRI="http://www.semanticweb.org/athan/ontologies/2026/4/untitled-ontology-8/"/>
-    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
-    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
-    <Prefix name="xml" IRI="http://www.w3.org/XML/1998/namespace"/>
-    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
-    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
-    <Declaration>
-        <Class IRI="#AnimalOrnament"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#Color"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#Embroidery"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#GeometricOrnament"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#HumanOrnament"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#Ornament"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#PlantOrnament"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#Region"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#SymbolicOrnament"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#Technique"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#hasColor"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#hasOrnament"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#hasRegion"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#hasTechnique"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#isColorOf"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#isOrnamentOf"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#isRegionOf"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#isTechniqueOf"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#regionUsesColor"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="#regionUsesTechnique"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#BirdOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#BrokenLineOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#ChurchOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#CrossOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#DobrudzhaRegion"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#DoubleHeadedBirdOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#EagleOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#FemaleFigureOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#FlowerOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#GrapeOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#GreatGoddessOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#HandOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#HorseHeadOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#HumanFigureOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#LeafOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#LilyOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#LionOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#OctagonOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#OwlOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#ParadiseBirdOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#PeacockOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#PolygonOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#RaisedHandsFigureOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#RhombusOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#RiderOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#RoosterOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#RosetteOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#SerpentOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#ShoplukRegion"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#SquareOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#StarOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#SunOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#SwastikaOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#TempleColumnOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#ThreeSaintsOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#TreeOfLifeOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#TreeOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#TriangleOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#VineOrnament"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="#ZigzagOrnament"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-    </Declaration>
-    <SubClassOf>
-        <Class IRI="#AnimalOrnament"/>
-        <Class IRI="#Ornament"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="#GeometricOrnament"/>
-        <Class IRI="#Ornament"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="#HumanOrnament"/>
-        <Class IRI="#Ornament"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="#PlantOrnament"/>
-        <Class IRI="#Ornament"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="#SymbolicOrnament"/>
-        <Class IRI="#Ornament"/>
-    </SubClassOf>
-    <DisjointClasses>
-        <Class IRI="#Color"/>
-        <Class IRI="#Embroidery"/>
-        <Class IRI="#Ornament"/>
-        <Class IRI="#Region"/>
-        <Class IRI="#Technique"/>
-    </DisjointClasses>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#BirdOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#ChurchOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#CrossOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#Region"/>
-        <NamedIndividual IRI="#DobrudzhaRegion"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#DoubleHeadedBirdOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#DoubleHeadedBirdOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#EagleOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#HumanOrnament"/>
-        <NamedIndividual IRI="#FemaleFigureOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#FlowerOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#GrapeOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#HumanOrnament"/>
-        <NamedIndividual IRI="#GreatGoddessOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#GreatGoddessOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#HumanOrnament"/>
-        <NamedIndividual IRI="#HandOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#HandOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#HorseHeadOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#HumanOrnament"/>
-        <NamedIndividual IRI="#HumanFigureOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#LeafOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#LilyOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#LionOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#OctagonOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#OwlOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#ParadiseBirdOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#ParadiseBirdOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#PeacockOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#PolygonOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#HumanOrnament"/>
-        <NamedIndividual IRI="#RaisedHandsFigureOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#RhombusOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#HumanOrnament"/>
-        <NamedIndividual IRI="#RiderOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#RoosterOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#RosetteOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#AnimalOrnament"/>
-        <NamedIndividual IRI="#SerpentOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#Region"/>
-        <NamedIndividual IRI="#ShoplukRegion"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#SquareOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#StarOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#SunOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#SwastikaOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#SwastikaOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#TempleColumnOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#ThreeSaintsOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#TreeOfLifeOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#SymbolicOrnament"/>
-        <NamedIndividual IRI="#TreeOfLifeOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#TreeOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#TriangleOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#PlantOrnament"/>
-        <NamedIndividual IRI="#VineOrnament"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="#GeometricOrnament"/>
-        <NamedIndividual IRI="#ZigzagOrnament"/>
-    </ClassAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <NamedIndividual IRI="#DobrudzhaRegion"/>
-        <NamedIndividual IRI="#FlowerOrnament"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <NamedIndividual IRI="#DobrudzhaRegion"/>
-        <NamedIndividual IRI="#RhombusOrnament"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <NamedIndividual IRI="#DobrudzhaRegion"/>
-        <NamedIndividual IRI="#VineOrnament"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <NamedIndividual IRI="#ShoplukRegion"/>
-        <NamedIndividual IRI="#CrossOrnament"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <NamedIndividual IRI="#ShoplukRegion"/>
-        <NamedIndividual IRI="#RhombusOrnament"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <NamedIndividual IRI="#ShoplukRegion"/>
-        <NamedIndividual IRI="#TriangleOrnament"/>
-    </ObjectPropertyAssertion>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#hasColor"/>
-        <ObjectProperty IRI="#isColorOf"/>
-    </InverseObjectProperties>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#hasOrnament"/>
-        <ObjectProperty IRI="#isOrnamentOf"/>
-    </InverseObjectProperties>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#hasRegion"/>
-        <ObjectProperty IRI="#isRegionOf"/>
-    </InverseObjectProperties>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#hasTechnique"/>
-        <ObjectProperty IRI="#isTechniqueOf"/>
-    </InverseObjectProperties>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#hasColor"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#hasOrnament"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#hasRegion"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#hasTechnique"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#isColorOf"/>
-        <Class IRI="#Color"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#isOrnamentOf"/>
-        <Class IRI="#Ornament"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#isRegionOf"/>
-        <Class IRI="#Region"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#isTechniqueOf"/>
-        <Class IRI="#Technique"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#regionUsesColor"/>
-        <Class IRI="#Region"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <Class IRI="#Region"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#regionUsesTechnique"/>
-        <Class IRI="#Region"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#hasColor"/>
-        <Class IRI="#Color"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#hasOrnament"/>
-        <Class IRI="#Ornament"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#hasRegion"/>
-        <Class IRI="#Region"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#hasTechnique"/>
-        <Class IRI="#Technique"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#isColorOf"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#isOrnamentOf"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#isRegionOf"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#isTechniqueOf"/>
-        <Class IRI="#Embroidery"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#regionUsesColor"/>
-        <Class IRI="#Color"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#regionUsesOrnament"/>
-        <Class IRI="#Ornament"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="#regionUsesTechnique"/>
-        <Class IRI="#Technique"/>
-    </ObjectPropertyRange>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#AnimalOrnament</IRI>
-        <Literal xml:lang="en">An ornament inspired by animals, birds, or stylized animal forms.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#AnimalOrnament</IRI>
-        <Literal xml:lang="bg">Орнамент, вдъхновен от животни, птици или стилизирани животински форми.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#AnimalOrnament</IRI>
-        <Literal xml:lang="en">Animal ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#AnimalOrnament</IRI>
-        <Literal xml:lang="bg">Животински орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#BirdOrnament</IRI>
-        <Literal xml:lang="en">bird ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#BirdOrnament</IRI>
-        <Literal xml:lang="bg">птичи орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#BirdOrnament</IRI>
-        <Literal xml:lang="bg">птица</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ChurchOrnament</IRI>
-        <Literal xml:lang="en">church ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ChurchOrnament</IRI>
-        <Literal xml:lang="bg">църковен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#ChurchOrnament</IRI>
-        <Literal xml:lang="bg">църква</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Color</IRI>
-        <Literal xml:lang="en">A color or color group used in traditional Bulgarian embroidery.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Color</IRI>
-        <Literal xml:lang="bg">Цвят или група от цветове, използвани в традиционната българска шевица.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Color</IRI>
-        <Literal xml:lang="en">Color</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Color</IRI>
-        <Literal xml:lang="bg">Цвят</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#CrossOrnament</IRI>
-        <Literal xml:lang="en">cross ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#CrossOrnament</IRI>
-        <Literal xml:lang="bg">кръстовиден орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#CrossOrnament</IRI>
-        <Literal xml:lang="bg">кръст</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#DobrudzhaRegion</IRI>
-        <Literal xml:lang="en">Dobrudzha region</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#DobrudzhaRegion</IRI>
-        <Literal xml:lang="bg">Добруджански регион</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#DobrudzhaRegion</IRI>
-        <Literal xml:lang="bg">Добруджа</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#DoubleHeadedBirdOrnament</IRI>
-        <Literal xml:lang="en">double-headed bird ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#DoubleHeadedBirdOrnament</IRI>
-        <Literal xml:lang="bg">орнамент двуглава птица</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#DoubleHeadedBirdOrnament</IRI>
-        <Literal xml:lang="bg">двуглав орел</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#DoubleHeadedBirdOrnament</IRI>
-        <Literal xml:lang="bg">двуглава птица</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#EagleOrnament</IRI>
-        <Literal xml:lang="en">eagle ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#EagleOrnament</IRI>
-        <Literal xml:lang="bg">орлов орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#EagleOrnament</IRI>
-        <Literal xml:lang="bg">орел</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Embroidery</IRI>
-        <Literal xml:lang="en">A traditional Bulgarian embroidery pattern represented by its region, colors, techniques, and ornaments.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Embroidery</IRI>
-        <Literal xml:lang="bg">Традиционен български везбен мотив, представен чрез своя регион, цветове, техники и орнаменти.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Embroidery</IRI>
-        <Literal xml:lang="en">Embroidery</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Embroidery</IRI>
-        <Literal xml:lang="bg">Шевица</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#FemaleFigureOrnament</IRI>
-        <Literal xml:lang="en">female figure ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#FemaleFigureOrnament</IRI>
-        <Literal xml:lang="bg">орнамент с женска фигура</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#FemaleFigureOrnament</IRI>
-        <Literal xml:lang="bg">жена</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#FemaleFigureOrnament</IRI>
-        <Literal xml:lang="bg">женска фигура</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#FlowerOrnament</IRI>
-        <Literal xml:lang="en">flower ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#FlowerOrnament</IRI>
-        <Literal xml:lang="bg">цветен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#FlowerOrnament</IRI>
-        <Literal xml:lang="bg">цвете</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#GeometricOrnament</IRI>
-        <Literal xml:lang="en">An ornament based on geometric forms such as lines, crosses, diamonds, circles, or repeated shapes.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#GeometricOrnament</IRI>
-        <Literal xml:lang="bg">Орнамент, изграден от геометрични форми като линии, кръстове, ромбове, кръгове или повтарящи се фигури.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#GeometricOrnament</IRI>
-        <Literal xml:lang="en">Geometric ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#GeometricOrnament</IRI>
-        <Literal xml:lang="bg">Геометричен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#GrapeOrnament</IRI>
-        <Literal xml:lang="en">grape ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#GrapeOrnament</IRI>
-        <Literal xml:lang="bg">гроздов орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#GrapeOrnament</IRI>
-        <Literal xml:lang="bg">грозд</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#GrapeOrnament</IRI>
-        <Literal xml:lang="bg">грозде</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#GreatGoddessOrnament</IRI>
-        <Literal xml:lang="en">great goddess ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#GreatGoddessOrnament</IRI>
-        <Literal xml:lang="bg">орнамент велика богиня</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#GreatGoddessOrnament</IRI>
-        <Literal xml:lang="bg">велика богиня</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HandOrnament</IRI>
-        <Literal xml:lang="en">hand ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HandOrnament</IRI>
-        <Literal xml:lang="bg">орнамент ръка</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#HandOrnament</IRI>
-        <Literal xml:lang="bg">ръка</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HorseHeadOrnament</IRI>
-        <Literal xml:lang="en">horse head ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HorseHeadOrnament</IRI>
-        <Literal xml:lang="bg">орнамент конска глава</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#HorseHeadOrnament</IRI>
-        <Literal xml:lang="bg">конска глава</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HumanFigureOrnament</IRI>
-        <Literal xml:lang="en">human figure ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HumanFigureOrnament</IRI>
-        <Literal xml:lang="bg">орнамент с човешка фигура</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#HumanFigureOrnament</IRI>
-        <Literal xml:lang="bg">човек</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#HumanFigureOrnament</IRI>
-        <Literal xml:lang="bg">човешка фигура</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#HumanOrnament</IRI>
-        <Literal xml:lang="en">An ornament representing a human figure or a stylized human form.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#HumanOrnament</IRI>
-        <Literal xml:lang="bg">Орнамент, представящ човешка фигура или стилизиран човешки образ.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HumanOrnament</IRI>
-        <Literal xml:lang="en">Human ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#HumanOrnament</IRI>
-        <Literal xml:lang="bg">Човешки орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#LeafOrnament</IRI>
-        <Literal xml:lang="en">leaf ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#LeafOrnament</IRI>
-        <Literal xml:lang="bg">листен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#LeafOrnament</IRI>
-        <Literal xml:lang="bg">лист</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#LeafOrnament</IRI>
-        <Literal xml:lang="bg">листо</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#LilyOrnament</IRI>
-        <Literal xml:lang="en">lily ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#LilyOrnament</IRI>
-        <Literal xml:lang="bg">лилиевиден орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#LilyOrnament</IRI>
-        <Literal xml:lang="bg">крин</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#LilyOrnament</IRI>
-        <Literal xml:lang="bg">лилия</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#LionOrnament</IRI>
-        <Literal xml:lang="en">lion ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#LionOrnament</IRI>
-        <Literal xml:lang="bg">лъвски орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#LionOrnament</IRI>
-        <Literal xml:lang="bg">лъв</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#OctagonOrnament</IRI>
-        <Literal xml:lang="en">octagon ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#OctagonOrnament</IRI>
-        <Literal xml:lang="bg">осмоъгълен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#OctagonOrnament</IRI>
-        <Literal xml:lang="bg">осмоъгълник</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Ornament</IRI>
-        <Literal xml:lang="en">A decorative motif or symbolic element used in Bulgarian embroidery.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Ornament</IRI>
-        <Literal xml:lang="bg">Декоративен мотив или символен елемент, използван в българската шевица.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Ornament</IRI>
-        <Literal xml:lang="en">Ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Ornament</IRI>
-        <Literal xml:lang="bg">Орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#OwlOrnament</IRI>
-        <Literal xml:lang="en">owl ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#OwlOrnament</IRI>
-        <Literal xml:lang="bg">орнамент кукумявка</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#OwlOrnament</IRI>
-        <Literal xml:lang="bg">кукумявка</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ParadiseBirdOrnament</IRI>
-        <Literal xml:lang="en">paradise bird ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ParadiseBirdOrnament</IRI>
-        <Literal xml:lang="bg">орнамент райска птица</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#ParadiseBirdOrnament</IRI>
-        <Literal xml:lang="bg">райска птица</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#PeacockOrnament</IRI>
-        <Literal xml:lang="en">peacock ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#PeacockOrnament</IRI>
-        <Literal xml:lang="bg">паунов орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#PeacockOrnament</IRI>
-        <Literal xml:lang="bg">паун</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#PlantOrnament</IRI>
-        <Literal xml:lang="en">An ornament inspired by plant forms such as flowers, leaves, vines, branches, or trees.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#PlantOrnament</IRI>
-        <Literal xml:lang="bg">Орнамент, вдъхновен от растителни форми като цветя, листа, лози, клонки или дървета.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#PlantOrnament</IRI>
-        <Literal xml:lang="en">Plant ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#PlantOrnament</IRI>
-        <Literal xml:lang="bg">Растителен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#PolygonOrnament</IRI>
-        <Literal xml:lang="en">polygon ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#PolygonOrnament</IRI>
-        <Literal xml:lang="bg">многоъгълен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#PolygonOrnament</IRI>
-        <Literal xml:lang="bg">многоъгълник</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RaisedHandsFigureOrnament</IRI>
-        <Literal xml:lang="en">raised hands figure ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RaisedHandsFigureOrnament</IRI>
-        <Literal xml:lang="bg">фигура с вдигнати ръце</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#RaisedHandsFigureOrnament</IRI>
-        <Literal xml:lang="bg">вдигнати ръце</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Region</IRI>
-        <Literal xml:lang="en">An ethnographic region associated with Bulgarian embroidery traditions.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Region</IRI>
-        <Literal xml:lang="bg">Етнографски регион, свързан с традициите в българската шевица.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Region</IRI>
-        <Literal xml:lang="en">Region</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Region</IRI>
-        <Literal xml:lang="bg">Регион</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RhombusOrnament</IRI>
-        <Literal xml:lang="en">rhombus ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RhombusOrnament</IRI>
-        <Literal xml:lang="bg">ромбовиден орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#RhombusOrnament</IRI>
-        <Literal xml:lang="bg">ромб</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RiderOrnament</IRI>
-        <Literal xml:lang="en">rider ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RiderOrnament</IRI>
-        <Literal xml:lang="bg">орнамент конник</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#RiderOrnament</IRI>
-        <Literal xml:lang="bg">ездач</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#RiderOrnament</IRI>
-        <Literal xml:lang="bg">конник</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RoosterOrnament</IRI>
-        <Literal xml:lang="en">rooster ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RoosterOrnament</IRI>
-        <Literal xml:lang="bg">петльов орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#RoosterOrnament</IRI>
-        <Literal xml:lang="bg">петел</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RosetteOrnament</IRI>
-        <Literal xml:lang="en">rosette ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#RosetteOrnament</IRI>
-        <Literal xml:lang="bg">розетъчен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#RosetteOrnament</IRI>
-        <Literal xml:lang="bg">розетка</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SerpentOrnament</IRI>
-        <Literal xml:lang="en">serpent ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SerpentOrnament</IRI>
-        <Literal xml:lang="bg">змиевиден орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#SerpentOrnament</IRI>
-        <Literal xml:lang="bg">змей</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#SerpentOrnament</IRI>
-        <Literal xml:lang="bg">змия</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ShoplukRegion</IRI>
-        <Literal xml:lang="en">Shopluk region</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ShoplukRegion</IRI>
-        <Literal xml:lang="bg">Шопски регион</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#ShoplukRegion</IRI>
-        <Literal xml:lang="bg">Шоплук</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SquareOrnament</IRI>
-        <Literal xml:lang="en">square ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SquareOrnament</IRI>
-        <Literal xml:lang="bg">квадратен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#SquareOrnament</IRI>
-        <Literal xml:lang="bg">квадрат</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#StarOrnament</IRI>
-        <Literal xml:lang="en">star ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#StarOrnament</IRI>
-        <Literal xml:lang="bg">звезден орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#StarOrnament</IRI>
-        <Literal xml:lang="bg">звезда</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SunOrnament</IRI>
-        <Literal xml:lang="en">sun ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SunOrnament</IRI>
-        <Literal xml:lang="bg">слънчев орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#SunOrnament</IRI>
-        <Literal xml:lang="bg">слънце</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SwastikaOrnament</IRI>
-        <Literal xml:lang="en">swastika ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SwastikaOrnament</IRI>
-        <Literal xml:lang="bg">свастичен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#SwastikaOrnament</IRI>
-        <Literal xml:lang="bg">свастика</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#SymbolicOrnament</IRI>
-        <Literal xml:lang="en">An ornament interpreted as carrying symbolic, ritual, protective, or cultural meaning.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#SymbolicOrnament</IRI>
-        <Literal xml:lang="bg">Орнамент, тълкуван като носител на символно, обредно, защитно или културно значение.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SymbolicOrnament</IRI>
-        <Literal xml:lang="en">Symbolic ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#SymbolicOrnament</IRI>
-        <Literal xml:lang="bg">Символен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Technique</IRI>
-        <Literal xml:lang="en">A stitch or technique used to create an embroidery.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#Technique</IRI>
-        <Literal xml:lang="bg">Везбен бод или техника, използвани при създаването на шевица.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Technique</IRI>
-        <Literal xml:lang="en">Technique</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#Technique</IRI>
-        <Literal xml:lang="bg">Техника</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#Technique</IRI>
-        <Literal xml:lang="bg">Бод</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TempleColumnOrnament</IRI>
-        <Literal xml:lang="en">temple column ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TempleColumnOrnament</IRI>
-        <Literal xml:lang="bg">орнамент храмова колона</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#TempleColumnOrnament</IRI>
-        <Literal xml:lang="bg">храмова колона</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ThreeSaintsOrnament</IRI>
-        <Literal xml:lang="en">three saints ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ThreeSaintsOrnament</IRI>
-        <Literal xml:lang="bg">орнамент трите светци</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#ThreeSaintsOrnament</IRI>
-        <Literal xml:lang="bg">трите светци</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TreeOfLifeOrnament</IRI>
-        <Literal xml:lang="en">tree of life ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TreeOfLifeOrnament</IRI>
-        <Literal xml:lang="bg">орнамент дърво на живота</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#TreeOfLifeOrnament</IRI>
-        <Literal xml:lang="bg">дърво на живота</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TreeOrnament</IRI>
-        <Literal xml:lang="en">tree ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TreeOrnament</IRI>
-        <Literal xml:lang="bg">дървесен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#TreeOrnament</IRI>
-        <Literal xml:lang="bg">дърво</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TriangleOrnament</IRI>
-        <Literal xml:lang="en">triangle ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#TriangleOrnament</IRI>
-        <Literal xml:lang="bg">триъгълен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#TriangleOrnament</IRI>
-        <Literal xml:lang="bg">триъгълник</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#VineOrnament</IRI>
-        <Literal xml:lang="en">vine ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#VineOrnament</IRI>
-        <Literal xml:lang="bg">лозов орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#VineOrnament</IRI>
-        <Literal xml:lang="bg">лоза</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ZigzagOrnament</IRI>
-        <Literal xml:lang="en">zigzag ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#ZigzagOrnament</IRI>
-        <Literal xml:lang="bg">зигзагообразен орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#ZigzagOrnament</IRI>
-        <Literal xml:lang="bg">зигзаг</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasColor</IRI>
-        <Literal xml:lang="en">Links an embroidery to a color used in it.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasColor</IRI>
-        <Literal xml:lang="bg">Свързва шевица с цвят, използван в нея.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasColor</IRI>
-        <Literal xml:lang="en">has color</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasColor</IRI>
-        <Literal xml:lang="bg">има цвят</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasOrnament</IRI>
-        <Literal xml:lang="en">Links an embroidery to an ornament or motif used in it.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasOrnament</IRI>
-        <Literal xml:lang="bg">Свързва шевица с орнамент или мотив, използван в нея.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasOrnament</IRI>
-        <Literal xml:lang="en">has ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasOrnament</IRI>
-        <Literal xml:lang="bg">има орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasRegion</IRI>
-        <Literal xml:lang="en">Links an embroidery to the region associated with it.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasRegion</IRI>
-        <Literal xml:lang="bg">Свързва шевица с региона, с който е свързана.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasRegion</IRI>
-        <Literal xml:lang="en">has region</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasRegion</IRI>
-        <Literal xml:lang="bg">има регион</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasTechnique</IRI>
-        <Literal xml:lang="en">Links an embroidery to a stitch or technique used to create it.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#hasTechnique</IRI>
-        <Literal xml:lang="bg">Свързва шевица с бод или техника, използвани при нейното изработване.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasTechnique</IRI>
-        <Literal xml:lang="en">has technique</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#hasTechnique</IRI>
-        <Literal xml:lang="bg">има техника</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#hasTechnique</IRI>
-        <Literal xml:lang="bg">има бод</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isColorOf</IRI>
-        <Literal xml:lang="en">Links a color to an embroidery in which it is used.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isColorOf</IRI>
-        <Literal xml:lang="bg">Свързва цвят с шевица, в която той се използва.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isColorOf</IRI>
-        <Literal xml:lang="en">is color of</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isColorOf</IRI>
-        <Literal xml:lang="bg">е цвят на</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isOrnamentOf</IRI>
-        <Literal xml:lang="en">Links an ornament to an embroidery in which it appears.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isOrnamentOf</IRI>
-        <Literal xml:lang="bg">Свързва орнамент с шевица, в която той присъства.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isOrnamentOf</IRI>
-        <Literal xml:lang="en">is ornament of</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isOrnamentOf</IRI>
-        <Literal xml:lang="bg">е орнамент на</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isRegionOf</IRI>
-        <Literal xml:lang="en">Links a region to an embroidery associated with it.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isRegionOf</IRI>
-        <Literal xml:lang="bg">Свързва регион с шевица, която е свързана с него.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isRegionOf</IRI>
-        <Literal xml:lang="en">is region of</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isRegionOf</IRI>
-        <Literal xml:lang="bg">е регион на</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isTechniqueOf</IRI>
-        <Literal xml:lang="en">Links a stitch or technique to an embroidery in which it is used.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#isTechniqueOf</IRI>
-        <Literal xml:lang="bg">Свързва бод или техника с шевица, в която се използва.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isTechniqueOf</IRI>
-        <Literal xml:lang="en">is technique of</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#isTechniqueOf</IRI>
-        <Literal xml:lang="bg">е техника на</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#regionUsesColor</IRI>
-        <Literal xml:lang="en">Links a region to a color characteristic for its embroidery tradition.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#regionUsesColor</IRI>
-        <Literal xml:lang="bg">Свързва регион с цвят, характерен за неговата везбена традиция.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#regionUsesColor</IRI>
-        <Literal xml:lang="en">region uses color</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#regionUsesColor</IRI>
-        <Literal xml:lang="bg">регионът използва цвят</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#regionUsesOrnament</IRI>
-        <Literal xml:lang="en">Links a region to an ornament characteristic for its embroidery tradition.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#regionUsesOrnament</IRI>
-        <Literal xml:lang="bg">Свързва регион с орнамент, характерен за неговата везбена традиция.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#regionUsesOrnament</IRI>
-        <Literal xml:lang="en">region uses ornament</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#regionUsesOrnament</IRI>
-        <Literal xml:lang="bg">регионът използва орнамент</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#regionUsesTechnique</IRI>
-        <Literal xml:lang="en">Links a region to a stitch or technique characteristic for its embroidery tradition.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>#regionUsesTechnique</IRI>
-        <Literal xml:lang="bg">Свързва регион с бод или техника, характерни за неговата везбена традиция.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#regionUsesTechnique</IRI>
-        <Literal xml:lang="en">region uses technique</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <IRI>#regionUsesTechnique</IRI>
-        <Literal xml:lang="bg">регионът използва техника</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty IRI="http://www.w3.org/2004/02/skos/core#altLabel"/>
-        <IRI>#regionUsesTechnique</IRI>
-        <Literal xml:lang="bg">регионът използва бод</Literal>
-    </AnnotationAssertion>
-</Ontology>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+         xmlns:ew="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#"
+         xml:base="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear">
+  <owl:Ontology rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear"/>
 
+  <owl:Class rdf:about="#AnimalOrnament">
+    <rdfs:subClassOf rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">An ornament inspired by animals, birds, or stylized animal forms.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Орнамент, вдъхновен от животни, птици или стилизирани животински форми.</rdfs:comment>
+    <rdfs:label xml:lang="en">Animal ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">Животински орнамент</rdfs:label>
+  </owl:Class>
 
+  <owl:Class rdf:about="#Color">
+    <owl:disjointWith rdf:resource="#Embroidery"/>
+    <owl:disjointWith rdf:resource="#Ornament"/>
+    <owl:disjointWith rdf:resource="#Region"/>
+    <owl:disjointWith rdf:resource="#Technique"/>
+    <rdfs:comment xml:lang="en">A color or color group used in traditional Bulgarian embroidery.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Цвят или група от цветове, използвани в традиционната българска шевица.</rdfs:comment>
+    <rdfs:label xml:lang="en">Color</rdfs:label>
+    <rdfs:label xml:lang="bg">Цвят</rdfs:label>
+  </owl:Class>
 
-<!-- Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi -->
+  <owl:Class rdf:about="#Embroidery">
+    <owl:disjointWith rdf:resource="#Ornament"/>
+    <owl:disjointWith rdf:resource="#Region"/>
+    <owl:disjointWith rdf:resource="#Technique"/>
+    <rdfs:comment xml:lang="en">A traditional Bulgarian embroidery pattern represented by its region, colors, techniques, and ornaments.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Традиционен български везбен мотив, представен чрез своя регион, цветове, техники и орнаменти.</rdfs:comment>
+    <rdfs:label xml:lang="en">Embroidery</rdfs:label>
+    <rdfs:label xml:lang="bg">Шевица</rdfs:label>
+  </owl:Class>
 
+  <owl:Class rdf:about="#GeometricOrnament">
+    <rdfs:subClassOf rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">An ornament based on geometric forms such as lines, crosses, diamonds, circles, or repeated shapes.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Орнамент, изграден от геометрични форми като линии, кръстове, ромбове, кръгове или повтарящи се фигури.</rdfs:comment>
+    <rdfs:label xml:lang="en">Geometric ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">Геометричен орнамент</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="#HumanOrnament">
+    <rdfs:subClassOf rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">An ornament representing a human figure or a stylized human form.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Орнамент, представящ човешка фигура или стилизиран човешки образ.</rdfs:comment>
+    <rdfs:label xml:lang="en">Human ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">Човешки орнамент</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="#Ornament">
+    <owl:disjointWith rdf:resource="#Region"/>
+    <owl:disjointWith rdf:resource="#Technique"/>
+    <rdfs:comment xml:lang="en">A decorative motif or symbolic element used in Bulgarian embroidery.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Декоративен мотив или символен елемент, използван в българската шевица.</rdfs:comment>
+    <rdfs:label xml:lang="en">Ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">Орнамент</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="#PlantOrnament">
+    <rdfs:subClassOf rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">An ornament inspired by plant forms such as flowers, leaves, vines, branches, or trees.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Орнамент, вдъхновен от растителни форми като цветя, листа, лози, клонки или дървета.</rdfs:comment>
+    <rdfs:label xml:lang="en">Plant ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">Растителен орнамент</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="#Region">
+    <owl:disjointWith rdf:resource="#Technique"/>
+    <rdfs:comment xml:lang="en">An ethnographic region associated with Bulgarian embroidery traditions.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Етнографски регион, свързан с традициите в българската шевица.</rdfs:comment>
+    <rdfs:label xml:lang="en">Region</rdfs:label>
+    <rdfs:label xml:lang="bg">Регион</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="#SymbolicOrnament">
+    <rdfs:subClassOf rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">An ornament interpreted as carrying symbolic, ritual, protective, or cultural meaning.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Орнамент, тълкуван като носител на символно, обредно, защитно или културно значение.</rdfs:comment>
+    <rdfs:label xml:lang="en">Symbolic ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">Символен орнамент</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="#Technique">
+    <rdfs:comment xml:lang="en">A stitch or technique used to create an embroidery.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Везбен бод или техника, използвани при създаването на шевица.</rdfs:comment>
+    <rdfs:label xml:lang="en">Technique</rdfs:label>
+    <rdfs:label xml:lang="bg">Техника</rdfs:label>
+    <skos:altLabel xml:lang="bg">Бод</skos:altLabel>
+  </owl:Class>
+
+  <owl:ObjectProperty rdf:about="#hasColor">
+    <owl:inverseOf rdf:resource="#isColorOf"/>
+    <rdfs:domain rdf:resource="#Embroidery"/>
+    <rdfs:range rdf:resource="#Color"/>
+    <rdfs:comment xml:lang="en">Links an embroidery to a color used in it.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва шевица с цвят, използван в нея.</rdfs:comment>
+    <rdfs:label xml:lang="en">has color</rdfs:label>
+    <rdfs:label xml:lang="bg">има цвят</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#hasOrnament">
+    <owl:inverseOf rdf:resource="#isOrnamentOf"/>
+    <rdfs:domain rdf:resource="#Embroidery"/>
+    <rdfs:range rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">Links an embroidery to an ornament or motif used in it.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва шевица с орнамент или мотив, използван в нея.</rdfs:comment>
+    <rdfs:label xml:lang="en">has ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">има орнамент</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#hasRegion">
+    <owl:inverseOf rdf:resource="#isRegionOf"/>
+    <rdfs:domain rdf:resource="#Embroidery"/>
+    <rdfs:range rdf:resource="#Region"/>
+    <rdfs:comment xml:lang="en">Links an embroidery to the region associated with it.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва шевица с региона, с който е свързана.</rdfs:comment>
+    <rdfs:label xml:lang="en">has region</rdfs:label>
+    <rdfs:label xml:lang="bg">има регион</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#hasTechnique">
+    <owl:inverseOf rdf:resource="#isTechniqueOf"/>
+    <rdfs:domain rdf:resource="#Embroidery"/>
+    <rdfs:range rdf:resource="#Technique"/>
+    <rdfs:comment xml:lang="en">Links an embroidery to a stitch or technique used to create it.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва шевица с бод или техника, използвани при нейното изработване.</rdfs:comment>
+    <rdfs:label xml:lang="en">has technique</rdfs:label>
+    <rdfs:label xml:lang="bg">има техника</rdfs:label>
+    <skos:altLabel xml:lang="bg">има бод</skos:altLabel>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#isColorOf">
+    <rdfs:domain rdf:resource="#Color"/>
+    <rdfs:range rdf:resource="#Embroidery"/>
+    <rdfs:comment xml:lang="en">Links a color to an embroidery in which it is used.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва цвят с шевица, в която той се използва.</rdfs:comment>
+    <rdfs:label xml:lang="en">is color of</rdfs:label>
+    <rdfs:label xml:lang="bg">е цвят на</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#isOrnamentOf">
+    <rdfs:domain rdf:resource="#Ornament"/>
+    <rdfs:range rdf:resource="#Embroidery"/>
+    <rdfs:comment xml:lang="en">Links an ornament to an embroidery in which it appears.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва орнамент с шевица, в която той присъства.</rdfs:comment>
+    <rdfs:label xml:lang="en">is ornament of</rdfs:label>
+    <rdfs:label xml:lang="bg">е орнамент на</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#isRegionOf">
+    <rdfs:domain rdf:resource="#Region"/>
+    <rdfs:range rdf:resource="#Embroidery"/>
+    <rdfs:comment xml:lang="en">Links a region to an embroidery associated with it.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва регион с шевица, която е свързана с него.</rdfs:comment>
+    <rdfs:label xml:lang="en">is region of</rdfs:label>
+    <rdfs:label xml:lang="bg">е регион на</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#isTechniqueOf">
+    <rdfs:domain rdf:resource="#Technique"/>
+    <rdfs:range rdf:resource="#Embroidery"/>
+    <rdfs:comment xml:lang="en">Links a stitch or technique to an embroidery in which it is used.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва бод или техника с шевица, в която се използва.</rdfs:comment>
+    <rdfs:label xml:lang="en">is technique of</rdfs:label>
+    <rdfs:label xml:lang="bg">е техника на</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#regionUsesColor">
+    <rdfs:domain rdf:resource="#Region"/>
+    <rdfs:range rdf:resource="#Color"/>
+    <rdfs:comment xml:lang="en">Links a region to a color characteristic for its embroidery tradition.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва регион с цвят, характерен за неговата везбена традиция.</rdfs:comment>
+    <rdfs:label xml:lang="en">region uses color</rdfs:label>
+    <rdfs:label xml:lang="bg">регионът използва цвят</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#regionUsesOrnament">
+    <rdfs:domain rdf:resource="#Region"/>
+    <rdfs:range rdf:resource="#Ornament"/>
+    <rdfs:comment xml:lang="en">Links a region to an ornament characteristic for its embroidery tradition.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва регион с орнамент, характерен за неговата везбена традиция.</rdfs:comment>
+    <rdfs:label xml:lang="en">region uses ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">регионът използва орнамент</rdfs:label>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="#regionUsesTechnique">
+    <rdfs:domain rdf:resource="#Region"/>
+    <rdfs:range rdf:resource="#Technique"/>
+    <rdfs:comment xml:lang="en">Links a region to a stitch or technique characteristic for its embroidery tradition.</rdfs:comment>
+    <rdfs:comment xml:lang="bg">Свързва регион с бод или техника, характерни за неговата везбена традиция.</rdfs:comment>
+    <rdfs:label xml:lang="en">region uses technique</rdfs:label>
+    <rdfs:label xml:lang="bg">регионът използва техника</rdfs:label>
+    <skos:altLabel xml:lang="bg">регионът използва бод</skos:altLabel>
+  </owl:ObjectProperty>
+
+  <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#altLabel"/>
+
+  <owl:NamedIndividual rdf:about="#BirdOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">bird ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">птичи орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">птица</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#BrokenLineOrnament">
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#ChurchOrnament">
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">church ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">църковен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">църква</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#CrossOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">cross ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">кръстовиден орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">кръст</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#DobrudzhaRegion">
+    <rdf:type rdf:resource="#Region"/>
+    <ew:regionUsesOrnament rdf:resource="#FlowerOrnament"/>
+    <ew:regionUsesOrnament rdf:resource="#RhombusOrnament"/>
+    <ew:regionUsesOrnament rdf:resource="#VineOrnament"/>
+    <rdfs:label xml:lang="en">Dobrudzha region</rdfs:label>
+    <rdfs:label xml:lang="bg">Добруджански регион</rdfs:label>
+    <skos:altLabel xml:lang="bg">Добруджа</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#DoubleHeadedBirdOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">double-headed bird ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент двуглава птица</rdfs:label>
+    <skos:altLabel xml:lang="bg">двуглав орел</skos:altLabel>
+    <skos:altLabel xml:lang="bg">двуглава птица</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#EagleOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">eagle ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орлов орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">орел</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#FemaleFigureOrnament">
+    <rdf:type rdf:resource="#HumanOrnament"/>
+    <rdfs:label xml:lang="en">female figure ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент с женска фигура</rdfs:label>
+    <skos:altLabel xml:lang="bg">жена</skos:altLabel>
+    <skos:altLabel xml:lang="bg">женска фигура</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#FlowerOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdfs:label xml:lang="en">flower ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">цветен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">цвете</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#GrapeOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdfs:label xml:lang="en">grape ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">гроздов орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">грозд</skos:altLabel>
+    <skos:altLabel xml:lang="bg">грозде</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#GreatGoddessOrnament">
+    <rdf:type rdf:resource="#HumanOrnament"/>
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">great goddess ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент велика богиня</rdfs:label>
+    <skos:altLabel xml:lang="bg">велика богиня</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#HandOrnament">
+    <rdf:type rdf:resource="#HumanOrnament"/>
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">hand ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент ръка</rdfs:label>
+    <skos:altLabel xml:lang="bg">ръка</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#HorseHeadOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">horse head ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент конска глава</rdfs:label>
+    <skos:altLabel xml:lang="bg">конска глава</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#HumanFigureOrnament">
+    <rdf:type rdf:resource="#HumanOrnament"/>
+    <rdfs:label xml:lang="en">human figure ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент с човешка фигура</rdfs:label>
+    <skos:altLabel xml:lang="bg">човек</skos:altLabel>
+    <skos:altLabel xml:lang="bg">човешка фигура</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#LeafOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdfs:label xml:lang="en">leaf ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">листен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">лист</skos:altLabel>
+    <skos:altLabel xml:lang="bg">листо</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#LilyOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdfs:label xml:lang="en">lily ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">лилиевиден орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">крин</skos:altLabel>
+    <skos:altLabel xml:lang="bg">лилия</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#LionOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">lion ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">лъвски орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">лъв</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#OctagonOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">octagon ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">осмоъгълен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">осмоъгълник</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#OwlOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">owl ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент кукумявка</rdfs:label>
+    <skos:altLabel xml:lang="bg">кукумявка</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#ParadiseBirdOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">paradise bird ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент райска птица</rdfs:label>
+    <skos:altLabel xml:lang="bg">райска птица</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#PeacockOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">peacock ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">паунов орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">паун</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#PolygonOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">polygon ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">многоъгълен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">многоъгълник</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#RaisedHandsFigureOrnament">
+    <rdf:type rdf:resource="#HumanOrnament"/>
+    <rdfs:label xml:lang="en">raised hands figure ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">фигура с вдигнати ръце</rdfs:label>
+    <skos:altLabel xml:lang="bg">вдигнати ръце</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#RhombusOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">rhombus ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">ромбовиден орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">ромб</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#RiderOrnament">
+    <rdf:type rdf:resource="#HumanOrnament"/>
+    <rdfs:label xml:lang="en">rider ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент конник</rdfs:label>
+    <skos:altLabel xml:lang="bg">ездач</skos:altLabel>
+    <skos:altLabel xml:lang="bg">конник</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#RoosterOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">rooster ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">петльов орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">петел</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#RosetteOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">rosette ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">розетъчен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">розетка</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#SerpentOrnament">
+    <rdf:type rdf:resource="#AnimalOrnament"/>
+    <rdfs:label xml:lang="en">serpent ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">змиевиден орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">змей</skos:altLabel>
+    <skos:altLabel xml:lang="bg">змия</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#ShoplukRegion">
+    <rdf:type rdf:resource="#Region"/>
+    <ew:regionUsesOrnament rdf:resource="#CrossOrnament"/>
+    <ew:regionUsesOrnament rdf:resource="#RhombusOrnament"/>
+    <ew:regionUsesOrnament rdf:resource="#TriangleOrnament"/>
+    <rdfs:label xml:lang="en">Shopluk region</rdfs:label>
+    <rdfs:label xml:lang="bg">Шопски регион</rdfs:label>
+    <skos:altLabel xml:lang="bg">Шоплук</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#SquareOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">square ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">квадратен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">квадрат</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#StarOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">star ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">звезден орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">звезда</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#SunOrnament">
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">sun ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">слънчев орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">слънце</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#SwastikaOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">swastika ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">свастичен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">свастика</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#TempleColumnOrnament">
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">temple column ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент храмова колона</rdfs:label>
+    <skos:altLabel xml:lang="bg">храмова колона</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#ThreeSaintsOrnament">
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">three saints ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент трите светци</rdfs:label>
+    <skos:altLabel xml:lang="bg">трите светци</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#TreeOfLifeOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdf:type rdf:resource="#SymbolicOrnament"/>
+    <rdfs:label xml:lang="en">tree of life ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">орнамент дърво на живота</rdfs:label>
+    <skos:altLabel xml:lang="bg">дърво на живота</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#TreeOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdfs:label xml:lang="en">tree ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">дървесен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">дърво</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#TriangleOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">triangle ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">триъгълен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">триъгълник</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#VineOrnament">
+    <rdf:type rdf:resource="#PlantOrnament"/>
+    <rdfs:label xml:lang="en">vine ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">лозов орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">лоза</skos:altLabel>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="#ZigzagOrnament">
+    <rdf:type rdf:resource="#GeometricOrnament"/>
+    <rdfs:label xml:lang="en">zigzag ornament</rdfs:label>
+    <rdfs:label xml:lang="bg">зигзагообразен орнамент</rdfs:label>
+    <skos:altLabel xml:lang="bg">зигзаг</skos:altLabel>
+  </owl:NamedIndividual>
+
+</rdf:RDF>
