@@ -1,4 +1,4 @@
-package fmi.ethnowear.ontology;
+package fmi.ethnowear.ontology.model;
 
 public enum OntologyLanguage {
     BG("bg"),

@@ -1,4 +1,4 @@
-package fmi.ethnowear.ontology;
+package fmi.ethnowear.ontology.model;
 
 public record OntologyResource(
         String iri,

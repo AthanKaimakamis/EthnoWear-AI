@@ -2,8 +2,12 @@ package fmi.ethnowear.config;
 
 import java.nio.file.Path;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+@Setter
+@Getter
 @ConfigurationProperties(prefix = "ethnowear.ontology")
 public class OntologyProperties {
 
@@ -11,19 +15,4 @@ public class OntologyProperties {
 
     private String namespace = "http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#";
 
-    public Path getPath() {
-        return path;
-    }
-
-    public void setPath(Path path) {
-        this.path = path;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
 }

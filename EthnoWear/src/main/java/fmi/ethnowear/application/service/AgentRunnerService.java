@@ -1,5 +1,9 @@
-package fmi.ethnowear.agents;
+package fmi.ethnowear.application.service;
 
+import fmi.ethnowear.agents.AgentNames;
+import fmi.ethnowear.agents.ClientAgent;
+import fmi.ethnowear.agents.InterpretationAgent;
+import fmi.ethnowear.agents.KnowledgeReasoningAgent;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
@@ -12,7 +16,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
 @Service
-public class JadePlatformService implements ApplicationRunner {
+public class AgentRunnerService implements ApplicationRunner {
 
     private AgentContainer mainContainer;
 

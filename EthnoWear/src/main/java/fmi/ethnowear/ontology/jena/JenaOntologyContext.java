@@ -9,8 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import fmi.ethnowear.ontology.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.OntologyLanguage;
+import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
+import fmi.ethnowear.ontology.model.OntologyLanguage;
 import lombok.Getter;
 
 import lombok.NonNull;
@@ -19,9 +19,10 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 
-import fmi.ethnowear.ontology.OntologyResource;
+import fmi.ethnowear.ontology.model.OntologyResource;
 
 public abstract class JenaOntologyContext {
 
@@ -153,6 +154,31 @@ public abstract class JenaOntologyContext {
         return individual != null && ontClass != null && individual.hasOntClass(ontClass, false);
     }
 
+    protected Optional<OntologyResource> hasValueRestriction(String classLocalName, String propertyLocalName){
+        OntClass ontClass = model.getOntClass(toUri(classLocalName));
+        Property targetProperty = model.getProperty(toUri(propertyLocalName));
+        if(ontClass == null || targetProperty == null)
+            return Optional.empty();
+
+        StmtIterator superClasses = model.listStatements(ontClass, RDFS.subClassOf, (RDFNode) null);
+        while (superClasses.hasNext()){
+            RDFNode node = superClasses.nextStatement().getObject();
+            if(!node.isResource())
+                continue;
+
+            Resource restriction = node.asResource();
+            if(!model.contains(restriction, OWL.onProperty, targetProperty))
+                continue;
+
+            StmtIterator values = model.listStatements(restriction, OWL.hasValue, (RDFNode) null);
+            while (values.hasNext()){
+                RDFNode value = values.nextStatement().getObject();
+                if(value.isResource() && value.asResource().getURI() != null)
+                    return Optional.of(toResource(value.asResource()));
+            }
+        }
+        return Optional.empty();
+    }
 
     protected LocalizedOntologyResource toLocalizedResource(@NonNull Resource resource, OntologyLanguage language) {
         return new LocalizedOntologyResource(
@@ -160,6 +186,7 @@ public abstract class JenaOntologyContext {
                 resource.getLocalName(),
                 preferredLabel(resource, language).orElse(resource.getLocalName()),
                 altLabels(resource, language),
+                comment(resource, language).orElse(null),
                 language
         );
     }
@@ -179,6 +206,12 @@ public abstract class JenaOntologyContext {
 
     protected List<String> altLabels(Resource resource, OntologyLanguage language) {
         return literalValues(resource, SKOS_ALT_LABEL, language);
+    }
+
+    protected Optional<String> comment(Resource resource, OntologyLanguage language) {
+        return literalValues(resource, RDFS.comment, language)
+                .stream()
+                .findFirst();
     }
 
     protected List<String> literalValues(Resource resource, Property property, OntologyLanguage language) {

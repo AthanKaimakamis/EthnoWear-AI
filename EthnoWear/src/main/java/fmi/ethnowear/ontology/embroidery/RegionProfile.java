@@ -1,6 +1,6 @@
 package fmi.ethnowear.ontology.embroidery;
 
-import fmi.ethnowear.ontology.OntologyResource;
+import fmi.ethnowear.ontology.model.OntologyResource;
 
 import java.util.List;
 
