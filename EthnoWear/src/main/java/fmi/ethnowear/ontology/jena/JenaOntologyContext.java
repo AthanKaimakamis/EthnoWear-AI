@@ -9,9 +9,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import fmi.ethnowear.config.ProjectPathResolver;
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
 import fmi.ethnowear.ontology.model.OntologyLanguage;
-import lombok.Getter;
 
 import lombok.NonNull;
 import org.apache.jena.ontology.Individual;
@@ -29,14 +29,20 @@ public abstract class JenaOntologyContext {
     private static final String SKOS_NS = "http://www.w3.org/2004/02/skos/core#";
     private static final Property SKOS_ALT_LABEL = ResourceFactory.createProperty(SKOS_NS, "altLabel");
 
-    @Getter
     private final String namespace;
-    @Getter
     private final OntModel model;
 
     public JenaOntologyContext(Path ontologyPath, String namespace) {
         this.namespace = namespace;
         this.model = loadOntology(ontologyPath);
+    }
+
+    protected String getNamespace() {
+        return namespace;
+    }
+
+    protected OntModel getModel() {
+        return model;
     }
 
     protected List<OntologyResource> classes(){
@@ -191,7 +197,7 @@ public abstract class JenaOntologyContext {
         );
     }
 
-    protected List<LocalizedOntologyResource> toLocalizedResources(@NonNull List<OntologyResource> resources, OntologyLanguage language) {
+    protected List<LocalizedOntologyResource> toLocalizedResourceList(@NonNull List<OntologyResource> resources, OntologyLanguage language) {
         return resources.stream()
                 .map(resource -> model.getResource(resource.iri()))
                 .map(resource -> toLocalizedResource(resource, language))
@@ -288,7 +294,8 @@ public abstract class JenaOntologyContext {
 
     @NonNull
     private OntModel loadOntology(@NonNull Path path) {
-        File ontologyFile = path.toFile();
+        Path resolvedPath = ProjectPathResolver.resolve(path);
+        File ontologyFile = resolvedPath.toFile();
 
         if (!ontologyFile.isFile()) {
             throw new IllegalStateException("Ontology file not found: " + ontologyFile.getPath());

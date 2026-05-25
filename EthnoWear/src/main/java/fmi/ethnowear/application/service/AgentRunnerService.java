@@ -18,14 +18,30 @@ import jade.wrapper.StaleProxyException;
 @Service
 public class AgentRunnerService implements ApplicationRunner {
 
+    private final RuleBasedReasoningService reasoningService;
+
     private AgentContainer mainContainer;
+    private AgentController clientAgentController;
+
+    public AgentRunnerService(RuleBasedReasoningService reasoningService) {
+        this.reasoningService = reasoningService;
+    }
 
     @Override
     public void run(ApplicationArguments args) {
         startPlatform();
-        startAgent(AgentNames.CLIENT, ClientAgent.class);
-        startAgent(AgentNames.KNOWLEDGE_REASONING, KnowledgeReasoningAgent.class);
+
+        clientAgentController = startAgent(AgentNames.CLIENT, ClientAgent.class);
+        startAgent(AgentNames.KNOWLEDGE_REASONING, KnowledgeReasoningAgent.class, reasoningService);
         startAgent(AgentNames.INTERPRETATION, InterpretationAgent.class);
+    }
+
+    public AgentController getClientAgentController() {
+        if (clientAgentController == null) {
+            throw new IllegalStateException("Client JADE agent is not started yet.");
+        }
+
+        return clientAgentController;
     }
 
     private void startPlatform() {
@@ -38,10 +54,11 @@ public class AgentRunnerService implements ApplicationRunner {
         System.out.println("JADE main container started");
     }
 
-    private void startAgent(String name, Class<?> agentClass) {
+    private AgentController startAgent(String name, Class<?> agentClass, Object... args) {
         try {
-            AgentController controller = mainContainer.createNewAgent(name, agentClass.getName(), null);
+            AgentController controller = mainContainer.createNewAgent(name, agentClass.getName(), args);
             controller.start();
+            return controller;
         } catch (StaleProxyException exception) {
             throw new IllegalStateException("Could not start JADE agent: " + name, exception);
         }

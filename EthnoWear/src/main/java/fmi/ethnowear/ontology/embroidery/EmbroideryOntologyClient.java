@@ -8,7 +8,46 @@ import java.util.List;
 import java.util.Optional;
 
 public interface EmbroideryOntologyClient {
+
+    // Regions
+
+    List<OntologyResource> listRegions();
+
+    List<LocalizedOntologyResource> listLocalizedRegions(OntologyLanguage language);
+
+    Optional<OntologyResource> findRegionByName(String regionNameOrLocalName, OntologyLanguage language);
+
+    Optional<RegionProfile> describeRegion(String regionLocalName);
+
+    Optional<LocalizedRegionProfile> describeLocalizedRegion(String regionNameOrLocalName, OntologyLanguage language);
+
+    List<OntologyResource> listOrnamentsUsedByRegion(String regionLocalName);
+
+    List<OntologyResource> listColorsUsedByRegion(String regionLocalName);
+
+    List<OntologyResource> listTechniquesUsedByRegion(String regionLocalName);
+
+    List<LocalizedOntologyResource> listLocalizedOrnamentsUsedByRegion(String regionLocalName, OntologyLanguage language);
+
+    // Region groups
+
+    List<OntologyResource> listRegionGroups();
+
+    List<LocalizedOntologyResource> listLocalizedRegionGroups(OntologyLanguage language);
+
+    List<OntologyResource> listRegionsInGroup(String regionLocalName);
+
+    Optional<OntologyResource> findRegionGroupForRegion(String regionLocalName);
+
+    Optional<OntologyResource> findRegionGroupByName(String nameOrLocalname, OntologyLanguage language);
+
+    Optional<LocalizedRegionGroupProfile> describeRegionGroup(String groupNameOrLocalName, OntologyLanguage language);
+
+    // Ornaments
+
     List<OntologyResource> listOrnaments();
+
+    List<LocalizedOntologyResource> listLocalizedOrnaments(OntologyLanguage language);
 
     List<OntologyResource> listGeometricOrnaments();
 
@@ -20,45 +59,27 @@ public interface EmbroideryOntologyClient {
 
     List<OntologyResource> listSymbolicOrnaments();
 
-    List<OntologyResource> listRegions();
-
-    List<OntologyResource> listOrnamentsUsedByRegion(String regionLocalName);
-
-    List<OntologyResource> listColorsUsedByRegion(String regionLocalName);
-
-    List<OntologyResource> listTechniquesUsedByRegion(String regionLocalName);
-
-    Optional<RegionProfile> describeRegion(String regionLocalName);
-
     List<OntologyResource> listTypesOfOrnament(String ornamentLocalName);
 
     boolean isOrnamentOfType(String ornamentLocalName, String ornamentTypeLocalName);
 
-    List<LocalizedOntologyResource> listLocalizedOrnamentsUsedByRegion(String regionLocalName, OntologyLanguage language);
+    // Colors
 
-    Optional<LocalizedRegionProfile> describeLocalizedRegion(String regionNameOrLocalName, OntologyLanguage language);
+    List<OntologyResource> listColors();
 
-    Optional<OntologyResource> findRegionByName(String regionNameOrLocalName, OntologyLanguage language);
+    List<LocalizedOntologyResource> listLocalizedColors(OntologyLanguage language);
 
-    List<OntologyResource> listRegionalEmbroideryTypes();
+    // Techniques
 
-    Optional<OntologyResource> findRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language);
+    List<OntologyResource> listTechniques();
 
-    Optional<OntologyResource> findRegionForRegionalEmbroidery(String regionalEmbroideryClassName);
+    List<LocalizedOntologyResource> listLocalizedTechniques(OntologyLanguage language);
 
-    Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalEmbroidery(String regionalEmbroideryClassLocalName,OntologyLanguage language);
-
-    List<OntologyResource> listRegionGroups();
-
-    List<OntologyResource> listRegionsInGroup(String regionLocalName);
-
-    Optional<OntologyResource> findRegionGroupForRegion(String regionLocalName);
-
-    Optional<LocalizedRegionGroupProfile> describeRegionGroup(String groupNameOrLocalName, OntologyLanguage language);
-
-    Optional<OntologyResource> findRegionGroupByName(String nameOrLocalname, OntologyLanguage language);
+    // Motifs
 
     List<OntologyResource> listMotifs();
+
+    List<LocalizedOntologyResource> listLocalizedMotifs(OntologyLanguage language);
 
     List<OntologyResource> listMotifsOfEmbroidery(String embroideryLocalName);
 
@@ -68,6 +89,17 @@ public interface EmbroideryOntologyClient {
 
     List<OntologyResource> listTechniquesOfMotif(String motifLocalName);
 
-    Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language);
+    // Regional embroidery types
 
+    List<OntologyResource> listRegionalEmbroideryTypes();
+
+    List<LocalizedOntologyResource> listLocalizedRegionalEmbroideryTypes(OntologyLanguage language);
+
+    Optional<OntologyResource> findRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language);
+
+    Optional<OntologyResource> findRegionForRegionalEmbroidery(String regionalEmbroideryClassName);
+
+    Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalEmbroidery(String regionalEmbroideryClassLocalName, OntologyLanguage language);
+
+    Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language);
 }

@@ -2,6 +2,10 @@ spring:
   application:
     name: ethnowear
 
+  docker:
+    compose:
+      enabled: false
+
   datasource:
     url: jdbc:sqlite:${ETHNOWEAR_DB_PATH:Database/ethnowear.sqlite}
     driver-class-name: org.sqlite.JDBC
