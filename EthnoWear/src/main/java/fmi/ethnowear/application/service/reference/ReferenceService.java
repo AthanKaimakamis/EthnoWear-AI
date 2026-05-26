@@ -1,4 +1,4 @@
-package fmi.ethnowear.application.service;
+package fmi.ethnowear.application.service.reference;
 
 import fmi.ethnowear.api.dto.reference.ReferenceItemDto;
 import fmi.ethnowear.api.dto.reference.ReferenceResponse;

@@ -1,10 +1,11 @@
-package fmi.ethnowear.application.service;
+package fmi.ethnowear.application.service.analysis;
 
 import fmi.ethnowear.agents.protocol.*;
 import fmi.ethnowear.api.dto.analysis.AnalysisCandidateDto;
 import fmi.ethnowear.api.dto.analysis.AnalysisEvidenceDto;
 import fmi.ethnowear.api.dto.analysis.AnalyzeRequest;
 import fmi.ethnowear.api.dto.analysis.AnalyzeResponse;
+import fmi.ethnowear.application.service.agent.AgentAnalysisGateway;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 

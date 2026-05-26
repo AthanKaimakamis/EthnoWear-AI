@@ -13,6 +13,15 @@ spring:
       maximum-pool-size: 1
       connection-init-sql: PRAGMA foreign_keys=ON
 
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
   sql:
     init:
       mode: never

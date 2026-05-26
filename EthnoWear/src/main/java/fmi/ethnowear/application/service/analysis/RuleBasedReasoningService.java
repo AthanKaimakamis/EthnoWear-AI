@@ -1,4 +1,4 @@
-package fmi.ethnowear.application.service;
+package fmi.ethnowear.application.service.analysis;
 
 import fmi.ethnowear.agents.protocol.AnalyzeFeaturesPayload;
 import fmi.ethnowear.agents.protocol.CandidatePayload;
@@ -10,7 +10,6 @@ import fmi.ethnowear.application.constants.ScoringWeights;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
 import fmi.ethnowear.ontology.model.OntologyResource;
-import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 

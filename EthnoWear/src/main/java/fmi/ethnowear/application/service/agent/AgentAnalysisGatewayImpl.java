@@ -1,4 +1,4 @@
-package fmi.ethnowear.application.service;
+package fmi.ethnowear.application.service.agent;
 
 import fmi.ethnowear.agents.protocol.*;
 import jade.wrapper.StaleProxyException;

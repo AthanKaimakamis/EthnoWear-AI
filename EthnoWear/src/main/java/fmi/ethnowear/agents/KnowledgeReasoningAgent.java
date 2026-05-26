@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.agents.protocol.AgentMessageTypes;
 import fmi.ethnowear.agents.protocol.AnalyzeFeaturesPayload;
 import fmi.ethnowear.agents.protocol.ReasoningResultPayload;
-import fmi.ethnowear.application.service.RuleBasedReasoningService;
+import fmi.ethnowear.application.service.analysis.RuleBasedReasoningService;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;

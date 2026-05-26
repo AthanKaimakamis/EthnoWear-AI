@@ -1,9 +1,10 @@
-package fmi.ethnowear.application.service;
+package fmi.ethnowear.application.service.agent;
 
 import fmi.ethnowear.agents.AgentNames;
 import fmi.ethnowear.agents.ClientAgent;
 import fmi.ethnowear.agents.InterpretationAgent;
 import fmi.ethnowear.agents.KnowledgeReasoningAgent;
+import fmi.ethnowear.application.service.analysis.RuleBasedReasoningService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;

@@ -2,7 +2,7 @@ package fmi.ethnowear.api.controller;
 
 import fmi.ethnowear.api.dto.analysis.AnalyzeRequest;
 import fmi.ethnowear.api.dto.analysis.AnalyzeResponse;
-import fmi.ethnowear.application.service.InterpretationService;
+import fmi.ethnowear.application.service.analysis.InterpretationService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

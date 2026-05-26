@@ -1,4 +1,4 @@
-package fmi.ethnowear.application.service;
+package fmi.ethnowear.application.service.agent;
 
 import fmi.ethnowear.agents.protocol.AnalyzeFeaturesPayload;
 import fmi.ethnowear.agents.protocol.InterpretationResultPayload;
