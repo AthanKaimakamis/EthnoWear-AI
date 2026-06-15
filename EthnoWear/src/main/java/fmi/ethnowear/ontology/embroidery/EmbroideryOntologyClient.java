@@ -49,6 +49,10 @@ public interface EmbroideryOntologyClient {
 
     List<LocalizedOntologyResource> listLocalizedOrnaments(OntologyLanguage language);
 
+    List<OntologyResource> listOrnamentTypes();
+
+    List<LocalizedOntologyResource> listLocalizedOrnamentTypes(OntologyLanguage language);
+
     List<OntologyResource> listGeometricOrnaments();
 
     List<OntologyResource> listPlantOrnaments();
@@ -74,6 +78,14 @@ public interface EmbroideryOntologyClient {
     List<OntologyResource> listTechniques();
 
     List<LocalizedOntologyResource> listLocalizedTechniques(OntologyLanguage language);
+
+    List<OntologyResource> listTechniqueTypes();
+
+    List<LocalizedOntologyResource> listLocalizedTechniqueTypes(OntologyLanguage language);
+
+    List<OntologyResource> listTechniquesOfType(String techniqueTypeLocalName);
+
+    List<OntologyResource> listTypesOfTechnique(String techniqueLocalName);
 
     // Motifs
 

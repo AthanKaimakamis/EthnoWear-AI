@@ -1,0 +1,1459 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:ew="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <owl:Ontology rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear"/>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery">
+    <skos:altLabel xml:lang="bg">Бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Embroidery</rdfs:label>
+    <rdfs:comment xml:lang="bg">Традиционен български везбен мотив, представен чрез своя регион, цветове, техники и орнаменти.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A traditional Bulgarian embroidery pattern represented by its region, colors, techniques, and ornaments.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif">
+    <rdfs:label xml:lang="bg">Мотив</rdfs:label>
+    <rdfs:label xml:lang="en">Motif</rdfs:label>
+    <rdfs:comment xml:lang="bg">Композиционна декоративна единица в шевицата, изградена от орнаменти, цветове и техники.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A composed decorative unit in embroidery, built from ornaments, colors, and techniques.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TechniqueName">
+    <rdfs:label xml:lang="bg">Название на техника</rdfs:label>
+    <skos:altLabel xml:lang="bg">Име на техника</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Име на бод</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Название на бод</skos:altLabel>
+    <rdfs:label xml:lang="en">Technique name</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass>
+          <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+        </owl:onClass>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isNameOf"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom>
+          <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+        </owl:allValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isNameOf"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <skos:altLabel xml:lang="en">Stitch name</skos:altLabel>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HumanOrnament">
+    <rdfs:label xml:lang="bg">Човешки орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">Human ornament</rdfs:label>
+    <rdfs:comment xml:lang="bg">Орнамент, представящ човешка фигура или стилизиран човешки образ.</rdfs:comment>
+    <rdfs:comment xml:lang="en">An ornament representing a human figure or a stylized human form.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique">
+    <skos:altLabel xml:lang="bg">Бод</skos:altLabel>
+    <skos:altLabel xml:lang="en">Stitch</skos:altLabel>
+    <rdfs:label xml:lang="bg">Техника</rdfs:label>
+    <rdfs:label xml:lang="en">Technique</rdfs:label>
+    <rdfs:comment xml:lang="bg">Везбен бод или техника, използвани при създаването на шевица.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A stitch or technique used to create an embroidery.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionGroup">
+    <skos:altLabel xml:lang="bg">Група райони</skos:altLabel>
+    <rdfs:label xml:lang="bg">Група рegйони</rdfs:label>
+    <rdfs:label xml:lang="en">Region group</rdfs:label>
+    <rdfs:comment xml:lang="bg">Обобщена група от везбени региони, използвана за организиране на регионални традиции, например западни или източни региони.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A broad grouping of embroidery regions used to organize regional traditions, such as western or eastern embroidery regions.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KulaVidinEmbroidery">
+    <skos:altLabel xml:lang="bg">Кулско-видинска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Кулско-видинска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Kula-Vidin embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KulaVidinRegion">
+            <skos:altLabel xml:lang="bg">Кулско-видински район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Кулско-видинска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Кулско-видински регион</rdfs:label>
+            <rdfs:label xml:lang="en">Kula-Vidin embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup>
+              <ew:RegionGroup rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup">
+                <skos:altLabel xml:lang="bg">Западни райони</skos:altLabel>
+                <rdfs:label xml:lang="bg">Западни региони</rdfs:label>
+                <rdfs:label xml:lang="en">Western embroidery regions</rdfs:label>
+                <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+              </ew:RegionGroup>
+            </ew:belongsToRegionGroup>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ContourTechnique">
+    <skos:altLabel xml:lang="bg">Контурни бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Контури</skos:altLabel>
+    <skos:altLabel xml:lang="en">Contour stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Контурни техники</rdfs:label>
+    <rdfs:label xml:lang="en">Contour techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region">
+    <skos:altLabel xml:lang="bg">Район</skos:altLabel>
+    <rdfs:label xml:lang="bg">Регион</rdfs:label>
+    <rdfs:label xml:lang="en">Region</rdfs:label>
+    <rdfs:comment xml:lang="bg">Етнографски регион, свързан с традициите в българската шевица.</rdfs:comment>
+    <rdfs:comment xml:lang="en">An ethnographic region associated with Bulgarian embroidery traditions.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KazanlakEmbroidery">
+    <skos:altLabel xml:lang="bg">Казанлъшка бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Казанлъшка шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Kazanlak embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KazanlakRegion">
+            <skos:altLabel xml:lang="bg">Казанлъшки район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Казанлъшка</skos:altLabel>
+            <rdfs:label xml:lang="bg">Казанлъшки регион</rdfs:label>
+            <rdfs:label xml:lang="en">Kazanlak embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup>
+              <ew:RegionGroup rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup">
+                <skos:altLabel xml:lang="bg">Източни райони</skos:altLabel>
+                <rdfs:label xml:lang="bg">Източни региони</rdfs:label>
+                <rdfs:label xml:lang="en">Eastern embroidery regions</rdfs:label>
+                <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+              </ew:RegionGroup>
+            </ew:belongsToRegionGroup>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TranEmbroidery">
+    <skos:altLabel xml:lang="bg">Трънска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Трънска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Tran embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TranRegion">
+            <skos:altLabel xml:lang="bg">Трънски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Трънска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Трънски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Tran embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SofiaEmbroidery">
+    <skos:altLabel xml:lang="bg">Софийска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Софийска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Sofia embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SofiaRegion">
+            <skos:altLabel xml:lang="bg">Софийски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Софийска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Софийски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Sofia embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KyustendilEmbroidery">
+    <skos:altLabel xml:lang="bg">Кюстендилска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Кюстендилска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Kyustendil embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KyustendilRegion">
+            <skos:altLabel xml:lang="bg">Кюстендилски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Кюстендилска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Кюстендилски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Kyustendil embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#MiddleRhodopeEmbroidery">
+    <skos:altLabel xml:lang="bg">Среднородопска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Среднородопска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Middle Rhodope embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#MiddleRhodopeRegion">
+            <skos:altLabel xml:lang="bg">Среднородопски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Среднородопска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Среднородопски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Middle Rhodope embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KolarovgradEmbroidery">
+    <skos:altLabel xml:lang="bg">Коларовградска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Коларовградска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Kolarovgrad embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KolarovgradRegion">
+            <skos:altLabel xml:lang="bg">Коларовградски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Коларовградска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Коларовградски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Kolarovgrad embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RazgradEmbroidery">
+    <skos:altLabel xml:lang="bg">Разградска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Разградска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Razgrad embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RazgradRegion">
+            <skos:altLabel xml:lang="bg">Разградски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Разградска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Разградски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Razgrad embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SamokovIhtimanEmbroidery">
+    <skos:altLabel xml:lang="bg">Самоковско-ихтиманска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Самоковско-ихтиманска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Samokov-Ihtiman embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SamokovIhtimanRegion">
+            <skos:altLabel xml:lang="bg">Самоковско-ихтимански район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Самоковско-ихтиманска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Самоковско-ихтимански регион</rdfs:label>
+            <rdfs:label xml:lang="en">Samokov-Ihtiman embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GaitanTechnique">
+    <skos:altLabel xml:lang="bg">Гайтани</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Гайтанджийски бодове</skos:altLabel>
+    <skos:altLabel xml:lang="en">Gaitan stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Гайтанджийски техники</rdfs:label>
+    <rdfs:label xml:lang="en">Gaitan techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery">
+    <skos:altLabel xml:lang="bg">Регионална бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Регионална шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Regional embroidery</rdfs:label>
+    <rdfs:comment xml:lang="bg">Категория везбена традиция, свързана с конкретен етнографски регион.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A category of embroidery tradition associated with a specific ethnographic region.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PlevenEmbroidery">
+    <skos:altLabel xml:lang="bg">Плевенска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Плевенска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Pleven embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PlevenRegion">
+            <skos:altLabel xml:lang="bg">Плевенски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Плевенска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Плевенски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Pleven embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ScallopTechnique">
+    <skos:altLabel xml:lang="bg">Фистонни бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Фистони</skos:altLabel>
+    <skos:altLabel xml:lang="en">Scallop stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Фистонни техники</rdfs:label>
+    <rdfs:label xml:lang="en">Scallop finishing techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#AnimalOrnament">
+    <rdfs:label xml:lang="bg">Животински орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">Animal ornament</rdfs:label>
+    <rdfs:comment xml:lang="bg">Орнамент, вдъхновен от животни, птици или стилизирани животински форми.</rdfs:comment>
+    <rdfs:comment xml:lang="en">An ornament inspired by animals, birds, or stylized animal forms.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RuseEmbroidery">
+    <skos:altLabel xml:lang="bg">Русенска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Русенска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Ruse embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RuseRegion">
+            <skos:altLabel xml:lang="bg">Русенски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Русенска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Русенски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Ruse embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament">
+    <rdfs:label xml:lang="bg">Орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">Ornament</rdfs:label>
+    <rdfs:comment xml:lang="bg">Декоративен мотив или символен елемент, използван в българската шевица.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A decorative motif or symbolic element used in Bulgarian embroidery.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name">
+    <rdfs:label xml:lang="bg">Название</rdfs:label>
+    <rdfs:label xml:lang="en">Name</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PirinEmbroidery">
+    <skos:altLabel xml:lang="bg">Пиринска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Пиринска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Pirin embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PirinRegion">
+            <skos:altLabel xml:lang="bg">Пирински район</skos:altLabel>
+            <skos:altLabel>Пиринска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Пирински регион</rdfs:label>
+            <rdfs:label xml:lang="en">Pirin embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color">
+    <skos:altLabel xml:lang="en">colour</skos:altLabel>
+    <rdfs:label xml:lang="bg">Цвят</rdfs:label>
+    <rdfs:label xml:lang="en">Color</rdfs:label>
+    <rdfs:comment xml:lang="bg">Цвят или група от цветове, използвани в традиционната българска шевица.</rdfs:comment>
+    <rdfs:comment xml:lang="en">A color or color group used in traditional Bulgarian embroidery.</rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ChainTechnique">
+    <skos:altLabel xml:lang="bg">Синджирени бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Синджир</skos:altLabel>
+    <skos:altLabel xml:lang="en">Chain stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Синджирени техники</rdfs:label>
+    <rdfs:label xml:lang="en">Chain techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SplitTechnique">
+    <skos:altLabel xml:lang="bg">Цепени бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Цепени</skos:altLabel>
+    <skos:altLabel xml:lang="en">Split stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Цепени техники</rdfs:label>
+    <rdfs:label xml:lang="en">Split techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#CrossTechnique">
+    <skos:altLabel xml:lang="bg">Кръстати бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Кръстати</skos:altLabel>
+    <skos:altLabel xml:lang="en">Cross stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Кръстати техники</rdfs:label>
+    <rdfs:label xml:lang="en">Cross techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GraovoEmbroidery">
+    <skos:altLabel xml:lang="bg">Граовска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Граовска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Graovo embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GraovoRegion">
+            <skos:altLabel xml:lang="bg">Граовски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Граовска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Граовски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Graovo embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SouthKarnobatEmbroidery">
+    <skos:altLabel xml:lang="bg">Карнобатска южна бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Карнобатска южна шевица</rdfs:label>
+    <rdfs:label xml:lang="en">South Karnobat embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SouthKarnobatRegion">
+            <skos:altLabel xml:lang="bg">Карнобатски южен район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Карнобатска (южна)</skos:altLabel>
+            <rdfs:label xml:lang="bg">Карнобатски южен регион</rdfs:label>
+            <rdfs:label xml:lang="en">South Karnobat embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GeometricOrnament">
+    <rdfs:label xml:lang="bg">Геометричен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">Geometric ornament</rdfs:label>
+    <rdfs:comment xml:lang="bg">Орнамент, изграден от геометрични форми като линии, кръстове, ромбове, кръгове или повтарящи се фигури.</rdfs:comment>
+    <rdfs:comment xml:lang="en">An ornament based on geometric forms such as lines, crosses, diamonds, circles, or repeated shapes.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PlantOrnament">
+    <rdfs:label xml:lang="bg">Растителен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">Plant ornament</rdfs:label>
+    <rdfs:comment xml:lang="bg">Орнамент, вдъхновен от растителни форми като цветя, листа, лози, клонки или дървета.</rdfs:comment>
+    <rdfs:comment xml:lang="en">An ornament inspired by plant forms such as flowers, leaves, vines, branches, or trees.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#LovechEmbroidery">
+    <skos:altLabel xml:lang="bg">Ловешка бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Ловешка шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Lovech embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#LovechRegion">
+            <skos:altLabel xml:lang="bg">Ловешки район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Ловешка</skos:altLabel>
+            <rdfs:label xml:lang="bg">Ловешки регион</rdfs:label>
+            <rdfs:label xml:lang="en">Lovech embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DedeagachEmbroidery">
+    <skos:altLabel xml:lang="bg">Дедеагачка бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Дедеагачка шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Dedeagach embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DedeagachRegion">
+            <skos:altLabel xml:lang="bg">Дедеагачки район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Дедеагачка</skos:altLabel>
+            <rdfs:label xml:lang="bg">Дедеагачки регион</rdfs:label>
+            <rdfs:label xml:lang="en">Dedeagach embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#UzunkyupriEmbroidery">
+    <skos:altLabel xml:lang="bg">Узункюприйска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Узункюприйска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Uzunkyupri embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#UzunkyupriRegion">
+            <skos:altLabel xml:lang="bg">Узункюприйски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Узункюприйска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Узункюприйски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Uzunkyupri embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SymbolicOrnament">
+    <rdfs:label xml:lang="bg">Символен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">Symbolic ornament</rdfs:label>
+    <rdfs:comment xml:lang="bg">Орнамент, тълкуван като носител на символно, обредно, защитно или културно значение.</rdfs:comment>
+    <rdfs:comment xml:lang="en">An ornament interpreted as carrying symbolic, ritual, protective, or cultural meaning.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#NikopolEmbroidery">
+    <skos:altLabel xml:lang="bg">Никополска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Никополска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Nikopol embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#NikopolRegion">
+            <skos:altLabel xml:lang="bg">Никополски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Никополска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Никополски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Nikopol embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#StankeDimitrovEmbroidery">
+    <skos:altLabel xml:lang="bg">Станкедимитровска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Станкедимитровска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Stanke Dimitrov embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#StankeDimitrovRegion">
+            <skos:altLabel xml:lang="bg">Станкедимитровска</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Станке Димитровски район</skos:altLabel>
+            <rdfs:label xml:lang="bg">Станке Димитровски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Stanke Dimitrov embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#WesternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#OpenworkTechnique">
+    <skos:altLabel xml:lang="bg">Ажурни бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Ажури</skos:altLabel>
+    <skos:altLabel xml:lang="en">Openwork stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Ажурни техники</rdfs:label>
+    <rdfs:label xml:lang="en">Openwork techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ElhovoEmbroidery">
+    <skos:altLabel xml:lang="bg">Елховска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Елховска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Elhovo embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ElhovoRegion">
+            <skos:altLabel xml:lang="bg">Елховски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Елховска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Елховски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Elhovo embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KarnobatYambolEmbroidery">
+    <skos:altLabel xml:lang="bg">Карнобатско-ямболска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Карнобатско-ямболска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Karnobat-Yambol embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#KarnobatYambolRegion">
+            <skos:altLabel xml:lang="bg">Карнобатско-ямболски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Карнобатско-ямболска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Карнобатско-ямболски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Karnobat-Yambol embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#OdrinAsiaMinorEmbroidery">
+    <skos:altLabel xml:lang="bg">Одринско-малоазийска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Одринско-малоазийска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Odrin-Asia Minor embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#OdrinAsiaMinorRegion">
+            <skos:altLabel xml:lang="bg">Одринско-малоазийски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Одринско-малоазийска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Одринско-малоазийски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Odrin-Asia Minor embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GabrovoEmbroidery">
+    <skos:altLabel xml:lang="bg">Габровска бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Габровска шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Gabrovo embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GabrovoRegion">
+            <skos:altLabel xml:lang="bg">Габровски район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Габровска</skos:altLabel>
+            <rdfs:label xml:lang="bg">Габровски регион</rdfs:label>
+            <rdfs:label xml:lang="en">Gabrovo embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DimotikaEmbroidery">
+    <skos:altLabel xml:lang="bg">Димотишка бродерия</skos:altLabel>
+    <rdfs:label xml:lang="bg">Димотишка шевица</rdfs:label>
+    <rdfs:label xml:lang="en">Dimotika embroidery</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue>
+          <ew:Region rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DimotikaRegion">
+            <skos:altLabel xml:lang="bg">Димотишки район</skos:altLabel>
+            <skos:altLabel xml:lang="bg">Димотишка</skos:altLabel>
+            <rdfs:label xml:lang="bg">Димотишки регион</rdfs:label>
+            <rdfs:label xml:lang="en">Dimotika embroidery region</rdfs:label>
+            <ew:belongsToRegionGroup rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EasternRegionGroup"/>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+          </ew:Region>
+        </owl:hasValue>
+        <owl:onProperty>
+          <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionalEmbroidery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PoligatTechnique">
+    <skos:altLabel xml:lang="bg">Полигатни бодове</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Полигати</skos:altLabel>
+    <skos:altLabel xml:lang="en">Poligat stitches</skos:altLabel>
+    <rdfs:label xml:lang="bg">Полигатни техники</rdfs:label>
+    <rdfs:label xml:lang="en">Poligat techniques</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasTechnique">
+    <skos:altLabel xml:lang="bg">има бод</skos:altLabel>
+    <skos:altLabel xml:lang="en">has stitch</skos:altLabel>
+    <rdfs:label xml:lang="bg">има техника</rdfs:label>
+    <rdfs:label xml:lang="en">has technique</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isTechniqueOf"/>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasColor">
+    <rdfs:label xml:lang="bg">има цвят</rdfs:label>
+    <rdfs:label xml:lang="en">has color</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isColorOf"/>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#motifHasOrnament">
+    <rdfs:label xml:lang="bg">мотивът има орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">motif has ornament</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#motifHasColor">
+    <rdfs:label xml:lang="bg">мотивът има цвят</rdfs:label>
+    <rdfs:label xml:lang="en">motif has color</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isColorOf">
+    <rdfs:label xml:lang="bg">е цвят на</rdfs:label>
+    <rdfs:label xml:lang="en">is color of</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#motifHasTechnique">
+    <skos:altLabel xml:lang="bg">мотивът има бод</skos:altLabel>
+    <skos:altLabel xml:lang="en">motif has stitch</skos:altLabel>
+    <rdfs:label xml:lang="bg">мотивът има техника</rdfs:label>
+    <rdfs:label xml:lang="en">motif has technique</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasName">
+    <skos:altLabel xml:lang="bg">има име</skos:altLabel>
+    <rdfs:label xml:lang="bg">има название</rdfs:label>
+    <rdfs:label xml:lang="en">has name</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isNameOf"/>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isOrnamentOf">
+    <rdfs:label xml:lang="bg">е орнамент на</rdfs:label>
+    <rdfs:label xml:lang="en">is ornament of</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesTechnique">
+    <skos:altLabel xml:lang="bg">регионът използва бод</skos:altLabel>
+    <skos:altLabel xml:lang="bg">районът използва техника</skos:altLabel>
+    <skos:altLabel xml:lang="bg">районът използва бод</skos:altLabel>
+    <skos:altLabel xml:lang="en">region uses stitch</skos:altLabel>
+    <rdfs:label xml:lang="bg">регионът използва техника</rdfs:label>
+    <rdfs:label xml:lang="en">region uses technique</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasMotif">
+    <rdfs:label xml:lang="bg">има мотив</rdfs:label>
+    <rdfs:label xml:lang="en">has motif</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isMotifOf"/>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isCharacteristicTechniqueOfRegion">
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesTechnique"/>
+    <skos:altLabel xml:lang="en">is characteristic stitch of region</skos:altLabel>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+    <skos:altLabel xml:lang="bg">е характерен бод за район</skos:altLabel>
+    <skos:altLabel xml:lang="bg">е характерна техника за район</skos:altLabel>
+    <rdfs:label xml:lang="bg">е характерна техника за регион</rdfs:label>
+    <skos:altLabel xml:lang="bg">е характерен бод за регион</skos:altLabel>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <rdfs:label xml:lang="en">is characteristic technique of region</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isCharacteristicOrnamentOfRegion">
+    <rdfs:label xml:lang="bg">е характерен орнамент за регион</rdfs:label>
+    <rdfs:label xml:lang="en">is characteristic ornament of region</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesOrnament"/>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegionMember">
+    <skos:altLabel xml:lang="bg">има район</skos:altLabel>
+    <skos:altLabel xml:lang="bg">включва регион</skos:altLabel>
+    <skos:altLabel xml:lang="bg">включва район</skos:altLabel>
+    <rdfs:label xml:lang="bg">има регион</rdfs:label>
+    <rdfs:label xml:lang="en">has region member</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionGroup"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesColor">
+    <skos:altLabel xml:lang="bg">районът използва цвят</skos:altLabel>
+    <rdfs:label xml:lang="bg">регионът използва цвят</rdfs:label>
+    <rdfs:label xml:lang="en">region uses color</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isTechniqueOfMotif">
+    <skos:altLabel xml:lang="bg">е бод на мотив</skos:altLabel>
+    <skos:altLabel xml:lang="en">is stitch of motif</skos:altLabel>
+    <rdfs:label xml:lang="bg">е техника на мотив</rdfs:label>
+    <rdfs:label xml:lang="en">is technique of motif</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#motifHasTechnique"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isNameOf">
+    <skos:altLabel xml:lang="bg">е име на</skos:altLabel>
+    <rdfs:label xml:lang="bg">е название на</rdfs:label>
+    <rdfs:label xml:lang="en">is name of</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasOrnament">
+    <rdfs:label xml:lang="bg">има орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">has ornament</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isOrnamentOf"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#nameUsedInRegion">
+    <skos:altLabel xml:lang="bg">название, използвано в район</skos:altLabel>
+    <skos:altLabel xml:lang="bg">име, използвано в регион</skos:altLabel>
+    <skos:altLabel xml:lang="bg">име, използвано в район</skos:altLabel>
+    <rdfs:label xml:lang="bg">название, използвано в регион</rdfs:label>
+    <rdfs:label xml:lang="en">name used in region</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesName"/>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isMotifOf">
+    <rdfs:label xml:lang="bg">е мотив на</rdfs:label>
+    <rdfs:label xml:lang="en">is motif of</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isColorOfMotif">
+    <rdfs:label xml:lang="bg">е цвят на мотив</rdfs:label>
+    <rdfs:label xml:lang="en">is color of motif</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#motifHasColor"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isTechniqueOf">
+    <skos:altLabel xml:lang="bg">е бод на</skos:altLabel>
+    <skos:altLabel xml:lang="en">is stitch of</skos:altLabel>
+    <rdfs:label xml:lang="bg">е техника на</rdfs:label>
+    <rdfs:label xml:lang="en">is technique of</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesName">
+    <skos:altLabel xml:lang="bg">регионът използва име</skos:altLabel>
+    <skos:altLabel xml:lang="bg">районът използва название</skos:altLabel>
+    <skos:altLabel xml:lang="bg">районът използва име</skos:altLabel>
+    <rdfs:label xml:lang="bg">регионът използва название</rdfs:label>
+    <rdfs:label xml:lang="en">region uses name</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isRegionOf">
+    <rdfs:label xml:lang="bg">е регион на</rdfs:label>
+    <rdfs:label xml:lang="en">is region of</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesOrnament">
+    <skos:altLabel xml:lang="bg">районът използва орнамент</skos:altLabel>
+    <rdfs:label xml:lang="bg">регионът използва орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">region uses ornament</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isCharacteristicColorOfRegion">
+    <rdfs:label xml:lang="bg">е характерен цвят за регион</rdfs:label>
+    <rdfs:label xml:lang="en">is characteristic color of region</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#regionUsesColor"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isOrnamentOfMotif">
+    <rdfs:label xml:lang="bg">е орнамент на мотив</rdfs:label>
+    <rdfs:label xml:lang="en">is ornament of motif</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#motifHasOrnament"/>
+  </owl:ObjectProperty>
+  <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#belongsToRegionGroup">
+    <skos:altLabel xml:lang="bg">принадлежи към група райони</skos:altLabel>
+    <rdfs:label xml:lang="bg">принадлежи към група региони</rdfs:label>
+    <rdfs:label xml:lang="en">belongs to region group</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionGroup"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegionMember"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </owl:FunctionalProperty>
+  <owl:FunctionalProperty rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#hasRegion">
+    <skos:altLabel xml:lang="bg">има район</skos:altLabel>
+    <rdfs:label xml:lang="bg">има регион</rdfs:label>
+    <rdfs:label xml:lang="en">has region</rdfs:label>
+    <rdfs:range rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+    <rdfs:domain rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+    <owl:inverseOf rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#isRegionOf"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </owl:FunctionalProperty>
+  <ew:GaitanTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#FourStrandGaitanStitch">
+    <skos:altLabel xml:lang="en">Four-strand</skos:altLabel>
+    <skos:altLabel xml:lang="en">Four-strand gaitan</skos:altLabel>
+    <skos:altLabel xml:lang="en">Four-strand gaitan technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Четворен</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Четворен гайтан</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Четворна гайтанена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Four-strand gaitan stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Четворен гайтанен бод</rdfs:label>
+  </ew:GaitanTechnique>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PolygonOrnament">
+    <skos:altLabel xml:lang="bg">многоъгълник</skos:altLabel>
+    <rdfs:label xml:lang="bg">многоъгълен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">polygon ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:PoligatTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#StaggeredWrappedPoligatStitch">
+    <skos:altLabel xml:lang="en">Staggered wrapped poligat technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Разминат (увивен)</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Размината увивна полигатна техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Staggered wrapped poligat stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Разминат увивен полигатен бод</rdfs:label>
+  </ew:PoligatTechnique>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#LionOrnament">
+    <skos:altLabel xml:lang="bg">лъв</skos:altLabel>
+    <rdfs:label xml:lang="bg">лъвски орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">lion ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:PlantOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#FlowerOrnament">
+    <skos:altLabel xml:lang="bg">цвете</skos:altLabel>
+    <rdfs:label xml:lang="bg">цветен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">flower ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:PlantOrnament>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#CrossOrnament">
+    <skos:altLabel xml:lang="bg">кръст</skos:altLabel>
+    <rdfs:label xml:lang="bg">кръстовиден орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">cross ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HandOrnament">
+    <skos:altLabel xml:lang="bg">ръка</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент ръка</rdfs:label>
+    <rdfs:label xml:lang="en">hand ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HumanOrnament"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:CrossTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DiagonalSurroundedCrossStitch">
+    <skos:altLabel xml:lang="en">Diagonal surrounded cross technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Диагонален обграден кръст</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Техника диагонален обграден кръст</skos:altLabel>
+    <rdfs:label xml:lang="en">Diagonal surrounded cross stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Диагонален обграден кръстат бод</rdfs:label>
+  </ew:CrossTechnique>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#EagleOrnament">
+    <skos:altLabel xml:lang="bg">орел</skos:altLabel>
+    <rdfs:label xml:lang="bg">орлов орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">eagle ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:SplitTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HorizontalSplitStitch">
+    <skos:altLabel xml:lang="en">Horizontal split technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Хоризонтален</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Хоризонтална цепена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Horizontal split stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Хоризонтален цепен бод</rdfs:label>
+  </ew:SplitTechnique>
+  <ew:HumanOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#FemaleFigureOrnament">
+    <skos:altLabel xml:lang="bg">женска фигура</skos:altLabel>
+    <skos:altLabel xml:lang="bg">жена</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент с женска фигура</rdfs:label>
+    <rdfs:label xml:lang="en">female figure ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:HumanOrnament>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TriangleOrnament">
+    <skos:altLabel xml:lang="bg">триъгълник</skos:altLabel>
+    <rdfs:label xml:lang="bg">триъгълен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">triangle ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#BrokenLineOrnament">
+    <skos:altLabel xml:lang="bg">пречупена линия</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент с пречупена линия</rdfs:label>
+    <rdfs:label xml:lang="en">broken line ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:PoligatTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GuidedThreadPoligatStitch">
+    <skos:altLabel xml:lang="en">Guided-thread poligat technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Полигат с водене на конец</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Полигатна техника с водене на конец</skos:altLabel>
+    <rdfs:label xml:lang="en">Guided-thread poligat stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Полигатен бод с водене на конец</rdfs:label>
+  </ew:PoligatTechnique>
+  <ew:PlantOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#LeafOrnament">
+    <skos:altLabel xml:lang="bg">листо</skos:altLabel>
+    <skos:altLabel xml:lang="bg">лист</skos:altLabel>
+    <rdfs:label xml:lang="bg">листен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">leaf ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:PlantOrnament>
+  <ew:ScallopTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ScallopStitch">
+    <skos:altLabel xml:lang="bg">Завършваща техника</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Фистон</skos:altLabel>
+    <skos:altLabel xml:lang="en">Finishing</skos:altLabel>
+    <skos:altLabel xml:lang="en">Finishing technique</skos:altLabel>
+    <skos:altLabel xml:lang="en">Finishing stitch</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Фистонна техника</skos:altLabel>
+    <rdfs:label xml:lang="bg">Фистонен бод</rdfs:label>
+    <skos:altLabel xml:lang="en">Scallop technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Фистон бод</skos:altLabel>
+    <rdfs:label xml:lang="en">Scallop stitch</rdfs:label>
+    <skos:altLabel xml:lang="en">Scallop</skos:altLabel>
+  </ew:ScallopTechnique>
+  <ew:PlantOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GrapeOrnament">
+    <skos:altLabel xml:lang="bg">грозде</skos:altLabel>
+    <skos:altLabel xml:lang="bg">грозд</skos:altLabel>
+    <rdfs:label xml:lang="bg">гроздов орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">grape ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:PlantOrnament>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PeacockOrnament">
+    <skos:altLabel xml:lang="bg">паун</skos:altLabel>
+    <rdfs:label xml:lang="bg">паунов орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">peacock ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:ContourTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#BastingStitch">
+    <skos:altLabel xml:lang="bg">Бод трупоска</skos:altLabel>
+    <skos:altLabel xml:lang="en">Basting technique</skos:altLabel>
+    <rdfs:label xml:lang="bg">Трупоска</rdfs:label>
+    <rdfs:label xml:lang="en">Basting stitch</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:ContourTechnique>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#StarOrnament">
+    <skos:altLabel xml:lang="bg">звезда</skos:altLabel>
+    <rdfs:label xml:lang="bg">звезден орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">star ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#OctagonOrnament">
+    <skos:altLabel xml:lang="bg">осмоъгълник</skos:altLabel>
+    <rdfs:label xml:lang="bg">осмоъгълен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">octagon ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:ChainTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TwoColorChainStitch">
+    <skos:altLabel xml:lang="en">Two-color chain</skos:altLabel>
+    <skos:altLabel xml:lang="en">Two-color chain technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Двуцветна синджирена техника</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Двуцветен синджир</skos:altLabel>
+    <rdfs:label xml:lang="en">Two-color chain stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Двуцветен синджирен бод</rdfs:label>
+  </ew:ChainTechnique>
+  <ew:PoligatTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#BraidedPoligatStitch">
+    <skos:altLabel xml:lang="en">Braided poligat technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Плетен</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Плетена полигатна техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Braided poligat stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Плетен полигатен бод</rdfs:label>
+  </ew:PoligatTechnique>
+  <ew:OpenworkTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HorizontalOpenworkStitch">
+    <skos:altLabel xml:lang="en">Horizontal openwork technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Хоризонтален</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Хоризонтална ажурна техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Horizontal openwork stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Хоризонтален ажурен бод</rdfs:label>
+  </ew:OpenworkTechnique>
+  <ew:ChainTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SingleColorChainStitch">
+    <skos:altLabel xml:lang="en">Single-color chain</skos:altLabel>
+    <skos:altLabel xml:lang="en">Single-color chain technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Едноцветен синджир</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Едноцветна синджирена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Single-color chain stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Едноцветен синджирен бод</rdfs:label>
+  </ew:ChainTechnique>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SquareOrnament">
+    <skos:altLabel xml:lang="bg">квадрат</skos:altLabel>
+    <rdfs:label xml:lang="bg">квадратен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">square ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ZigzagOrnament">
+    <skos:altLabel xml:lang="bg">зигзаг</skos:altLabel>
+    <rdfs:label xml:lang="bg">зигзагообразен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">zigzag ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:ChainTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SimpleChainStitch">
+    <skos:altLabel xml:lang="en">chain</skos:altLabel>
+    <skos:altLabel xml:lang="en">Simple chain</skos:altLabel>
+    <skos:altLabel xml:lang="en">Simple chain technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">синджир</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Обикновен синджир</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Обикновена синджирена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Simple chain stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Обикновен синджирен бод</rdfs:label>
+  </ew:ChainTechnique>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ChurchOrnament">
+    <skos:altLabel xml:lang="bg">църква</skos:altLabel>
+    <rdfs:label xml:lang="bg">църковен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">church ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ParadiseBirdOrnament">
+    <skos:altLabel xml:lang="bg">райска птица</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент райска птица</rdfs:label>
+    <rdfs:label xml:lang="en">paradise bird ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#AnimalOrnament"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HorseHeadOrnament">
+    <skos:altLabel xml:lang="bg">конска глава</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент конска глава</rdfs:label>
+    <rdfs:label xml:lang="en">horse head ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:ContourTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DoubleSidedStitch">
+    <skos:altLabel xml:lang="bg">Двулицева техника</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Двулицев</skos:altLabel>
+    <skos:altLabel xml:lang="en">Double-sided technique</skos:altLabel>
+    <rdfs:label xml:lang="bg">Двулицев бод</rdfs:label>
+    <rdfs:label xml:lang="en">Double-sided stitch</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:ContourTechnique>
+  <ew:GaitanTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SixStrandGaitanStitch">
+    <skos:altLabel xml:lang="en">Six-strand</skos:altLabel>
+    <skos:altLabel xml:lang="en">Six-strand gaitan</skos:altLabel>
+    <skos:altLabel xml:lang="en">Six-strand gaitan technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Шесторен</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Шесторен гайтан</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Шесторна гайтанена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Six-strand gaitan stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Шесторен гайтанен бод</rdfs:label>
+  </ew:GaitanTechnique>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RosetteOrnament">
+    <skos:altLabel xml:lang="bg">розетка</skos:altLabel>
+    <rdfs:label xml:lang="bg">розетъчен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">rosette ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#BirdOrnament">
+    <skos:altLabel xml:lang="bg">птица</skos:altLabel>
+    <rdfs:label xml:lang="bg">птичи орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">bird ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#DoubleHeadedBirdOrnament">
+    <skos:altLabel xml:lang="bg">двуглава птица</skos:altLabel>
+    <skos:altLabel xml:lang="bg">двуглав орел</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент двуглава птица</rdfs:label>
+    <rdfs:label xml:lang="en">double-headed bird ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#AnimalOrnament"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TempleColumnOrnament">
+    <skos:altLabel xml:lang="bg">храмова колона</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент храмова колона</rdfs:label>
+    <rdfs:label xml:lang="en">temple column ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:HumanOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RiderOrnament">
+    <skos:altLabel xml:lang="bg">конник</skos:altLabel>
+    <skos:altLabel xml:lang="bg">ездач</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент конник</rdfs:label>
+    <rdfs:label xml:lang="en">rider ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:HumanOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SunOrnament">
+    <skos:altLabel xml:lang="bg">слънце</skos:altLabel>
+    <rdfs:label xml:lang="bg">слънчев орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">sun ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:OpenworkTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SukaiOpenworkStitch">
+    <skos:altLabel xml:lang="en">Sukai openwork technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Сукай</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Дупчест</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Дупчеста ажурна техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Sukai openwork stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Дупчест ажурен бод</rdfs:label>
+  </ew:OpenworkTechnique>
+  <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#altLabel"/>
+  <ew:SplitTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ShoplukSplitStitch">
+    <skos:altLabel xml:lang="en">Shopluk split technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Шопски</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Шопска цепена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Shopluk split stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Шопски цепен бод</rdfs:label>
+  </ew:SplitTechnique>
+  <ew:PlantOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TreeOrnament">
+    <skos:altLabel xml:lang="bg">дърво</skos:altLabel>
+    <rdfs:label xml:lang="bg">дървесен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">tree ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:PlantOrnament>
+  <ew:ContourTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#BrokenSamokovStitch">
+    <skos:altLabel xml:lang="en">Broken Samokov technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Начупен самоковски</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Начупена самоковска техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Broken Samokov stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Начупен самоковски бод</rdfs:label>
+  </ew:ContourTechnique>
+  <ew:PlantOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#LilyOrnament">
+    <skos:altLabel xml:lang="bg">лилия</skos:altLabel>
+    <skos:altLabel xml:lang="bg">крин</skos:altLabel>
+    <rdfs:label xml:lang="bg">лилиевиден орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">lily ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:PlantOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GreatGoddessOrnament">
+    <skos:altLabel xml:lang="bg">велика богиня</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент велика богиня</rdfs:label>
+    <rdfs:label xml:lang="en">great goddess ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HumanOrnament"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#OwlOrnament">
+    <skos:altLabel xml:lang="bg">кукумявка</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент кукумявка</rdfs:label>
+    <rdfs:label xml:lang="en">owl ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RoosterOrnament">
+    <skos:altLabel xml:lang="bg">петел</skos:altLabel>
+    <rdfs:label xml:lang="bg">петльов орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">rooster ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:OpenworkTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#VerticalOpenworkStitch">
+    <skos:altLabel xml:lang="en">Vertical openwork technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Вертикален</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Вертикална ажурна техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Vertical openwork stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Вертикален ажурен бод</rdfs:label>
+  </ew:OpenworkTechnique>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ThreeSaintsOrnament">
+    <skos:altLabel xml:lang="bg">трите светци</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент трите светци</rdfs:label>
+    <rdfs:label xml:lang="en">three saints ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:AnimalOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SerpentOrnament">
+    <skos:altLabel xml:lang="bg">змия</skos:altLabel>
+    <skos:altLabel xml:lang="bg">змей</skos:altLabel>
+    <rdfs:label xml:lang="bg">змиевиден орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">serpent ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:AnimalOrnament>
+  <ew:PoligatTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SimplePoligatStitch">
+    <skos:altLabel xml:lang="en">Simple poligat technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Обикновен полигат</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Обикновена полигатна техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Simple poligat stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Обикновен полигатен бод</rdfs:label>
+  </ew:PoligatTechnique>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#TreeOfLifeOrnament">
+    <skos:altLabel xml:lang="bg">дърво на живота</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент дърво на живота</rdfs:label>
+    <rdfs:label xml:lang="en">tree of life ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#PlantOrnament"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:PlantOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#VineOrnament">
+    <skos:altLabel xml:lang="bg">лоза</skos:altLabel>
+    <rdfs:label xml:lang="bg">лозов орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">vine ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:PlantOrnament>
+  <ew:CrossTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SurroundedCrossStitch">
+    <skos:altLabel xml:lang="en">Surrounded cross technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Обграден кръст</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Техника обграден кръст</skos:altLabel>
+    <rdfs:label xml:lang="en">Surrounded cross stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Обграден кръстат бод</rdfs:label>
+  </ew:CrossTechnique>
+  <ew:HumanOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#HumanFigureOrnament">
+    <skos:altLabel xml:lang="bg">човешка фигура</skos:altLabel>
+    <skos:altLabel xml:lang="bg">човек</skos:altLabel>
+    <rdfs:label xml:lang="bg">орнамент с човешка фигура</rdfs:label>
+    <rdfs:label xml:lang="en">human figure ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:HumanOrnament>
+  <owl:AllDisjointClasses>
+    <owl:members rdf:parseType="Collection">
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Color"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Embroidery"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Motif"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Name"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Ornament"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Region"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RegionGroup"/>
+      <owl:Class rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Technique"/>
+    </owl:members>
+  </owl:AllDisjointClasses>
+  <ew:HumanOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RaisedHandsFigureOrnament">
+    <skos:altLabel xml:lang="bg">вдигнати ръце</skos:altLabel>
+    <rdfs:label xml:lang="bg">фигура с вдигнати ръце</rdfs:label>
+    <rdfs:label xml:lang="en">raised hands figure ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:HumanOrnament>
+  <ew:ContourTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#Backstitch">
+    <skos:altLabel xml:lang="en">Backstitch technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Зад игла</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Техника зад игла</skos:altLabel>
+    <rdfs:label xml:lang="en">Backstitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Бод зад игла</rdfs:label>
+  </ew:ContourTechnique>
+  <ew:GeometricOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#RhombusOrnament">
+    <skos:altLabel xml:lang="bg">ромб</skos:altLabel>
+    <rdfs:label xml:lang="bg">ромбовиден орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">rhombus ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:GeometricOrnament>
+  <ew:SymbolicOrnament rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SwastikaOrnament">
+    <skos:altLabel xml:lang="bg">свастика</skos:altLabel>
+    <rdfs:label xml:lang="bg">свастичен орнамент</rdfs:label>
+    <rdfs:label xml:lang="en">swastika ornament</rdfs:label>
+    <rdf:type rdf:resource="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#GeometricOrnament"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:SymbolicOrnament>
+  <ew:CrossTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#SlavicCrossStitch">
+    <skos:altLabel xml:lang="en">Slavic cross technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Славянски кръст</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Техника славянски кръст</skos:altLabel>
+    <rdfs:label xml:lang="bg">Славянски кръстат бод</rdfs:label>
+    <rdfs:label xml:lang="en">Slavic cross stitch</rdfs:label>
+  </ew:CrossTechnique>
+  <ew:SplitTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#VerticalSplitStitch">
+    <skos:altLabel xml:lang="en">Vertical split technique</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Вертикален</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Вертикална цепена техника</skos:altLabel>
+    <rdfs:label xml:lang="en">Vertical split stitch</rdfs:label>
+    <rdfs:label xml:lang="bg">Вертикален цепен бод</rdfs:label>
+  </ew:SplitTechnique>
+  <ew:ContourTechnique rdf:about="http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#ReturnStitch">
+    <skos:altLabel xml:lang="bg">Техника със връщане</skos:altLabel>
+    <skos:altLabel xml:lang="bg">Със връщане</skos:altLabel>
+    <skos:altLabel xml:lang="en">Return technique</skos:altLabel>
+    <rdfs:label xml:lang="bg">Бод със връщане</rdfs:label>
+    <rdfs:label xml:lang="en">Return stitch</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
+  </ew:ContourTechnique>
+</rdf:RDF>

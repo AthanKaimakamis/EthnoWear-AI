@@ -27,6 +27,7 @@ public final class OntologyTerms {
         public static final String IS_TECHNIQUE_OF_MOTIF = "isTechniqueOfMotif";
         public static final String MOTIF_HAS_COLOR = "motifHasColor";
         public static final String MOTIF_HAS_ORNAMENT = "motifHasOrnament";
+        public static final String MOTIF_HAS_REGION = "motifHasRegion";
         public static final String MOTIF_HAS_TECHNIQUE = "motifHasTechnique";
         public static final String REGION_USES_COLOR = "regionUsesColor";
         public static final String REGION_USES_ORNAMENT = "regionUsesOrnament";
@@ -73,6 +74,14 @@ public final class OntologyTerms {
         public static final String STANKE_DIMITROV_EMBROIDERY = "StankeDimitrovEmbroidery";
         public static final String SYMBOLIC_ORNAMENT = "SymbolicOrnament";
         public static final String TECHNIQUE = "Technique";
+        public static final String CHAIN_TECHNIQUE = "ChainTechnique";
+        public static final String CONTOUR_TECHNIQUE = "ContourTechnique";
+        public static final String CROSS_TECHNIQUE = "CrossTechnique";
+        public static final String GAITAN_TECHNIQUE = "GaitanTechnique";
+        public static final String OPENWORK_TECHNIQUE = "OpenworkTechnique";
+        public static final String POLIGAT_TECHNIQUE = "PoligatTechnique";
+        public static final String SCALLOP_TECHNIQUE = "ScallopTechnique";
+        public static final String SPLIT_TECHNIQUE = "SplitTechnique";
         public static final String TRAN_EMBROIDERY = "TranEmbroidery";
         public static final String UZUNKYUPRI_EMBROIDERY = "UzunkyupriEmbroidery";
 

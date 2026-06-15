@@ -1,8 +1,8 @@
 package fmi.ethnowear.ontology.embroidery;
 
-import fmi.ethnowear.config.OntologyProperties;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.jena.JenaOntologyContext;
+import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
 import fmi.ethnowear.ontology.model.OntologyLanguage;
 import fmi.ethnowear.ontology.model.OntologyResource;
@@ -14,8 +14,8 @@ import java.util.Optional;
 @Service
 public class EmbroideryOntology extends JenaOntologyContext implements EmbroideryOntologyClient {
 
-    public EmbroideryOntology(OntologyProperties properties) {
-        super(properties.getPath(), properties.getNamespace());
+    public EmbroideryOntology(JenaOntologyStore store) {
+        super(store);
     }
 
     // Regions
@@ -33,11 +33,7 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     @Override
     public Optional<OntologyResource> findRegionByName(String regionNameOrLocalName, OntologyLanguage language) {
         return listRegions().stream()
-                .filter(region -> matchesLabelOrAltLabel(
-                        getModel().getResource(region.iri()),
-                        regionNameOrLocalName,
-                        language
-                ))
+                .filter(region -> matchesLabelOrAltLabel(region, regionNameOrLocalName, language))
                 .findFirst();
     }
 
@@ -56,7 +52,7 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     public Optional<LocalizedRegionProfile> describeLocalizedRegion(String regionNameOrLocalName, OntologyLanguage language) {
         return findRegionByName(regionNameOrLocalName, language)
                 .map(region -> new LocalizedRegionProfile(
-                        toLocalizedResource(getModel().getResource(region.iri()), language),
+                        toLocalizedResource(region, language),
                         toLocalizedResourceList(listOrnamentsUsedByRegion(region.localName()), language),
                         toLocalizedResourceList(listColorsUsedByRegion(region.localName()), language),
                         toLocalizedResourceList(listTechniquesUsedByRegion(region.localName()), language)
@@ -122,10 +118,7 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     @Override
     public Optional<OntologyResource> findRegionGroupByName(String nameOrLocalname, OntologyLanguage language) {
         return listRegionGroups().stream()
-                .filter(group -> matchesLabelOrAltLabel(
-                        getModel().getResource(group.iri()),
-                        nameOrLocalname,
-                        language))
+                .filter(group -> matchesLabelOrAltLabel(group, nameOrLocalname, language))
                 .findFirst();
     }
 
@@ -133,7 +126,7 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     public Optional<LocalizedRegionGroupProfile> describeRegionGroup(String groupNameOrLocalName, OntologyLanguage language) {
         return findRegionGroupByName(groupNameOrLocalName, language)
                 .map(group -> new LocalizedRegionGroupProfile(
-                        toLocalizedResource(getModel().getResource(group.iri()), language),
+                        toLocalizedResource(group, language),
                         toLocalizedResourceList(listRegionsInGroup(group.localName()), language)
                 ));
     }
@@ -148,6 +141,16 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     @Override
     public List<LocalizedOntologyResource> listLocalizedOrnaments(OntologyLanguage language) {
         return toLocalizedResourceList(listOrnaments(), language);
+    }
+
+    @Override
+    public List<OntologyResource> listOrnamentTypes() {
+        return subclassesOf(OntologyTerms.Classes.ORNAMENT, true);
+    }
+
+    @Override
+    public List<LocalizedOntologyResource> listLocalizedOrnamentTypes(OntologyLanguage language) {
+        return toLocalizedResourceList(listOrnamentTypes(), language);
     }
 
     @Override
@@ -209,6 +212,28 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
         return toLocalizedResourceList(listTechniques(), language);
     }
 
+    @Override
+    public List<OntologyResource> listTechniqueTypes() {
+        return subclassesOf(OntologyTerms.Classes.TECHNIQUE, true);
+    }
+
+    @Override
+    public List<LocalizedOntologyResource> listLocalizedTechniqueTypes(OntologyLanguage language) {
+        return toLocalizedResourceList(listTechniqueTypes(), language);
+    }
+
+    @Override
+    public List<OntologyResource> listTechniquesOfType(String techniqueTypeLocalName) {
+        return individualsOfClass(techniqueTypeLocalName);
+    }
+
+    @Override
+    public List<OntologyResource> listTypesOfTechnique(String techniqueLocalName) {
+        return typesOfIndividual(techniqueLocalName, false).stream()
+                .filter(type -> isSubclassOf(type.localName(), OntologyTerms.Classes.TECHNIQUE))
+                .toList();
+    }
+
     // Motifs
 
     @Override
@@ -256,11 +281,7 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     @Override
     public Optional<OntologyResource> findRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language) {
         return listRegionalEmbroideryTypes().stream()
-                .filter(type -> matchesLabelOrAltLabel(
-                        getModel().getResource(type.iri()),
-                        nameOrLocalName,
-                        language
-                ))
+                .filter(type -> matchesLabelOrAltLabel(type, nameOrLocalName, language))
                 .findFirst();
     }
 
@@ -272,16 +293,12 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     @Override
     public Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalEmbroidery(String regionalEmbroideryClassLocalName, OntologyLanguage language) {
         return findRegionForRegionalEmbroidery(regionalEmbroideryClassLocalName)
-                .map(region -> toLocalizedResource(
-                        getModel().getResource(region.iri()),
-                        language));
+                .map(region -> toLocalizedResource(region, language));
     }
 
     @Override
     public Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language) {
         return findRegionalEmbroideryByName(nameOrLocalName, language)
-                .map(type -> toLocalizedResource(
-                        getModel().getResource(type.iri()),
-                        language));
+                .map(type -> toLocalizedResource(type, language));
     }
 }

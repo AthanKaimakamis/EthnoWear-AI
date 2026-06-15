@@ -30,3 +30,16 @@ ethnowear:
   ontology:
     path: ${ETHNOWEAR_ONTOLOGY_PATH:Ontology/EthnoWear.owx}
     namespace: ${ETHNOWEAR_ONTOLOGY_NAMESPACE:http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#}
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"

@@ -1,286 +1,314 @@
 package fmi.ethnowear.ontology.jena;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-
-import fmi.ethnowear.config.ProjectPathResolver;
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
 import fmi.ethnowear.ontology.model.OntologyLanguage;
-
+import fmi.ethnowear.ontology.model.OntologyResource;
 import lombok.NonNull;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 
-import fmi.ethnowear.ontology.model.OntologyResource;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 public abstract class JenaOntologyContext {
 
     private static final String SKOS_NS = "http://www.w3.org/2004/02/skos/core#";
     private static final Property SKOS_ALT_LABEL = ResourceFactory.createProperty(SKOS_NS, "altLabel");
 
-    private final String namespace;
-    private final OntModel model;
+    private final JenaOntologyStore store;
 
-    public JenaOntologyContext(Path ontologyPath, String namespace) {
-        this.namespace = namespace;
-        this.model = loadOntology(ontologyPath);
+    protected JenaOntologyContext(JenaOntologyStore store) {
+        this.store = store;
     }
 
-    protected String getNamespace() {
-        return namespace;
-    }
-
-    protected OntModel getModel() {
-        return model;
-    }
-
-    protected List<OntologyResource> classes(){
-        return model.listClasses()
-                .filterKeep(r -> r.getURI() != null)
-                .mapWith(this::toResource)
+    protected List<OntologyResource> classes() {
+        return store.read(model -> model.listClasses()
+                .filterKeep(resource -> resource.getURI() != null)
+                .mapWith(resource -> toResource(model, resource))
                 .toList()
                 .stream()
                 .sorted(Comparator.comparing(OntologyResource::localName))
-                .toList();
+                .toList());
     }
 
-    protected List<OntologyResource> individuals(){
-        return model.listIndividuals()
-                .filterKeep(r -> r.getURI() != null)
-                .mapWith(this::toResource)
+    protected List<OntologyResource> individuals() {
+        return store.read(model -> model.listIndividuals()
+                .filterKeep(resource -> resource.getURI() != null)
+                .mapWith(resource -> toResource(model, resource))
                 .toList()
                 .stream()
                 .sorted(Comparator.comparing(OntologyResource::localName))
-                .toList();
+                .toList());
     }
 
-    protected List<OntologyResource> individualsOfClass(String classLocalName){
-        OntClass ontClass = model.getOntClass(toUri(classLocalName));
-        if(ontClass == null)
-            return List.of();
-
-        return ontClass.listInstances()
-                .filterKeep(r -> r.getURI() != null)
-                .mapWith(this::toResource)
-                .toList()
-                .stream()
-                .sorted(Comparator.comparing(OntologyResource::localName))
-                .toList();
-    }
-
-    protected List<OntologyResource> propertyResource(String subjectLocalName, String propertyLocalName){
-        Resource subject = model.getResource(toUri(subjectLocalName));
-        Property property = model.getProperty(toUri(propertyLocalName));
-
-        return model.listObjectsOfProperty(subject, property)
-                .filterKeep(RDFNode::isResource)
-                .mapWith(RDFNode::asResource)
-                .filterKeep(r -> r.getURI() != null)
-                .mapWith(this::toResource)
-                .toList()
-                .stream()
-                .sorted(Comparator.comparing(OntologyResource::localName))
-                .toList();
-    }
-
-    protected List<OntologyResource> subclassesOf(String classLocalName, boolean direct){
-        OntClass ontClass = model.getOntClass(toUri(classLocalName));
-        if(ontClass == null)
-            return List.of();
-
-        return ontClass.listSubClasses(direct)
-                .filterKeep(r -> r.getURI() != null)
-                .mapWith(this::toResource)
-                .toList()
-                .stream()
-                .sorted(Comparator.comparing(OntologyResource::localName))
-                .toList();
-    }
-
-    protected List<OntologyResource> typesOfIndividual(String individualLocalName, boolean direct){
-        Individual individual = model.getIndividual(toUri(individualLocalName));
-        if(individual == null)
-            return List.of();
-
-        return individual.listRDFTypes(direct)
-                .filterKeep(r -> r.getURI() != null)
-                .mapWith(this::toResource)
-                .toList()
-                .stream()
-                .sorted(Comparator.comparing(OntologyResource::localName))
-                .toList();
-    }
-
-    protected Optional<OntologyResource> findResource(String localName){
-        Resource resource = model.getResource(toUri(localName));
-        if(resource == null || resource.getURI() == null)
-            return Optional.empty();
-
-        return Optional.of(toResource(resource));
-    }
-
-    protected Optional<OntologyResource> findClassResource(String localName){
-        OntClass ontClass = model.getOntClass(toUri(localName));
-        if(ontClass == null || ontClass.getURI() == null)
-            return Optional.empty();
-
-        return Optional.of(toResource(ontClass));
-    }
-
-    protected Optional<OntologyResource> findIndividualResource(String localName){
-        Individual individual = model.getIndividual(toUri(localName));
-        if(individual == null || individual.getURI() == null)
-            return Optional.empty();
-
-        return Optional.of(toResource(individual));
-    }
-
-    protected boolean isSubclassOf(String childClassLocalName, String parentClassLocalName){
-        OntClass child = model.getOntClass(toUri(childClassLocalName));
-        OntClass parent = model.getOntClass(toUri(parentClassLocalName));
-
-        return child != null && parent != null && child.hasSuperClass(parent);
-    }
-
-    protected boolean isIndividualOfClass(String individualLocalName, String classLocalName){
-        Individual individual = model.getIndividual(toUri(individualLocalName));
-        OntClass ontClass = model.getOntClass(toUri(classLocalName));
-
-        return individual != null && ontClass != null && individual.hasOntClass(ontClass, false);
-    }
-
-    protected Optional<OntologyResource> hasValueRestriction(String classLocalName, String propertyLocalName){
-        OntClass ontClass = model.getOntClass(toUri(classLocalName));
-        Property targetProperty = model.getProperty(toUri(propertyLocalName));
-        if(ontClass == null || targetProperty == null)
-            return Optional.empty();
-
-        StmtIterator superClasses = model.listStatements(ontClass, RDFS.subClassOf, (RDFNode) null);
-        while (superClasses.hasNext()){
-            RDFNode node = superClasses.nextStatement().getObject();
-            if(!node.isResource())
-                continue;
-
-            Resource restriction = node.asResource();
-            if(!model.contains(restriction, OWL.onProperty, targetProperty))
-                continue;
-
-            StmtIterator values = model.listStatements(restriction, OWL.hasValue, (RDFNode) null);
-            while (values.hasNext()){
-                RDFNode value = values.nextStatement().getObject();
-                if(value.isResource() && value.asResource().getURI() != null)
-                    return Optional.of(toResource(value.asResource()));
+    protected List<OntologyResource> individualsOfClass(String classLocalName) {
+        return store.read(model -> {
+            OntClass ontClass = model.getOntClass(toUri(classLocalName));
+            if (ontClass == null) {
+                return List.of();
             }
-        }
-        return Optional.empty();
+
+            return ontClass.listInstances()
+                    .filterKeep(resource -> resource.getURI() != null)
+                    .mapWith(resource -> toResource(model, resource))
+                    .toList()
+                    .stream()
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
+        });
     }
 
-    protected LocalizedOntologyResource toLocalizedResource(@NonNull Resource resource, OntologyLanguage language) {
-        return new LocalizedOntologyResource(
-                resource.getURI(),
-                resource.getLocalName(),
-                preferredLabel(resource, language).orElse(resource.getLocalName()),
-                altLabels(resource, language),
-                comment(resource, language).orElse(null),
-                language
-        );
+    protected List<OntologyResource> propertyResource(String subjectLocalName, String propertyLocalName) {
+        return store.read(model -> {
+            Resource subject = model.getResource(toUri(subjectLocalName));
+            Property property = model.getProperty(toUri(propertyLocalName));
+
+            return model.listObjectsOfProperty(subject, property)
+                    .filterKeep(RDFNode::isResource)
+                    .mapWith(RDFNode::asResource)
+                    .filterKeep(resource -> resource.getURI() != null)
+                    .mapWith(resource -> toResource(model, resource))
+                    .toList()
+                    .stream()
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
+        });
     }
 
-    protected List<LocalizedOntologyResource> toLocalizedResourceList(@NonNull List<OntologyResource> resources, OntologyLanguage language) {
-        return resources.stream()
+    protected List<OntologyResource> subclassesOf(String classLocalName, boolean direct) {
+        return store.read(model -> {
+            OntClass ontClass = model.getOntClass(toUri(classLocalName));
+            if (ontClass == null) {
+                return List.of();
+            }
+
+            return ontClass.listSubClasses(direct)
+                    .filterKeep(resource -> resource.getURI() != null)
+                    .mapWith(resource -> toResource(model, resource))
+                    .toList()
+                    .stream()
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
+        });
+    }
+
+    protected List<OntologyResource> typesOfIndividual(String individualLocalName, boolean direct) {
+        return store.read(model -> {
+            Individual individual = model.getIndividual(toUri(individualLocalName));
+            if (individual == null) {
+                return List.of();
+            }
+
+            return individual.listRDFTypes(direct)
+                    .filterKeep(resource -> resource.getURI() != null)
+                    .mapWith(resource -> toResource(model, resource))
+                    .toList()
+                    .stream()
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
+        });
+    }
+
+    protected Optional<OntologyResource> findResource(String localName) {
+        return store.read(model -> {
+            Resource resource = model.getResource(toUri(localName));
+            if (!model.containsResource(resource)) {
+                return Optional.empty();
+            }
+            return Optional.of(toResource(model, resource));
+        });
+    }
+
+    protected Optional<OntologyResource> findClassResource(String localName) {
+        return store.read(model -> {
+            OntClass ontClass = model.getOntClass(toUri(localName));
+            return ontClass == null || ontClass.getURI() == null
+                    ? Optional.empty()
+                    : Optional.of(toResource(model, ontClass));
+        });
+    }
+
+    protected Optional<OntologyResource> findIndividualResource(String localName) {
+        return store.read(model -> {
+            Individual individual = model.getIndividual(toUri(localName));
+            return individual == null || individual.getURI() == null
+                    ? Optional.empty()
+                    : Optional.of(toResource(model, individual));
+        });
+    }
+
+    protected boolean isSubclassOf(String childClassLocalName, String parentClassLocalName) {
+        return store.read(model -> {
+            OntClass child = model.getOntClass(toUri(childClassLocalName));
+            OntClass parent = model.getOntClass(toUri(parentClassLocalName));
+            return child != null && parent != null && child.hasSuperClass(parent);
+        });
+    }
+
+    protected boolean isIndividualOfClass(String individualLocalName, String classLocalName) {
+        return store.read(model -> {
+            Individual individual = model.getIndividual(toUri(individualLocalName));
+            OntClass ontClass = model.getOntClass(toUri(classLocalName));
+            return individual != null && ontClass != null && individual.hasOntClass(ontClass, false);
+        });
+    }
+
+    protected Optional<OntologyResource> hasValueRestriction(String classLocalName, String propertyLocalName) {
+        return store.read(model -> {
+            OntClass ontClass = model.getOntClass(toUri(classLocalName));
+            Property targetProperty = model.getProperty(toUri(propertyLocalName));
+            if (ontClass == null || targetProperty == null) {
+                return Optional.empty();
+            }
+
+            StmtIterator superClasses = model.listStatements(ontClass, RDFS.subClassOf, (RDFNode) null);
+            while (superClasses.hasNext()) {
+                RDFNode node = superClasses.nextStatement().getObject();
+                if (!node.isResource()) {
+                    continue;
+                }
+
+                Resource restriction = node.asResource();
+                if (!model.contains(restriction, OWL.onProperty, targetProperty)) {
+                    continue;
+                }
+
+                StmtIterator values = model.listStatements(restriction, OWL.hasValue, (RDFNode) null);
+                while (values.hasNext()) {
+                    RDFNode value = values.nextStatement().getObject();
+                    if (value.isResource() && value.asResource().getURI() != null) {
+                        return Optional.of(toResource(model, value.asResource()));
+                    }
+                }
+            }
+            return Optional.empty();
+        });
+    }
+
+    protected LocalizedOntologyResource toLocalizedResource(
+            @NonNull OntologyResource resource,
+            OntologyLanguage language
+    ) {
+        return store.read(model -> toLocalizedResource(model, model.getResource(resource.iri()), language));
+    }
+
+    protected List<LocalizedOntologyResource> toLocalizedResourceList(
+            @NonNull List<OntologyResource> resources,
+            OntologyLanguage language
+    ) {
+        return store.read(model -> resources.stream()
                 .map(resource -> model.getResource(resource.iri()))
-                .map(resource -> toLocalizedResource(resource, language))
-                .toList();
+                .map(resource -> toLocalizedResource(model, resource, language))
+                .toList());
     }
 
-    protected Optional<String> preferredLabel(Resource resource, OntologyLanguage language) {
-        return literalValues(resource, RDFS.label, language)
-                .stream()
-                .findFirst();
-    }
-
-    protected List<String> altLabels(Resource resource, OntologyLanguage language) {
-        return literalValues(resource, SKOS_ALT_LABEL, language);
-    }
-
-    protected Optional<String> comment(Resource resource, OntologyLanguage language) {
-        return literalValues(resource, RDFS.comment, language)
-                .stream()
-                .findFirst();
-    }
-
-    protected List<String> literalValues(Resource resource, Property property, OntologyLanguage language) {
-        List<String> values = new ArrayList<>();
-
-        StmtIterator statements = model.listStatements(resource, property, (RDFNode) null);
-        while (statements.hasNext()) {
-            RDFNode node = statements.nextStatement().getObject();
-
-            if (node instanceof Literal literal
-                    && language.tag().equalsIgnoreCase(literal.getLanguage())) {
-                values.add(literal.getString());
-            }
-        }
-
-        return values;
-    }
-
-    protected boolean matchesLabelOrAltLabel(@NonNull Resource resource, String text, OntologyLanguage language) {
-        String normalizedText = normalize(text);
-
-        if (resource.getLocalName() != null
-                && normalize(resource.getLocalName()).equals(normalizedText)) {
-            return true;
-        }
-
-        boolean labelMatches = literalValues(resource, RDFS.label, language)
-                .stream()
-                .map(this::normalize)
-                .anyMatch(normalizedText::equals);
-
-        if (labelMatches) {
-            return true;
-        }
-
-        return literalValues(resource, SKOS_ALT_LABEL, language)
-                .stream()
-                .map(this::normalize)
-                .anyMatch(normalizedText::equals);
+    protected boolean matchesLabelOrAltLabel(
+            @NonNull OntologyResource resource,
+            String text,
+            OntologyLanguage language
+    ) {
+        return store.read(model -> matchesLabelOrAltLabel(model, model.getResource(resource.iri()), text, language));
     }
 
     protected String normalize(String value) {
         return value == null ? "" : value.trim().toLowerCase();
     }
 
-
     protected String toUri(@NonNull String value) {
         if (value.startsWith("http://") || value.startsWith("https://")) {
             return value;
         }
         String localName = value.startsWith("#") ? value.substring(1) : value;
-        return namespace + localName;
+        return store.uri(localName);
     }
 
-    protected OntologyResource toResource(@NonNull Resource resource) {
-        return new OntologyResource(
+    private LocalizedOntologyResource toLocalizedResource(
+            OntModel model,
+            Resource resource,
+            OntologyLanguage language
+    ) {
+        return new LocalizedOntologyResource(
                 resource.getURI(),
                 resource.getLocalName(),
-                labelFor(resource).orElse(null)
+                preferredLabel(model, resource, language).orElse(resource.getLocalName()),
+                literalValues(model, resource, SKOS_ALT_LABEL, language),
+                comment(model, resource, language).orElse(null),
+                language
         );
     }
 
-    private Optional<String> labelFor(Resource resource) {
+    private Optional<String> preferredLabel(OntModel model, Resource resource, OntologyLanguage language) {
+        return literalValues(model, resource, RDFS.label, language).stream().findFirst();
+    }
+
+    private Optional<String> comment(OntModel model, Resource resource, OntologyLanguage language) {
+        return literalValues(model, resource, RDFS.comment, language).stream().findFirst();
+    }
+
+    private List<String> literalValues(
+            OntModel model,
+            Resource resource,
+            Property property,
+            OntologyLanguage language
+    ) {
+        List<String> values = new ArrayList<>();
+        StmtIterator statements = model.listStatements(resource, property, (RDFNode) null);
+        while (statements.hasNext()) {
+            RDFNode node = statements.nextStatement().getObject();
+            if (node instanceof Literal literal
+                    && language.tag().equalsIgnoreCase(literal.getLanguage())) {
+                values.add(literal.getString());
+            }
+        }
+        return values;
+    }
+
+    private boolean matchesLabelOrAltLabel(
+            OntModel model,
+            Resource resource,
+            String text,
+            OntologyLanguage language
+    ) {
+        String normalizedText = normalize(text);
+        if (resource.getLocalName() != null
+                && normalize(resource.getLocalName()).equals(normalizedText)) {
+            return true;
+        }
+
+        boolean labelMatches = literalValues(model, resource, RDFS.label, language)
+                .stream()
+                .map(this::normalize)
+                .anyMatch(normalizedText::equals);
+        if (labelMatches) {
+            return true;
+        }
+
+        return literalValues(model, resource, SKOS_ALT_LABEL, language)
+                .stream()
+                .map(this::normalize)
+                .anyMatch(normalizedText::equals);
+    }
+
+    private OntologyResource toResource(OntModel model, Resource resource) {
+        return new OntologyResource(
+                resource.getURI(),
+                resource.getLocalName(),
+                labelFor(model, resource).orElse(null)
+        );
+    }
+
+    private Optional<String> labelFor(OntModel model, Resource resource) {
         StmtIterator labels = model.listStatements(resource, RDFS.label, (RDFNode) null);
         while (labels.hasNext()) {
             RDFNode value = labels.nextStatement().getObject();
@@ -288,26 +316,6 @@ public abstract class JenaOntologyContext {
                 return Optional.of(literal.getString());
             }
         }
-
         return Optional.empty();
-    }
-
-    @NonNull
-    private OntModel loadOntology(@NonNull Path path) {
-        Path resolvedPath = ProjectPathResolver.resolve(path);
-        File ontologyFile = resolvedPath.toFile();
-
-        if (!ontologyFile.isFile()) {
-            throw new IllegalStateException("Ontology file not found: " + ontologyFile.getPath());
-        }
-
-        OntModel loadedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_RULE_INF);
-        try (InputStream input = new FileInputStream(ontologyFile)) {
-            loadedModel.read(input, namespace);
-            return loadedModel;
-        } catch (Exception exception) {
-            throw new IllegalStateException("Could not load ontology file with Jena: " + ontologyFile.getPath(),
-                    exception);
-        }
     }
 }

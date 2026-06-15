@@ -51,7 +51,14 @@ public class AgentRunnerService implements ApplicationRunner {
         profile.setParameter(Profile.MAIN_HOST, "localhost");
         profile.setParameter(Profile.GUI, "false");
 
-        mainContainer = runtime.createMainContainer(profile);
+        AgentContainer container = runtime.createMainContainer(profile);
+        if (container == null) {
+            throw new IllegalStateException(
+                    "Could not start the JADE main container. Ensure JADE port 1099 is not already in use."
+            );
+        }
+
+        mainContainer = container;
         System.out.println("JADE main container started");
     }
 

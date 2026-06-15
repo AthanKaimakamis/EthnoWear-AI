@@ -1,0 +1,213 @@
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+
+const resources = {
+    bg: {
+        translation: {
+            app: {
+                subtitle: 'Архив на шевици',
+                language: 'Език',
+                navigation: 'Основна навигация',
+                openNavigation: 'Отвори навигацията',
+                closeNavigation: 'Затвори навигацията',
+            },
+            nav: {
+                archive: 'Архив',
+                admin: 'Админ',
+                test: 'Тест',
+            },
+            forms: {
+                save: 'Запази',
+                saving: 'Запазване...',
+            },
+            archive: {
+                title: 'Архив на регионални шевици',
+                subtitle: 'Данни за регионални шевици, базирани на онтологията.',
+                fallbackDescription: 'Концепция за регионална шевица от онтологията.',
+                selectedFilters_one: '{{count}} избран онтологичен филтър.',
+                selectedFilters_other: '{{count}} избрани онтологични филтъра.',
+                noResults: 'Няма намерени регионални шевици за избраните филтри.',
+                loadError: 'Неуспешно зареждане на справочните данни.',
+                showing: 'Показани {{from}}-{{to}} от {{total}} резултата',
+                itemsPerPage: 'На страница',
+            },
+            archiveNav: {
+                label: 'Навигация в архива',
+                embroideries: 'Шевици',
+                motifs: 'Мотиви',
+                techniques: 'Техники',
+                ornaments: 'Орнаменти',
+            },
+            archiveReference: {
+                loading: 'Зареждане на справочните данни.',
+                noResults: 'Няма намерени записи за избраните филтри.',
+                regionFilter: 'Филтриране по регион.',
+                search: 'Търсене по име, local name или алтернативен етикет',
+                categoryCount_one: '{{count}} онтологична концепция',
+                categoryCount_other: '{{count}} онтологични концепции',
+                uncategorized: 'Без категория',
+                motifs: {
+                    title: 'Архив на мотиви',
+                    subtitle: 'Мотивите ще бъдат свързани с архивни записи в следващата стъпка.',
+                    empty: 'Тази секция е оставена празна засега.',
+                },
+                techniques: {
+                    title: 'Архив на техники',
+                    subtitle: 'Техники, свързани с регионите от онтологията.',
+                },
+                ornaments: {
+                    title: 'Архив на орнаменти',
+                    subtitle: 'Орнаменти, свързани с регионите от онтологията.',
+                },
+            },
+            filters: {
+                title: 'Онтологични филтри',
+                subtitle: 'Филтриране по онтологични концепции.',
+                regionalEmbroideries: 'Регионални шевици',
+                regions: 'Региони',
+                regionGroups: 'Групи региони',
+                ornaments: 'Орнаменти',
+                ornamentTypes: 'Типове орнаменти',
+                techniques: 'Техники',
+                clear: 'Изчисти филтрите',
+                clearShort: 'Изчисти',
+                show: 'Покажи филтрите',
+                hide: 'Скрий филтрите',
+            },
+            ornamentTypes: {
+                geometric: 'Геометрични',
+                plant: 'Растителни',
+                animal: 'Животински',
+                human: 'Човешки',
+                symbolic: 'Символични',
+            },
+            admin: {
+                ontology: 'Онтология', openMenu: 'Отвори админ менюто', subtitle: 'Управление на онтологичните понятия и връзките между тях.',
+                search: 'Търсене по име, local name или връзка', add: 'Добави', edit: 'Редактирай', delete: 'Изтрий', cancel: 'Отказ',
+                saved: 'Промените са запазени.', deleted: 'Записът е изтрит.', noResults: 'Няма намерени записи.',
+                list: { saveEdit: 'Запази промяната', remove: 'Премахни' },
+                confirmDelete: 'Изтриване на запис', confirmDeleteText: 'Сигурни ли сте, че искате да изтриете {{name}}?',
+                entities: { ornaments: 'Орнаменти', techniques: 'Техники', motifs: 'Мотиви', regions: 'Региони', regionalEmbroideries: 'Регионални шевици' },
+                columns: { name: 'Име', relationships: 'Връзки', actions: 'Действия' },
+                form: { addTitle: 'Добавяне на онтологичен запис', editTitle: 'Редактиране на онтологичен запис', identity: 'Идентичност',
+                    description: 'Описание', relationships: 'Онтологични връзки', types: 'Типове', labelBg: 'Име на български', labelEn: 'Име на английски',
+                    altLabelsBg: 'Алтернативни имена на български', altLabelsEn: 'Алтернативни имена на английски',
+                    altLabelsHelp: 'Въведете име и натиснете Enter. Може да добавите повече от едно.',
+                    commentBg: 'Описание на български', commentEn: 'Описание на английски', region: 'Регион', regionGroup: 'Група региони', none: 'Няма' },
+            },
+        },
+    },
+    en: {
+        translation: {
+            app: {
+                subtitle: 'Embroidery Archive',
+                language: 'Language',
+                navigation: 'Main navigation',
+                openNavigation: 'Open navigation',
+                closeNavigation: 'Close navigation',
+            },
+            nav: {
+                archive: 'Archive',
+                admin: 'Admin',
+                test: 'Test',
+            },
+            forms: {
+                save: 'Save',
+                saving: 'Saving...',
+            },
+            archive: {
+                title: 'Regional Embroidery Archive',
+                subtitle: 'Ontology-backed regional embroidery data.',
+                fallbackDescription: 'Regional embroidery concept from the ontology.',
+                selectedFilters_one: '{{count}} ontology filter selected.',
+                selectedFilters_other: '{{count}} ontology filters selected.',
+                noResults: 'No regional embroideries found for the selected filters.',
+                loadError: 'Failed to load archive reference data.',
+                showing: 'Showing {{from}}-{{to}} of {{total}} results',
+                itemsPerPage: 'Items per page',
+            },
+            archiveNav: {
+                label: 'Archive navigation',
+                embroideries: 'Embroideries',
+                motifs: 'Motifs',
+                techniques: 'Techniques',
+                ornaments: 'Ornaments',
+            },
+            archiveReference: {
+                loading: 'Loading reference data.',
+                noResults: 'No entries found for the selected filters.',
+                regionFilter: 'Filter by region.',
+                search: 'Search by name, local name, or alternative label',
+                categoryCount_one: '{{count}} ontology concept',
+                categoryCount_other: '{{count}} ontology concepts',
+                uncategorized: 'Uncategorized',
+                motifs: {
+                    title: 'Motif Archive',
+                    subtitle: 'Motifs will be connected to archive records in the next step.',
+                    empty: 'This section is intentionally empty for now.',
+                },
+                techniques: {
+                    title: 'Technique Archive',
+                    subtitle: 'Techniques connected to ontology regions.',
+                },
+                ornaments: {
+                    title: 'Ornament Archive',
+                    subtitle: 'Ornaments connected to ontology regions.',
+                },
+            },
+            filters: {
+                title: 'Ontology Filters',
+                subtitle: 'Filter by ontology concepts.',
+                regionalEmbroideries: 'Regional Embroideries',
+                regions: 'Regions',
+                regionGroups: 'Region groups',
+                ornaments: 'Ornaments',
+                ornamentTypes: 'Ornament types',
+                techniques: 'Techniques',
+                clear: 'Clear filters',
+                clearShort: 'Clear',
+                show: 'Show filters',
+                hide: 'Hide filters',
+            },
+            ornamentTypes: {
+                geometric: 'Geometric',
+                plant: 'Plant',
+                animal: 'Animal',
+                human: 'Human',
+                symbolic: 'Symbolic',
+            },
+            admin: {
+                ontology: 'Ontology', openMenu: 'Open admin menu', subtitle: 'Manage ontology concepts and the relationships between them.',
+                search: 'Search by name, local name, or relationship', add: 'Add', edit: 'Edit', delete: 'Delete', cancel: 'Cancel',
+                saved: 'Changes saved.', deleted: 'Entry deleted.', noResults: 'No entries found.',
+                list: { saveEdit: 'Save change', remove: 'Remove' },
+                confirmDelete: 'Delete entry', confirmDeleteText: 'Are you sure you want to delete {{name}}?',
+                entities: { ornaments: 'Ornaments', techniques: 'Techniques', motifs: 'Motifs', regions: 'Regions', regionalEmbroideries: 'Regional embroideries' },
+                columns: { name: 'Name', relationships: 'Relationships', actions: 'Actions' },
+                form: { addTitle: 'Add ontology entry', editTitle: 'Edit ontology entry', identity: 'Identity', description: 'Description',
+                    relationships: 'Ontology relationships', types: 'Types', labelBg: 'Bulgarian name', labelEn: 'English name',
+                    altLabelsBg: 'Alternative Bulgarian names', altLabelsEn: 'Alternative English names',
+                    altLabelsHelp: 'Enter a name and press Enter. You can add more than one.',
+                    commentBg: 'Bulgarian description', commentEn: 'English description', region: 'Region', regionGroup: 'Region group', none: 'None' },
+            },
+        },
+    },
+} as const
+
+void i18n.use(initReactI18next).init({
+    resources,
+    lng: 'bg',
+    fallbackLng: 'bg',
+    supportedLngs: ['bg', 'en'],
+    interpolation: {
+        escapeValue: false,
+    },
+})
+
+i18n.on('languageChanged', (language) => {
+    document.documentElement.lang = language
+})
+
+document.documentElement.lang = 'bg'
+
+export default i18n
