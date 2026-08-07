@@ -1,0 +1,63 @@
+name: ethnowear
+
+services:
+  frontend:
+    build:
+      context: ./ethnowear-frontend
+      dockerfile: Dockerfile
+    image: ethnowear-frontend:local
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./EthnoWear
+      dockerfile: Dockerfile
+    image: ethnowear-backend:local
+    environment:
+      ETHNOWEAR_DB_URL: "jdbc:sqlserver://sqlserver:1433;databaseName=EthnoWear;encrypt=true;trustServerCertificate=true"
+      ETHNOWEAR_DB_USERNAME: "sa"
+      ETHNOWEAR_DB_PASSWORD: "${MSSQL_SA_PASSWORD}"
+      ETHNOWEAR_ONTOLOGY_PATH: /app/Ontology/EthnoWear.owx
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - backend-ontology:/app/Ontology
+    restart: unless-stopped
+
+  sqlserver:
+    container_name: ethnowear-sqlserver-local
+    build:
+      context: ./EthnoWearDB
+      dockerfile: Dockerfile
+    image: ethnowear-sqlserver:local
+    platform: ${MSSQL_PLATFORM:-linux/amd64}
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: ${MSSQL_PID:-Developer}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+    ports:
+      - "${MSSQL_PORT:-1433}:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  backend-ontology:
+  sqlserver-data:
+    external: true
+    name: ethnowear_sqlserver_data

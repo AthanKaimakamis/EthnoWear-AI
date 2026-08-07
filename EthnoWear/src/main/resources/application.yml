@@ -7,20 +7,24 @@ spring:
       enabled: false
 
   datasource:
-    url: jdbc:sqlite:${ETHNOWEAR_DB_PATH:Database/ethnowear.sqlite}
-    driver-class-name: org.sqlite.JDBC
+    url: ${ETHNOWEAR_DB_URL:jdbc:sqlserver://localhost:1433;databaseName=EthnoWear;encrypt=true;trustServerCertificate=true}
+    username: ${ETHNOWEAR_DB_USERNAME:sa}
+    password: ${ETHNOWEAR_DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     hikari:
-      maximum-pool-size: 1
-      connection-init-sql: PRAGMA foreign_keys=ON
-
+      maximum-pool-size: 10
+      minimum-idle: 1
+      connection-timeout: 30000
   jpa:
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
+        default_schema: ethnowear
+        use_nationalized_character_data: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
   sql:
     init:

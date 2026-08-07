@@ -10,34 +10,38 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "media_assets")
+@Table(name = "MediaAssets", schema = "ethnowear")
 public class MediaAsset extends BaseEntity {
 
-    @Column(name = "file_name")
+    @Column(name = "FileName")
     private String fileName;
 
-    @Column(name = "file_path")
+    @Column(name = "FilePath")
     private String filePath;
 
-    @Column(name = "storage_url")
+    @Column(name = "StorageUrl")
     private String storageUrl;
 
-    @Column(name = "mime_type")
+    @Column(name = "MimeType")
     private String mimeType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "media_type", nullable = false)
+    @Column(name = "MediaType", nullable = false)
     private MediaType mediaType;
 
+    @Column(name = "Width")
     private Integer width;
+
+    @Column(name = "Height")
     private Integer height;
 
-    @Column(name = "size_bytes")
+    @Column(name = "SizeBytes")
     private Long sizeBytes;
 
+    @Column(name = "Checksum")
     private String checksum;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_reference_id")
+    @JoinColumn(name = "SourceReferenceId")
     private SourceReference sourceReference;
 }

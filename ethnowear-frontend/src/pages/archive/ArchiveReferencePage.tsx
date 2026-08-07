@@ -1,26 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Alert,
     Box,
     Button,
     Card,
     CardContent,
     CardMedia,
-    Checkbox,
     Chip,
+    Collapse,
     Divider,
-    FormControlLabel,
     InputAdornment,
     Paper,
     Stack,
     TextField,
     Typography,
 } from '@mui/material'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import FilterListIcon from '@mui/icons-material/FilterList'
 import SearchIcon from '@mui/icons-material/Search'
 import { useTranslation } from 'react-i18next'
 import { getFullReference } from '../../api/ReferenceApi.ts'
 import type { Language, ReferenceData, ReferenceResource } from '../../types/reference.ts'
 import ArchiveReferencePageSkeleton from '../../components/loading/ArchiveReferencePageSkeleton.tsx'
+import SearchableFilterList from '../../components/filtres/SearchableFilterList.tsx'
 
 type ArchiveReferenceKind = 'motifs' | 'techniques' | 'ornaments'
 
@@ -31,6 +37,16 @@ type Props = {
 type CategorySection = {
     category: ReferenceResource
     items: ReferenceResource[]
+}
+
+type ArchiveReferenceFiltersProps = {
+    regions: ReferenceResource[]
+    categories: ReferenceResource[]
+    selectedRegions: string[]
+    selectedCategories: string[]
+    onToggleRegion: (localName: string) => void
+    onToggleCategory: (localName: string) => void
+    onClear: () => void
 }
 
 const imageNotFoundUrl = '/Image-not-found.png'
@@ -248,11 +264,61 @@ function ArchiveCategorySection({ section }: { section: CategorySection }) {
     )
 }
 
+function ArchiveReferenceFilters(props: ArchiveReferenceFiltersProps) {
+    const { t } = useTranslation()
+
+    function filterAccordion(
+        title: string,
+        items: ReferenceResource[],
+        selected: string[],
+        onToggle: (localName: string) => void,
+    ) {
+        if (items.length === 0) {
+            return null
+        }
+
+        return (
+            <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: 'transparent', '&::before': { display: 'none' } }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0.5 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{title}</Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ px: 0.5, pt: 0 }}>
+                    <SearchableFilterList
+                        title={title}
+                        items={items}
+                        selectedValues={selected}
+                        onToggle={onToggle}
+                    />
+                </AccordionDetails>
+            </Accordion>
+        )
+    }
+
+    return (
+        <Paper elevation={1} sx={{ p: 2, borderRadius: 1, border: 1, borderColor: 'divider', bgcolor: '#EEF1F1' }}>
+            <Stack spacing={1.5}>
+                <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{t('filters.title')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t('filters.availableOnly')}</Typography>
+                </Box>
+                <Divider />
+                {filterAccordion(t('filters.regions'), props.regions, props.selectedRegions, props.onToggleRegion)}
+                {filterAccordion(t('filters.categories'), props.categories, props.selectedCategories, props.onToggleCategory)}
+                <Button variant="outlined" disabled={props.selectedRegions.length + props.selectedCategories.length === 0} onClick={props.onClear}>
+                    {t('filters.clear')}
+                </Button>
+            </Stack>
+        </Paper>
+    )
+}
+
 function ArchiveReferencePage({ kind }: Props) {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const [reference, setReference] = useState<ReferenceData | null>(null)
     const [selectedRegions, setSelectedRegions] = useState<string[]>([])
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
     const [searchText, setSearchText] = useState('')
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -288,22 +354,44 @@ function ArchiveReferencePage({ kind }: Props) {
         }
     }, [language, t])
 
+    const sourceItems = useMemo(() => reference ? sourceItemsForKind(kind, reference) : [], [kind, reference])
+    const categoryRelationMap = useMemo(() => reference ? relationMapForKind(kind, reference) : {}, [kind, reference])
+
     const items: ReferenceResource[] = useMemo(() => {
         if (!reference) {
             return []
         }
 
-        const sourceItems = sourceItemsForKind(kind, reference)
-
-        if (selectedRegions.length === 0 || kind === 'motifs') {
-            return sourceItems
-        }
-
         return sourceItems.filter((item) => {
             const regions = itemRegions(item.localName, kind, reference)
-            return selectedRegions.some((regionLocalName) => regions.includes(regionLocalName))
+            const matchesRegion = selectedRegions.length === 0 || selectedRegions.some(
+                (regionLocalName) => regions.includes(regionLocalName)
+            )
+            const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(
+                (categoryLocalName) => categoryRelationMap[categoryLocalName]?.includes(item.localName)
+            )
+            return matchesRegion && matchesCategory
         })
-    }, [kind, reference, selectedRegions])
+    }, [categoryRelationMap, kind, reference, selectedCategories, selectedRegions, sourceItems])
+
+    const availableRegions = useMemo(() => {
+        if (!reference || kind === 'motifs') return []
+        return reference.regions.filter(region => selectedRegions.includes(region.localName) || sourceItems.some(item => {
+            const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(
+                category => categoryRelationMap[category]?.includes(item.localName)
+            )
+            return matchesCategory && itemRegions(item.localName, kind, reference).includes(region.localName)
+        }))
+    }, [categoryRelationMap, kind, reference, selectedCategories, selectedRegions, sourceItems])
+
+    const availableCategories = useMemo(() => {
+        if (!reference) return []
+        return categoriesForKind(kind, reference).filter(category => selectedCategories.includes(category.localName)
+            || (categoryRelationMap[category.localName] ?? []).some(itemLocalName => {
+                if (selectedRegions.length === 0) return true
+                return selectedRegions.some(region => itemRegions(itemLocalName, kind, reference).includes(region))
+            }))
+    }, [categoryRelationMap, kind, reference, selectedCategories, selectedRegions])
 
     const categorySections = useMemo(() => {
         if (!reference) {
@@ -319,8 +407,6 @@ function ArchiveReferencePage({ kind }: Props) {
         )
     }, [items, kind, reference, searchText, t])
 
-    const hasActiveFilters = selectedRegions.length > 0 || searchText.trim().length > 0
-
     function toggleRegion(regionLocalName: string) {
         setSelectedRegions((current) => current.includes(regionLocalName)
             ? current.filter((item) => item !== regionLocalName)
@@ -328,8 +414,16 @@ function ArchiveReferencePage({ kind }: Props) {
         )
     }
 
+    function toggleCategory(categoryLocalName: string) {
+        setSelectedCategories(current => current.includes(categoryLocalName)
+            ? current.filter(item => item !== categoryLocalName)
+            : [...current, categoryLocalName]
+        )
+    }
+
     function clearFilters() {
         setSelectedRegions([])
+        setSelectedCategories([])
         setSearchText('')
     }
 
@@ -352,54 +446,51 @@ function ArchiveReferencePage({ kind }: Props) {
                 textAlign: 'left',
             }}
         >
-            <Paper
-                elevation={1}
-                sx={{
-                    p: 2,
-                    position: { md: 'sticky' },
-                    top: { md: 140 },
-                    borderRadius: 1,
-                    border: 1,
-                    borderColor: 'divider',
-                    bgcolor: '#EEF1F1',
-                }}
-            >
-                <Stack spacing={1.5}>
-                    <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            {t('filters.title')}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {t('archiveReference.regionFilter')}
-                        </Typography>
-                    </Box>
+            <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'sticky', top: 140 }}>
+                <ArchiveReferenceFilters
+                    regions={availableRegions}
+                    categories={availableCategories}
+                    selectedRegions={selectedRegions}
+                    selectedCategories={selectedCategories}
+                    onToggleRegion={toggleRegion}
+                    onToggleCategory={toggleCategory}
+                    onClear={clearFilters}
+                />
+            </Box>
 
-                    <Divider />
-
-                    <Stack spacing={0.5}>
-                        {(reference?.regions ?? []).map((region) => (
-                            <FormControlLabel
-                                key={region.localName}
-                                control={
-                                    <Checkbox
-                                        checked={selectedRegions.includes(region.localName)}
-                                        onChange={() => toggleRegion(region.localName)}
-                                    />
-                                }
-                                label={region.label}
-                            />
-                        ))}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                <Button
+                    variant="text"
+                    color="inherit"
+                    fullWidth
+                    aria-expanded={mobileFiltersOpen}
+                    onClick={() => setMobileFiltersOpen(open => !open)}
+                    sx={{ minHeight: 52, border: 1, borderLeft: 4, borderColor: 'divider', borderLeftColor: 'primary.main', bgcolor: '#EEF1F1' }}
+                >
+                    <Stack direction="row" sx={{ width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                            <FilterListIcon color="primary" fontSize="small" />
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                {mobileFiltersOpen ? t('filters.hide') : t('filters.show')}
+                            </Typography>
+                        </Stack>
+                        {mobileFiltersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </Stack>
-
-                    <Button
-                        variant="outlined"
-                        disabled={!hasActiveFilters}
-                        onClick={clearFilters}
-                    >
-                        {t('filters.clear')}
-                    </Button>
-                </Stack>
-            </Paper>
+                </Button>
+                <Collapse in={mobileFiltersOpen} unmountOnExit>
+                    <Box sx={{ mt: 1.5 }}>
+                        <ArchiveReferenceFilters
+                            regions={availableRegions}
+                            categories={availableCategories}
+                            selectedRegions={selectedRegions}
+                            selectedCategories={selectedCategories}
+                            onToggleRegion={toggleRegion}
+                            onToggleCategory={toggleCategory}
+                            onClear={clearFilters}
+                        />
+                    </Box>
+                </Collapse>
+            </Box>
 
             <Stack spacing={3} sx={{ minWidth: 0 }}>
                 <Stack spacing={2}>

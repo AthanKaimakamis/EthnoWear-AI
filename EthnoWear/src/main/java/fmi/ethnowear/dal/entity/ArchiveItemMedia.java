@@ -10,24 +10,26 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "archive_item_media")
+@Table(name = "ArchiveItemMedia", schema = "ethnowear")
 public class ArchiveItemMedia extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "archive_item_id", nullable = false)
+    @JoinColumn(name = "ArchiveItemId", nullable = false)
     private ArchiveItem archiveItem;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "media_asset_id", nullable = false)
+    @JoinColumn(name = "MediaAssetId", nullable = false)
     private MediaAsset mediaAsset;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "Role", nullable = false)
     private MediaRole role;
 
-    @Column(name = "caption_bg", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "CaptionBg")
     private String captionBg;
 
-    @Column(name = "caption_en", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "CaptionEn")
     private String captionEn;
 }

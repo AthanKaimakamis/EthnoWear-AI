@@ -5,41 +5,47 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "sources")
+@Table(name = "Sources", schema = "ethnowear")
 public class Source extends BaseEntity {
 
+    @Column(name = "Title", nullable = false)
     private String title;
+
+    @Column(name = "Author")
     private String author;
+
+    @Column(name = "Publisher")
     private String publisher;
 
-    @Column(name = "publication_year")
+    @Column(name = "PublicationYear")
     private Integer year;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "source_type", nullable = false)
+    @Column(name = "SourceType", nullable = false)
     private SourceType sourceType;
 
+    @Column(name = "Language")
     private String language;
 
-    @Column(name = "file_path")
+    @Column(name = "FilePath")
     private String filePath;
 
+    @Column(name = "Url")
     private String url;
+
+    @Column(name = "Isbn")
     private String isbn;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "Notes")
     private String notes;
 
-    @Column(name = "is_trusted", nullable = false)
+    @Column(name = "IsTrusted", nullable = false)
     private boolean trusted;
 
 }

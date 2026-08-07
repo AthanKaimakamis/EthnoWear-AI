@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "sXWGTJxTZdrXuemie0xpttq1wmASbN9EJmElZGEPM6Q1nC9e8J2i8XrpIhYoOGUJYy/tizYQQQrL2KMzqp8rsw==",
+  "success": true,
+  "projectFilePath": "/Users/athan/Library/CloudStorage/GoogleDrive-stu2501697009@uni-plovdiv.bg/My Drive/EndTerm/FinalProject/EthnoWearDB/EthnoWearDB.sqlproj",
+  "expectedPackageFiles": [
+    "/Users/athan/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.3/microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "/Users/athan/.nuget/packages/microsoft.netframework.referenceassemblies.net20/1.0.3/microsoft.netframework.referenceassemblies.net20.1.0.3.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://20.20.20.2:8092/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    }
+  ]
+}

@@ -255,14 +255,48 @@ public class OntologyEntityAdminService {
         }
     }
 
-    private Individual requiredIndividual(OntModel model, String localName, String expectedClass) {
+    private Individual requiredIndividual(OntModel model, String localName, String expectedClassLocalName) {
         validateLocalName(localName);
         Individual individual = model.getIndividual(store.uri(localName));
-        if (individual == null || !individual.hasOntClass(requiredClass(model, expectedClass), false)) {
-            throw error(OntologyEntityException.Reason.INVALID,
-                    expectedClass + " does not exist: " + localName);
+        if (individual == null) {
+            throw error(OntologyEntityException.Reason.INVALID, "Ontology individual does not exist: " + localName);
         }
+
+        OntClass expectedClass = requiredClass(model, expectedClassLocalName);
+        if (!isInstanceOfClassOrSubclass(model, individual, expectedClass)) {
+            throw error(OntologyEntityException.Reason.INVALID, localName + " is not an instance of " + expectedClassLocalName + " or one of its subclasses");
+        }
+
         return individual;
+    }
+
+    private boolean isInstanceOfClassOrSubclass(OntModel model, Individual individual, OntClass expectedClass) {
+        Deque<Resource> pending = new ArrayDeque<>();
+        Set<String> visited = new HashSet<>();
+
+        individual.listRDFTypes(false)
+                .filterKeep(Resource::isURIResource)
+                .forEachRemaining(pending::addLast);
+
+        while (!pending.isEmpty()) {
+            Resource currentClass = pending.removeFirst();
+            String currentUri = currentClass.getURI();
+
+            if (currentUri == null || !visited.add(currentUri)) {
+                continue;
+            }
+
+            if (currentUri.equals(expectedClass.getURI())) {
+                return true;
+            }
+
+            model.listObjectsOfProperty(currentClass, RDFS.subClassOf)
+                    .filterKeep(RDFNode::isURIResource)
+                    .mapWith(RDFNode::asResource)
+                    .forEachRemaining(pending::addLast);
+        }
+
+        return false;
     }
 
     private OntClass requiredClass(OntModel model, String localName) {

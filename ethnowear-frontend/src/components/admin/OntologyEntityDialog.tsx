@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Alert, Box, Button, Stack } from '@mui/material'
 import AppDialog from '../AppDialog.tsx'
 import FormTextField from '../forms/FormTextField.tsx'
@@ -6,7 +6,8 @@ import FormSelectField from '../forms/FormSelectField.tsx'
 import FormMultiSelectField from '../forms/formMultiSelectFields.tsx'
 import FormSection from '../forms/FormSection.tsx'
 import FormStringListField from '../forms/FormStringListField.tsx'
-import type { SelectOption } from '../forms/formTypes.ts'
+import OntologyRelationshipField from './OntologyRelationshipField.tsx'
+import type { OptionCategory, SelectOption } from '../forms/formTypes.ts'
 import type { OntologyEntity, OntologyEntityInput, OntologyEntityType } from '../../types/ontologyAdmin.ts'
 import { useTranslation } from 'react-i18next'
 
@@ -16,6 +17,8 @@ export type EntityOptions = {
     ornaments: SelectOption[]
     techniques: SelectOption[]
     motifs: SelectOption[]
+    ornamentCategories: OptionCategory[]
+    techniqueCategories: OptionCategory[]
 }
 
 type Props = {
@@ -29,35 +32,22 @@ type Props = {
     onSubmit: (input: OntologyEntityInput) => void
 }
 
-const ornamentTypes: SelectOption[] = [
-    'GeometricOrnament', 'PlantOrnament', 'AnimalOrnament', 'HumanOrnament', 'SymbolicOrnament',
-].map(value => ({ value, label: value }))
-
-const techniqueTypes: SelectOption[] = [
-    'ChainTechnique', 'ContourTechnique', 'CrossTechnique', 'GaitanTechnique',
-    'OpenworkTechnique', 'PoligatTechnique', 'ScallopTechnique', 'SplitTechnique',
-].map(value => ({ value, label: value }))
-
 function selected(values: string[] | undefined, options: SelectOption[]) {
     const selectedValues = new Set(values ?? [])
     return options.filter(option => selectedValues.has(option.value))
 }
 
-function OntologyEntityDialog(props: Props) {
-    const { t } = useTranslation()
-    const [form, setForm] = useState<OntologyEntityInput>({
+function initialForm(entity: OntologyEntity | null): OntologyEntityInput {
+    return entity ? { ...entity } : {
         localName: '', labelBg: '', labelEn: '', altLabelsBg: [], altLabelsEn: [],
         commentBg: '', commentEn: '', typeLocalNames: [], characteristicRegionLocalNames: [],
         regionGroupLocalName: '', regionLocalName: '', ornamentLocalNames: [], techniqueLocalNames: [], motifLocalNames: [],
-    })
+    }
+}
 
-    useEffect(() => {
-        setForm(props.entity ? { ...props.entity } : {
-            localName: '', labelBg: '', labelEn: '', altLabelsBg: [], altLabelsEn: [],
-            commentBg: '', commentEn: '', typeLocalNames: [], characteristicRegionLocalNames: [],
-            regionGroupLocalName: '', regionLocalName: '', ornamentLocalNames: [], techniqueLocalNames: [], motifLocalNames: [],
-        })
-    }, [props.entity, props.open])
+function OntologyEntityDialog(props: Props) {
+    const { t } = useTranslation()
+    const [form, setForm] = useState<OntologyEntityInput>(() => initialForm(props.entity))
 
     function set<K extends keyof OntologyEntityInput>(key: K, value: OntologyEntityInput[K]) {
         setForm(current => ({ ...current, [key]: value }))
@@ -68,13 +58,16 @@ function OntologyEntityDialog(props: Props) {
         props.onSubmit(form)
     }
 
-    const typeOptions = props.type === 'ornaments' ? ornamentTypes : techniqueTypes
+    const typeOptions = props.type === 'ornaments'
+        ? props.options.ornamentCategories
+        : props.options.techniqueCategories
     const showTypes = props.type === 'ornaments' || props.type === 'techniques'
-    const showRegion = props.type === 'motifs' || props.type === 'regional-embroideries'
+    const showRegion = props.type === 'motifs'
     const showRegionGroup = props.type === 'regions'
-    const showOrnaments = props.type === 'regions' || props.type === 'motifs' || props.type === 'regional-embroideries'
-    const showTechniques = props.type === 'regions' || props.type === 'motifs' || props.type === 'regional-embroideries'
-    const showMotifs = props.type === 'regional-embroideries'
+    const showOrnaments = props.type === 'regions' || props.type === 'motifs'
+    const showTechniques = props.type === 'regions' || props.type === 'motifs'
+    const showMotifs = false
+    const useRelationshipLists = props.type === 'regions'
 
     return (
         <AppDialog open={props.open} onClose={props.onClose} maxWidth="md"
@@ -93,10 +86,10 @@ function OntologyEntityDialog(props: Props) {
                                 onChange={event => set('labelBg', event.target.value)} />
                             <FormTextField name="labelEn" label={t('admin.form.labelEn')} value={form.labelEn ?? ''}
                                 onChange={event => set('labelEn', event.target.value)} />
-                            <FormStringListField name="altLabelsBg" label={t('admin.form.altLabelsBg')}
+                            <FormStringListField key={`${props.entity?.localName ?? 'new'}-alt-bg`} name="altLabelsBg" label={t('admin.form.altLabelsBg')}
                                 helperText={t('admin.form.altLabelsHelp')} value={form.altLabelsBg}
                                 onChange={value => set('altLabelsBg', value)} />
-                            <FormStringListField name="altLabelsEn" label={t('admin.form.altLabelsEn')}
+                            <FormStringListField key={`${props.entity?.localName ?? 'new'}-alt-en`} name="altLabelsEn" label={t('admin.form.altLabelsEn')}
                                 helperText={t('admin.form.altLabelsHelp')} value={form.altLabelsEn}
                                 onChange={value => set('altLabelsEn', value)} />
                         </Box>
@@ -119,12 +112,24 @@ function OntologyEntityDialog(props: Props) {
                                 {showRegion && <FormSelectField name="regionLocalName" label={t('admin.form.region')}
                                     options={[{ value: '', label: t('admin.form.none') }, ...props.options.regions]}
                                     value={form.regionLocalName ?? ''} onChange={event => set('regionLocalName', event.target.value)} />}
-                                {showOrnaments && <FormMultiSelectField name="ornamentLocalNames" label={t('admin.entities.ornaments')}
-                                    options={props.options.ornaments} value={selected(form.ornamentLocalNames, props.options.ornaments)}
-                                    onChange={value => set('ornamentLocalNames', value.map(option => option.value))} />}
-                                {showTechniques && <FormMultiSelectField name="techniqueLocalNames" label={t('admin.entities.techniques')}
-                                    options={props.options.techniques} value={selected(form.techniqueLocalNames, props.options.techniques)}
-                                    onChange={value => set('techniqueLocalNames', value.map(option => option.value))} />}
+                                {showOrnaments && (useRelationshipLists
+                                    ? <OntologyRelationshipField key={`${props.entity?.localName ?? 'new'}-ornaments`} label={t('admin.entities.ornaments')}
+                                        options={props.options.ornaments} value={form.ornamentLocalNames ?? []}
+                                        categories={props.options.ornamentCategories}
+                                        onChange={value => set('ornamentLocalNames', value)} />
+                                    : <FormMultiSelectField name="ornamentLocalNames" label={t('admin.entities.ornaments')}
+                                        options={props.options.ornaments} value={selected(form.ornamentLocalNames, props.options.ornaments)}
+                                        onChange={value => set('ornamentLocalNames', value.map(option => option.value))} />
+                                )}
+                                {showTechniques && (useRelationshipLists
+                                    ? <OntologyRelationshipField key={`${props.entity?.localName ?? 'new'}-techniques`} label={t('admin.entities.techniques')}
+                                        options={props.options.techniques} value={form.techniqueLocalNames ?? []}
+                                        categories={props.options.techniqueCategories}
+                                        onChange={value => set('techniqueLocalNames', value)} />
+                                    : <FormMultiSelectField name="techniqueLocalNames" label={t('admin.entities.techniques')}
+                                        options={props.options.techniques} value={selected(form.techniqueLocalNames, props.options.techniques)}
+                                        onChange={value => set('techniqueLocalNames', value.map(option => option.value))} />
+                                )}
                                 {showMotifs && <FormMultiSelectField name="motifLocalNames" label={t('admin.entities.motifs')}
                                     options={props.options.motifs} value={selected(form.motifLocalNames, props.options.motifs)}
                                     onChange={value => set('motifLocalNames', value.map(option => option.value))} />}

@@ -1,8 +1,8 @@
 import type {DisabledEmbroideryFilters, EmbroideryFilters} from "../../types/embroideryFilters.ts";
 import type {ReferenceResource} from "../../types/reference.ts";
-import {Accordion, AccordionDetails, AccordionSummary, Box, Stack, Typography} from "@mui/material";
+import {Accordion, AccordionDetails, AccordionSummary, Stack, Typography} from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import FilterCheckboxList from "./FilterCheckboxList.tsx";
+import SearchableFilterList from './SearchableFilterList.tsx'
 
 type FilterKey = keyof EmbroideryFilters
 
@@ -56,47 +56,22 @@ function FilterAccordion({
 
             <AccordionDetails
                 sx={{
-                    maxHeight: 230,
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
                     px: 0.5,
                     pt: 0,
                     pb: 1.5,
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#AEB4AE transparent',
-                    '&::-webkit-scrollbar': { width: 6 },
-                    '&::-webkit-scrollbar-thumb': {
-                        bgcolor: '#AEB4AE',
-                        borderRadius: 3,
-                    },
                 }}
             >
                 <Stack spacing={2}>
                     {groups.map((group) => (
-                        <Box key={group.filterKey}>
-                            {group.title && (
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{
-                                        display: 'block',
-                                        mb: 0.5,
-                                        textTransform: 'uppercase',
-                                        fontWeight: 700
-                                    }}
-                                >
-                                    {group.title}
-                                </Typography>
-                            )}
-
-                            <FilterCheckboxList
-                                filterKey={group.filterKey}
-                                items={group.items}
-                                filters={filters}
-                                disabledFilters={disabledFilters}
-                                onToggle={onToggle}
-                            />
-                        </Box>
+                        <SearchableFilterList
+                            key={group.filterKey}
+                            title={group.title ?? title}
+                            showTitle={Boolean(group.title)}
+                            items={group.items}
+                            selectedValues={filters[group.filterKey]}
+                            disabledValues={disabledFilters?.[group.filterKey]}
+                            onToggle={value => onToggle(group.filterKey, value)}
+                        />
                     ))}
                 </Stack>
             </AccordionDetails>

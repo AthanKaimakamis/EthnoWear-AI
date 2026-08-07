@@ -1,7 +1,8 @@
 import type { ReferenceResource } from './reference'
 
+export type FilterCombinationMode = 'and' | 'or'
+
 export type EmbroideryFilters = {
-    regionalEmbroideryLocalNames: string[]
     regionGroupLocalNames: string[]
     regionLocalNames: string[]
     ornamentTypeLocalNames: string[]
@@ -11,7 +12,6 @@ export type EmbroideryFilters = {
 }
 
 export const emptyEmbroideryFilters: EmbroideryFilters = {
-    regionalEmbroideryLocalNames: [],
     regionGroupLocalNames: [],
     regionLocalNames: [],
     ornamentTypeLocalNames: [],
@@ -22,7 +22,6 @@ export const emptyEmbroideryFilters: EmbroideryFilters = {
 export type DisabledEmbroideryFilters = Partial<EmbroideryFilters>
 
 export type EmbroideryFilterOptions = {
-    regionalEmbroideries: ReferenceResource[]
     regionGroups: ReferenceResource[]
     regions: ReferenceResource[]
     ornamentTypes: ReferenceResource[]

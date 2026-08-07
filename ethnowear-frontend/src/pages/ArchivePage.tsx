@@ -26,6 +26,7 @@ import {
     emptyEmbroideryFilters,
     type EmbroideryFilterOptions,
     type EmbroideryFilters,
+    type FilterCombinationMode,
 } from '../types/embroideryFilters'
 import EmbroideryFilterPanel from '../components/embroidery/EmbroideryFilterPanel'
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
@@ -35,44 +36,28 @@ type FilterKey = keyof EmbroideryFilters
 function matchesEmbroidery(
     embroideryLocalName: string,
     filters: EmbroideryFilters,
-    reference: ReferenceData
+    reference: ReferenceData,
+    combinationMode: FilterCombinationMode,
 ) {
-    if (
-        filters.regionalEmbroideryLocalNames.length > 0 &&
-        !filters.regionalEmbroideryLocalNames.includes(embroideryLocalName)
-    ) {
-        return false
-    }
-
     const regionLocalName = reference.regionByRegionalEmbroidery[embroideryLocalName]
-
-    if (filters.regionGroupLocalNames.length > 0) {
-        const belongsToSelectedGroup = filters.regionGroupLocalNames.some((groupLocalName) =>
-            reference.regionsByRegionGroup[groupLocalName]?.includes(regionLocalName)
-        )
-
-        if (!belongsToSelectedGroup) {
-            return false
-        }
-    }
-
-    if (
-        filters.regionLocalNames.length > 0 &&
-        !filters.regionLocalNames.includes(regionLocalName)
-    ) {
-        return false
-    }
-
     const regionOrnaments = reference.ornamentsByRegion[regionLocalName] ?? []
     const regionTechniques = reference.techniquesByRegion?.[regionLocalName] ?? []
+    const activeGroupMatches: boolean[] = []
 
-    if (
-        filters.ornamentLocalNames.length > 0 &&
-        !filters.ornamentLocalNames.some((ornamentLocalName) =>
+    if (filters.regionGroupLocalNames.length > 0) {
+        activeGroupMatches.push(filters.regionGroupLocalNames.some((groupLocalName) =>
+            reference.regionsByRegionGroup[groupLocalName]?.includes(regionLocalName)
+        ))
+    }
+
+    if (filters.regionLocalNames.length > 0) {
+        activeGroupMatches.push(filters.regionLocalNames.includes(regionLocalName))
+    }
+
+    if (filters.ornamentLocalNames.length > 0) {
+        activeGroupMatches.push(filters.ornamentLocalNames.some((ornamentLocalName) =>
             regionOrnaments.includes(ornamentLocalName)
-        )
-    ) {
-        return false
+        ))
     }
 
     if (filters.ornamentTypeLocalNames.length > 0) {
@@ -82,56 +67,34 @@ function matchesEmbroidery(
             )
         )
 
-        if (!regionOrnaments.some((ornamentLocalName) => selectedTypeOrnaments.has(ornamentLocalName))) {
-            return false
-        }
-    }
-
-    if (
-        filters.techniqueLocalNames.length > 0 &&
-        !filters.techniqueLocalNames.some((techniqueLocalName) =>
-            regionTechniques.includes(techniqueLocalName)
+        activeGroupMatches.push(
+            regionOrnaments.some((ornamentLocalName) => selectedTypeOrnaments.has(ornamentLocalName))
         )
-    ) {
-        return false
     }
 
-    return true
+    if (filters.techniqueLocalNames.length > 0) {
+        activeGroupMatches.push(filters.techniqueLocalNames.some((techniqueLocalName) =>
+            regionTechniques.includes(techniqueLocalName)
+        ))
+    }
+
+    if (activeGroupMatches.length === 0) {
+        return true
+    }
+
+    return combinationMode === 'and'
+        ? activeGroupMatches.every(Boolean)
+        : activeGroupMatches.some(Boolean)
 }
 
 function visibleOptions(
     options: ReferenceResource[],
     filterKey: FilterKey,
     filters: EmbroideryFilters,
-    reference: ReferenceData
+    reference: ReferenceData,
+    combinationMode: FilterCombinationMode,
 ) {
     const selectedValues = filters[filterKey]
-    const hasRegionOrnamentRelations = Object.values(reference.ornamentsByRegion)
-        .some((ornaments) => ornaments.length > 0)
-
-    if (!hasRegionOrnamentRelations && filterKey === 'ornamentLocalNames') {
-        const allowedBySelectedTypes = new Set(
-            filters.ornamentTypeLocalNames.flatMap(
-                (typeLocalName) => reference.ornamentsByType[typeLocalName] ?? []
-            )
-        )
-
-        return options.filter((option) =>
-            selectedValues.includes(option.localName) ||
-            filters.ornamentTypeLocalNames.length === 0 ||
-            allowedBySelectedTypes.has(option.localName)
-        )
-    }
-
-    if (!hasRegionOrnamentRelations && filterKey === 'ornamentTypeLocalNames') {
-        return options.filter((option) =>
-            selectedValues.includes(option.localName) ||
-            filters.ornamentLocalNames.length === 0 ||
-            filters.ornamentLocalNames.some((ornamentLocalName) =>
-                reference.ornamentsByType[option.localName]?.includes(ornamentLocalName)
-            )
-        )
-    }
 
     return options.filter((option) => {
         if (selectedValues.includes(option.localName)) {
@@ -144,7 +107,7 @@ function visibleOptions(
         }
 
         return reference.regionalEmbroideryTypes.some((embroidery) =>
-            matchesEmbroidery(embroidery.localName, candidateFilters, reference)
+            matchesEmbroidery(embroidery.localName, candidateFilters, reference, combinationMode)
         )
     })
 }
@@ -154,6 +117,7 @@ function ArchivePage() {
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const [reference, setReference] = useState<ReferenceData | null>(null)
     const [filters, setFilters] = useState<EmbroideryFilters>(emptyEmbroideryFilters)
+    const [combinationMode, setCombinationMode] = useState<FilterCombinationMode>('and')
     const [page, setPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(12)
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
@@ -196,24 +160,15 @@ function ArchivePage() {
         }
     }, [language, t])
 
-    const ornamentTypeOptions: ReferenceResource[] = useMemo(() => [
-        { iri: '#GeometricOrnament', localName: 'GeometricOrnament', label: t('ornamentTypes.geometric') },
-        { iri: '#PlantOrnament', localName: 'PlantOrnament', label: t('ornamentTypes.plant') },
-        { iri: '#AnimalOrnament', localName: 'AnimalOrnament', label: t('ornamentTypes.animal') },
-        { iri: '#HumanOrnament', localName: 'HumanOrnament', label: t('ornamentTypes.human') },
-        { iri: '#SymbolicOrnament', localName: 'SymbolicOrnament', label: t('ornamentTypes.symbolic') },
-    ], [t])
-
     const allFilterOptions: EmbroideryFilterOptions = useMemo(() => {
         return {
-            regionalEmbroideries: reference?.regionalEmbroideryTypes ?? [],
             regionGroups: reference?.regionGroups ?? [],
             regions: reference?.regions ?? [],
-            ornamentTypes: ornamentTypeOptions,
+            ornamentTypes: reference?.ornamentTypes ?? [],
             ornaments: reference?.ornaments ?? [],
             techniques: reference?.techniques ?? [],
         }
-    }, [ornamentTypeOptions, reference])
+    }, [reference])
 
     const filteredRegionalEmbroideries = useMemo(() => {
         const allItems = reference?.regionalEmbroideryTypes ?? []
@@ -222,8 +177,10 @@ function ArchivePage() {
             return []
         }
 
-        return allItems.filter((item) => matchesEmbroidery(item.localName, filters, reference))
-    }, [filters, reference])
+        return allItems.filter((item) => matchesEmbroidery(
+            item.localName, filters, reference, combinationMode
+        ))
+    }, [combinationMode, filters, reference])
 
     const filterOptions: EmbroideryFilterOptions = useMemo(() => {
         if (!reference) {
@@ -231,47 +188,45 @@ function ArchivePage() {
         }
 
         return {
-            regionalEmbroideries: visibleOptions(
-                allFilterOptions.regionalEmbroideries,
-                'regionalEmbroideryLocalNames',
-                filters,
-                reference
-            ),
             regionGroups: visibleOptions(
                 allFilterOptions.regionGroups,
                 'regionGroupLocalNames',
                 filters,
-                reference
+                reference,
+                combinationMode
             ),
             regions: visibleOptions(
                 allFilterOptions.regions,
                 'regionLocalNames',
                 filters,
-                reference
+                reference,
+                combinationMode
             ),
             ornamentTypes: visibleOptions(
                 allFilterOptions.ornamentTypes,
                 'ornamentTypeLocalNames',
                 filters,
-                reference
+                reference,
+                combinationMode
             ),
             ornaments: visibleOptions(
                 allFilterOptions.ornaments,
                 'ornamentLocalNames',
                 filters,
-                reference
+                reference,
+                combinationMode
             ),
             techniques: visibleOptions(
                 allFilterOptions.techniques,
                 'techniqueLocalNames',
                 filters,
-                reference
+                reference,
+                combinationMode
             ),
         }
-    }, [allFilterOptions, filters, reference])
+    }, [allFilterOptions, combinationMode, filters, reference])
 
     const selectedFilterCount =
-        filters.regionalEmbroideryLocalNames.length +
         filters.regionGroupLocalNames.length +
         filters.regionLocalNames.length +
         filters.ornamentTypeLocalNames.length +
@@ -324,6 +279,8 @@ function ArchivePage() {
                     <EmbroideryFilterPanel
                         filters={filters}
                         options={filterOptions}
+                        combinationMode={combinationMode}
+                        onCombinationModeChange={mode => { setCombinationMode(mode); setPage(1) }}
                         onChange={handleFiltersChange}
                         onClear={handleClearFilters}
                     />
@@ -388,6 +345,8 @@ function ArchivePage() {
                             <EmbroideryFilterPanel
                                 filters={filters}
                                 options={filterOptions}
+                                combinationMode={combinationMode}
+                                onCombinationModeChange={mode => { setCombinationMode(mode); setPage(1) }}
                                 onChange={handleFiltersChange}
                                 onClear={handleClearFilters}
                             />

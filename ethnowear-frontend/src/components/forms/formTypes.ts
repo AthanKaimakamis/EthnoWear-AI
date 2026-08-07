@@ -15,6 +15,10 @@ export type SelectOption = {
     value: string
 }
 
+export type OptionCategory = SelectOption & {
+    optionValues: string[]
+}
+
 export type BaseFormField = {
     name: string
     label: string

@@ -20,7 +20,6 @@ public class ReferenceService {
 
     private final EmbroideryOntologyClient ontology;
 
-
     public ReferenceService(EmbroideryOntologyClient ontology) {
         this.ontology = ontology;
     }

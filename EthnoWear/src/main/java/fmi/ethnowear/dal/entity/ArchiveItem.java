@@ -11,57 +11,59 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "archive_items")
+@Table(name = "ArchiveItems", schema = "ethnowear")
 public class ArchiveItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_reference_id")
+    @JoinColumn(name = "SourceReferenceId")
     private SourceReference sourceReference;
 
-    @Column(name = "collection_id")
+    @Column(name = "CollectionId")
     private String collectionId;
 
-    @Column(name = "inventory_number")
+    @Column(name = "InventoryNumber")
     private String inventoryNumber;
 
-    @Column(name = "title_bg")
+    @Column(name = "TitleBg")
     private String titleBg;
 
-    @Column(name = "title_en")
+    @Column(name = "TitleEn")
     private String titleEn;
 
-    @Column(name = "description_bg", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "DescriptionBg")
     private String descriptionBg;
 
-    @Column(name = "description_en", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "DescriptionEn")
     private String descriptionEn;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "archive_type", nullable = false)
+    @Column(name = "ArchiveType", nullable = false)
     private ArchiveType archiveType;
 
-    @Column(name = "period_text")
+    @Column(name = "PeriodText")
     private String periodText;
 
-    @Column(name = "origin_text")
+    @Column(name = "OriginText")
     private String originText;
 
-    @Column(name = "current_location")
+    @Column(name = "CurrentLocation")
     private String currentLocation;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "trusted_level", nullable = false)
+    @Column(name = "TrustedLevel", nullable = false)
     private TrustedLevel trustedLevel;
 
-    @Column(name = "ontology_region_iri")
+    @Column(name = "OntologyRegionIri")
     private String ontologyRegionIri;
 
-    @Column(name = "ontology_region_local_name")
+    @Column(name = "OntologyRegionLocalName")
     private String ontologyRegionLocalName;
 
-    @Column(name = "ontology_regional_embroidery_iri")
+    @Column(name = "OntologyRegionalEmbroideryIri")
     private String ontologyRegionalEmbroideryIri;
 
-    @Column(name = "ontology_regional_embroidery_local_name")
+    @Column(name = "OntologyRegionalEmbroideryLocalName")
     private String ontologyRegionalEmbroideryLocalName;
 }

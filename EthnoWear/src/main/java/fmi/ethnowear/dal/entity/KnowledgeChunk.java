@@ -10,32 +10,33 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "knowledge_chunks")
+@Table(name = "KnowledgeChunks", schema = "ethnowear")
 public class KnowledgeChunk extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "chunk_type", nullable = false)
+    @Column(name = "ChunkType", nullable = false)
     private KnowledgeChunkType chunkType;
 
-    @Column(name = "ontology_iri")
+    @Column(name = "OntologyIri")
     private String ontologyIri;
 
-    @Column(name = "ontology_local_name")
+    @Column(name = "OntologyLocalName")
     private String ontologyLocalName;
 
-    @Column(nullable = false)
+    @Column(name = "Language", nullable = false)
     private String language;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "Content", nullable = false)
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_reference_id")
+    @JoinColumn(name = "SourceReferenceId")
     private SourceReference sourceReference;
 
-    @Column(name = "embedding_model")
+    @Column(name = "EmbeddingModel")
     private String embeddingModel;
 
-    @Column(name = "embedding_id")
+    @Column(name = "EmbeddingId")
     private String embeddingId;
 }

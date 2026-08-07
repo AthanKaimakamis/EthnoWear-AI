@@ -4,12 +4,15 @@ import {
     Divider,
     Paper,
     Stack,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography
 } from "@mui/material"
 import type {
     DisabledEmbroideryFilters,
     EmbroideryFilterOptions,
-    EmbroideryFilters
+    EmbroideryFilters,
+    FilterCombinationMode,
 } from '../../types/embroideryFilters.ts'
 import FilterAccordion from "../filtres/FilterAccordion.tsx";
 import { useTranslation } from 'react-i18next'
@@ -20,7 +23,9 @@ type EmbroideryFilterPanelProps = {
     filters: EmbroideryFilters
     options: EmbroideryFilterOptions
     disabledFilters?: DisabledEmbroideryFilters
+    combinationMode: FilterCombinationMode
     onChange: (filters: EmbroideryFilters) => void
+    onCombinationModeChange: (mode: FilterCombinationMode) => void
     onClear: () => void
 }
 
@@ -28,7 +33,9 @@ function EmbroideryFilterPanel({
                                    filters,
                                    options,
                                    disabledFilters,
+                                   combinationMode,
                                    onChange,
+                                   onCombinationModeChange,
                                    onClear,
                                }: EmbroideryFilterPanelProps) {
     const { t } = useTranslation()
@@ -76,20 +83,25 @@ function EmbroideryFilterPanel({
 
                 <Divider />
 
-                <FilterAccordion
-                    title={t('filters.regionalEmbroideries')}
-                    filters={filters}
-                    disabledFilters={disabledFilters}
-                    onToggle={toggleValue}
-                    groups={[
-                        {
-                            filterKey: 'regionalEmbroideryLocalNames',
-                            items: options.regionalEmbroideries,
-                        },
-                    ]}
-                />
+                <Box>
+                    <Typography variant="caption" color="text.secondary">
+                        {t('filters.combinationMode')}
+                    </Typography>
+                    <ToggleButtonGroup
+                        exclusive
+                        fullWidth
+                        size="small"
+                        value={combinationMode}
+                        onChange={(_, value: FilterCombinationMode | null) => value && onCombinationModeChange(value)}
+                        aria-label={t('filters.combinationMode')}
+                        sx={{ mt: 0.75 }}
+                    >
+                        <ToggleButton value="and">{t('filters.matchAll')}</ToggleButton>
+                        <ToggleButton value="or">{t('filters.matchAny')}</ToggleButton>
+                    </ToggleButtonGroup>
+                </Box>
 
-                <FilterAccordion
+                {(options.regionGroups.length > 0 || options.regions.length > 0) && <FilterAccordion
                     title={t('filters.regions')}
                     filters={filters}
                     disabledFilters={disabledFilters}
@@ -106,9 +118,9 @@ function EmbroideryFilterPanel({
                             items: options.regions,
                         },
                     ]}
-                />
+                />}
 
-                <FilterAccordion
+                {options.techniques.length > 0 && <FilterAccordion
                     title={t('filters.techniques')}
                     filters={filters}
                     disabledFilters={disabledFilters}
@@ -119,9 +131,9 @@ function EmbroideryFilterPanel({
                             items: options.techniques,
                         },
                     ]}
-                />
+                />}
 
-                <FilterAccordion
+                {(options.ornamentTypes.length > 0 || options.ornaments.length > 0) && <FilterAccordion
                     title={t('filters.ornaments')}
                     filters={filters}
                     disabledFilters={disabledFilters}
@@ -138,7 +150,7 @@ function EmbroideryFilterPanel({
                             items: options.ornaments,
                         },
                     ]}
-                />
+                />}
 
                 <Button
                     variant="outlined"

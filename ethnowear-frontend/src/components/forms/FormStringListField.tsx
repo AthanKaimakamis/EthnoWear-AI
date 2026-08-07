@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
     Box,
     Button,
@@ -32,12 +32,6 @@ function FormStringListField(props: Props) {
     const [draft, setDraft] = useState('')
     const [editingIndex, setEditingIndex] = useState<number | null>(null)
     const [editingValue, setEditingValue] = useState('')
-
-    useEffect(() => {
-        setDraft('')
-        setEditingIndex(null)
-        setEditingValue('')
-    }, [props.value])
 
     function isDuplicate(candidate: string, ignoredIndex?: number) {
         return props.value.some((value, index) => (

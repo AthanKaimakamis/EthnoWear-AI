@@ -12,31 +12,34 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "archive_item_features")
+@Table(name = "ArchiveItemFeatures", schema = "ethnowear")
 public class ArchiveItemFeature extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "archive_item_id", nullable = false)
+    @JoinColumn(name = "ArchiveItemId", nullable = false)
     private ArchiveItem archiveItem;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "feature_type", nullable = false)
+    @Column(name = "FeatureType", nullable = false)
     private FeatureType featureType;
 
-    @Column(name = "ontology_iri", nullable = false)
+    @Column(name = "OntologyIri", nullable = false)
     private String ontologyIri;
 
-    @Column(name = "ontology_local_name", nullable = false)
+    @Column(name = "OntologyLocalName", nullable = false)
     private String ontologyLocalName;
 
+    @Column(name = "Confidence", precision = 5, scale = 4)
     private BigDecimal confidence;
 
+    @Column(name = "Validated", nullable = false)
     private boolean validated;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "Notes")
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_reference_id")
+    @JoinColumn(name = "SourceReferenceId")
     private SourceReference sourceReference;
 }
