@@ -2,7 +2,7 @@ package fmi.ethnowear.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.ontology.OntologyTerms;
-import fmi.ethnowear.ontology.admin.OrnamentAlreadyExistsException;
+import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
 import fmi.ethnowear.ontology.admin.OrnamentCreateCommand;
 import fmi.ethnowear.ontology.admin.OrnamentDetails;
 import fmi.ethnowear.ontology.admin.OrnamentOntologyAdminService;

@@ -51,3 +51,6 @@ pnpm-debug.log*
 .vscode/
 **/.vscode/
 !.vscode/extensions.json
+.env
+.gitignore
+.env.example

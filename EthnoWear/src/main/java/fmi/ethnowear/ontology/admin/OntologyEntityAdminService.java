@@ -1,5 +1,6 @@
 package fmi.ethnowear.ontology.admin;
 
+import fmi.ethnowear.application.exceptions.OntologyEntityException;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.ontology.Individual;
@@ -13,6 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static fmi.ethnowear.util.TextUtils.isBlank;
+import static fmi.ethnowear.util.TextUtils.isNotBlank;
 
 @Service
 public class OntologyEntityAdminService {
@@ -343,7 +347,7 @@ public class OntologyEntityAdminService {
     }
 
     private void addLiteral(OntModel model, Resource resource, Property property, String value, String language) {
-        if (value != null && !value.isBlank()) {
+        if (isNotBlank(value)) {
             resource.addProperty(property, model.createLiteral(value.trim(), language));
         }
     }
@@ -365,8 +369,7 @@ public class OntologyEntityAdminService {
             throw error(OntologyEntityException.Reason.INVALID, "Request body is required");
         }
         if (creating) validateLocalName(command.localName());
-        if ((command.labelBg() == null || command.labelBg().isBlank())
-                && (command.labelEn() == null || command.labelEn().isBlank())) {
+        if (isBlank(command.labelBg()) && isBlank(command.labelEn())) {
             throw error(OntologyEntityException.Reason.INVALID, "At least one localized label is required");
         }
     }
@@ -378,7 +381,7 @@ public class OntologyEntityAdminService {
     }
 
     private Set<String> nullableSet(String value) {
-        return value == null || value.isBlank() ? Set.of() : Set.of(value);
+        return isBlank(value) ? Set.of() : Set.of(value);
     }
 
     private String className(OntologyEntityKind kind) {

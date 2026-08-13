@@ -1,13 +1,52 @@
 package fmi.ethnowear.dal.repository;
 
 import fmi.ethnowear.application.enums.ArchiveType;
+import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.application.enums.TrustedLevel;
 import fmi.ethnowear.dal.entity.ArchiveItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface ArchiveItemRepository extends JpaRepository<ArchiveItem, Long> {
+
+    /**
+     * Finds archive records providing validated evidence for an ontology entity.
+     * Region and regional-embroidery queries also include direct archive links.
+     *
+     * @param featureType ontology feature category being matched
+     * @param ontologyIri authoritative ontology IRI of the entity
+     * @param includeRegionDirectLinks whether direct region links are included
+     * @param includeEmbroideryDirectLinks whether direct regional-embroidery links are included
+     * @param pageable page and sorting request
+     * @return matching archive records without duplicates
+     */
+    @Query("""
+            SELECT item
+            FROM ArchiveItem item
+            WHERE EXISTS (
+                SELECT feature.id
+                FROM ArchiveItemFeature feature
+                WHERE feature.archiveItem = item
+                    AND feature.featureType = :featureType
+                    AND feature.ontologyIri = :ontologyIri
+                    AND feature.validated = true
+            )
+            OR (:includeRegionDirectLinks = true AND item.ontologyRegionIri = :ontologyIri)
+            OR (:includeEmbroideryDirectLinks = true
+                AND item.ontologyRegionalEmbroideryIri = :ontologyIri)
+            """)
+    Page<ArchiveItem> findOntologyEvidence(
+            @Param("featureType") FeatureType featureType,
+            @Param("ontologyIri") String ontologyIri,
+            @Param("includeRegionDirectLinks") boolean includeRegionDirectLinks,
+            @Param("includeEmbroideryDirectLinks") boolean includeEmbroideryDirectLinks,
+            Pageable pageable
+    );
 
     /**
      * Finds all archive items belonging to the specified archive type.
@@ -66,4 +105,12 @@ public interface ArchiveItemRepository extends JpaRepository<ArchiveItem, Long> 
      * @return archive items matching either title, or an empty list when none exist
      */
     List<ArchiveItem> findByTitleBgContainingIgnoreCaseOrTitleEnContainingIgnoreCase(String titleBg, String titleEn);
+
+    /**
+     * Checks whether an exact source reference supports at least one archive item.
+     *
+     * @param sourceReferenceId database identifier of the source reference
+     * @return {@code true} when at least one archive item uses the reference
+     */
+    boolean existsBySourceReference_Id(Long sourceReferenceId);
 }

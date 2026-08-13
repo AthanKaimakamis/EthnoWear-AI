@@ -1,5 +1,7 @@
 package fmi.ethnowear.ontology.admin;
 
+import fmi.ethnowear.application.exceptions.InvalidTechniqueException;
+import fmi.ethnowear.application.exceptions.TechniqueInUseException;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.rdf.model.Property;

@@ -87,33 +87,55 @@ function MainLayout() {
                         <MenuIcon />
                     </IconButton>
 
-                    <Box sx={{ flexGrow: 1, minWidth: 0, textAlign: 'left' }}>
-                        <Typography
-                            variant="h5"
-                            component={NavLink}
-                            to="/archive"
+                    <Box
+                        component={NavLink}
+                        to="/archive"
+                        aria-label="EthnoWear"
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.25,
+                            flexGrow: 1,
+                            minWidth: 0,
+                            color: 'text.primary',
+                            textAlign: 'left',
+                            textDecoration: 'none',
+                        }}
+                    >
+                        <Box
+                            component="img"
+                            src="/logo_v3.png"
+                            alt=""
+                            aria-hidden="true"
                             sx={{
-                                color: 'text.primary',
-                                fontWeight: 800,
-                                lineHeight: 1,
-                                textDecoration: 'none',
+                                width: { xs: 40, md: 48 },
+                                height: { xs: 40, md: 48 },
+                                flexShrink: 0,
+                                objectFit: 'contain',
                             }}
-                        >
-                            EthnoWear
-                        </Typography>
-
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                display: 'block',
-                                color: 'text.secondary',
-                                mt: 0.5,
-                                letterSpacing: 0.8,
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {t('app.subtitle')}
-                        </Typography>
+                        />
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography
+                                variant="h5"
+                                component="span"
+                                sx={{ display: 'block', fontWeight: 800, lineHeight: 1 }}
+                            >
+                                EthnoWear
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                                component="span"
+                                sx={{
+                                    display: { xs: 'none', sm: 'block' },
+                                    color: 'text.secondary',
+                                    mt: 0.5,
+                                    letterSpacing: 0.8,
+                                    textTransform: 'uppercase',
+                                }}
+                            >
+                                {t('app.subtitle')}
+                            </Typography>
+                        </Box>
                     </Box>
 
                     <Stack
@@ -192,17 +214,26 @@ function MainLayout() {
                         py: 2.25,
                     }}
                 >
-                    <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            EthnoWear
-                        </Typography>
-                        <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ textTransform: 'uppercase' }}
-                        >
-                            {t('app.subtitle')}
-                        </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                        <Box
+                            component="img"
+                            src="/logo_v3.png"
+                            alt=""
+                            aria-hidden="true"
+                            sx={{ width: 48, height: 48, flexShrink: 0, objectFit: 'contain' }}
+                        />
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                                EthnoWear
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ textTransform: 'uppercase' }}
+                            >
+                                {t('app.subtitle')}
+                            </Typography>
+                        </Box>
                     </Box>
 
                     <IconButton

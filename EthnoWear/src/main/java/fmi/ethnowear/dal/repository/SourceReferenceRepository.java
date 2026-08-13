@@ -7,7 +7,28 @@ import java.util.List;
 
 public interface SourceReferenceRepository extends JpaRepository<SourceReference, Long> {
 
-    List<SourceReference> findBySourceId(Long sourceId);
+    /**
+     * Finds all exact references belonging to one source.
+     *
+     * @param sourceId database identifier of the source
+     * @return references belonging to the source, or an empty list when none exist
+     */
+    List<SourceReference> findBySource_Id(Long sourceId);
 
-    List<SourceReference> findBySourceIdAndChapter(Long sourceId, String chapter);
+    /**
+     * Finds references belonging to one source and chapter.
+     *
+     * @param sourceId database identifier of the source
+     * @param chapter chapter used to filter the references
+     * @return matching references, or an empty list when none exist
+     */
+    List<SourceReference> findBySource_IdAndChapter(Long sourceId, String chapter);
+
+    /**
+     * Checks whether a source has at least one exact reference.
+     *
+     * @param sourceId database identifier of the source
+     * @return {@code true} when at least one reference exists for the source
+     */
+    boolean existsBySource_Id(Long sourceId);
 }

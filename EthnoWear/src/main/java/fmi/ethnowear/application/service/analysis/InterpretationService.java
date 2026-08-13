@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+import static fmi.ethnowear.util.TextUtils.defaultIfBlank;
+
 @Service
 public class InterpretationService {
 
@@ -92,6 +94,6 @@ public class InterpretationService {
 
     @NonNull
     private String normalizeLanguage(String language) {
-        return language == null || language.isBlank() ? "bg" : language;
+        return defaultIfBlank(language, "bg");
     }
 }

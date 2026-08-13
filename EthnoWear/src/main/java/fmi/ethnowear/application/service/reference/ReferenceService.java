@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import java.util.function.Function;
 
 
@@ -25,7 +26,7 @@ public class ReferenceService {
     }
 
     public ReferenceResponse getFullReference(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
 
         return new ReferenceResponse(
                 language.tag(),
@@ -122,47 +123,47 @@ public class ReferenceService {
     }
 
     public List<ReferenceItemDto> getRegions(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedRegions);
     }
 
     public List<ReferenceItemDto> getRegionGroups(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedRegionGroups);
     }
 
     public List<ReferenceItemDto> getOrnaments(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedOrnaments);
     }
 
     public List<ReferenceItemDto> getOrnamentTypes(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedOrnamentTypes);
     }
 
     public List<ReferenceItemDto> getColors(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedColors);
     }
 
     public List<ReferenceItemDto> getTechniques(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedTechniques);
     }
 
     public List<ReferenceItemDto> getTechniqueTypes(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedTechniqueTypes);
     }
 
     public List<ReferenceItemDto> getMotifs(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedMotifs);
     }
 
     public List<ReferenceItemDto> getRegionalEmbroideryTypes(String languageTag) {
-        OntologyLanguage language = parseLanguage(languageTag);
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
         return toDtos(language, ontology::listLocalizedRegionalEmbroideryTypes);
     }
 
@@ -234,14 +235,4 @@ public class ReferenceService {
         }
     }
 
-    private OntologyLanguage parseLanguage(String languageTag) {
-        if(languageTag == null || languageTag.isBlank())
-            return OntologyLanguage.BG;
-
-        return switch (languageTag.trim().toLowerCase()) {
-            case "en" -> OntologyLanguage.EN;
-            case "bg" -> OntologyLanguage.BG;
-            default -> OntologyLanguage.BG;
-        };
-    }
 }

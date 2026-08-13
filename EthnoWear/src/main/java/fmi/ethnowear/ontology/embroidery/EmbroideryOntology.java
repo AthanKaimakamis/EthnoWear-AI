@@ -180,7 +180,10 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
 
     @Override
     public List<OntologyResource> listTypesOfOrnament(String ornamentLocalName) {
-        return typesOfIndividual(ornamentLocalName, false);
+        return typesOfIndividual(ornamentLocalName, false).stream()
+                .filter(type -> !type.localName().equals(OntologyTerms.Classes.ORNAMENT))
+                .filter(type -> isSubclassOf(type.localName(), OntologyTerms.Classes.ORNAMENT))
+                .toList();
     }
 
     @Override
@@ -248,7 +251,7 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
 
     @Override
     public List<OntologyResource> listMotifsOfEmbroidery(String embroideryLocalName) {
-        return propertyResource(embroideryLocalName, OntologyTerms.ObjectProperties.HAS_MOTIF);
+        return hasValueRestrictions(embroideryLocalName, OntologyTerms.ObjectProperties.HAS_MOTIF);
     }
 
     @Override
@@ -300,5 +303,116 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     public Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language) {
         return findRegionalEmbroideryByName(nameOrLocalName, language)
                 .map(type -> toLocalizedResource(type, language));
+    }
+
+    @Override
+    public List<OntologyResource> listRegionsOfMotif(String motifLocalName) {
+        return propertyResource(motifLocalName, OntologyTerms.ObjectProperties.MOTIF_HAS_REGION);
+    }
+
+    @Override
+    public List<OntologyResource> listOrnamentsOfEmbroidery(String embroideryLocalName) {
+        return hasValueRestrictions(embroideryLocalName, OntologyTerms.ObjectProperties.HAS_ORNAMENT);
+    }
+
+    @Override
+    public List<OntologyResource> listColorsOfEmbroidery(String embroideryLocalName) {
+        return hasValueRestrictions(embroideryLocalName, OntologyTerms.ObjectProperties.HAS_COLOR);
+    }
+
+    @Override
+    public List<OntologyResource> listTechniquesOfEmbroidery(String embroideryLocalName) {
+        return hasValueRestrictions(embroideryLocalName, OntologyTerms.ObjectProperties.HAS_TECHNIQUE);
+    }
+
+    @Override
+    public List<OntologyResource> listRegionalEmbroideriesForRegion(String regionLocalName) {
+        return subclassesWithHasValueRestriction(
+                OntologyTerms.Classes.REGIONAL_EMBROIDERY,
+                OntologyTerms.ObjectProperties.HAS_REGION,
+                regionLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listRegionsUsingOrnament(String ornamentLocalName) {
+        return individualsWithPropertyValue(
+                OntologyTerms.Classes.REGION,
+                OntologyTerms.ObjectProperties.REGION_USES_ORNAMENT,
+                ornamentLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listMotifsUsingOrnament(String ornamentLocalName) {
+        return individualsWithPropertyValue(
+                OntologyTerms.Classes.MOTIF,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_ORNAMENT,
+                ornamentLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listRegionalEmbroideriesUsingOrnament(String ornamentLocalName) {
+        return regionalEmbroideriesUsing(OntologyTerms.ObjectProperties.HAS_ORNAMENT, ornamentLocalName);
+    }
+
+    @Override
+    public List<OntologyResource> listRegionsUsingTechnique(String techniqueLocalName) {
+        return individualsWithPropertyValue(
+                OntologyTerms.Classes.REGION,
+                OntologyTerms.ObjectProperties.REGION_USES_TECHNIQUE,
+                techniqueLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listMotifsUsingTechnique(String techniqueLocalName) {
+        return individualsWithPropertyValue(
+                OntologyTerms.Classes.MOTIF,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_TECHNIQUE,
+                techniqueLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listRegionalEmbroideriesUsingTechnique(String techniqueLocalName) {
+        return regionalEmbroideriesUsing(OntologyTerms.ObjectProperties.HAS_TECHNIQUE, techniqueLocalName);
+    }
+
+    @Override
+    public List<OntologyResource> listRegionsUsingColor(String colorLocalName) {
+        return individualsWithPropertyValue(
+                OntologyTerms.Classes.REGION,
+                OntologyTerms.ObjectProperties.REGION_USES_COLOR,
+                colorLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listMotifsUsingColor(String colorLocalName) {
+        return individualsWithPropertyValue(
+                OntologyTerms.Classes.MOTIF,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_COLOR,
+                colorLocalName
+        );
+    }
+
+    @Override
+    public List<OntologyResource> listRegionalEmbroideriesUsingColor(String colorLocalName) {
+        return regionalEmbroideriesUsing(OntologyTerms.ObjectProperties.HAS_COLOR, colorLocalName);
+    }
+
+    @Override
+    public List<OntologyResource> listRegionalEmbroideriesUsingMotif(String motifLocalName) {
+        return regionalEmbroideriesUsing(OntologyTerms.ObjectProperties.HAS_MOTIF, motifLocalName);
+    }
+
+    private List<OntologyResource> regionalEmbroideriesUsing(String propertyLocalName, String valueLocalName) {
+        return subclassesWithHasValueRestriction(
+                OntologyTerms.Classes.REGIONAL_EMBROIDERY,
+                propertyLocalName,
+                valueLocalName
+        );
     }
 }

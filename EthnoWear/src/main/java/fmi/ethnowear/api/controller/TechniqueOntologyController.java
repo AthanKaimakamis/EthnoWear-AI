@@ -2,7 +2,7 @@ package fmi.ethnowear.api.controller;
 
 import fmi.ethnowear.ontology.admin.TechniqueCreateCommand;
 import fmi.ethnowear.ontology.admin.TechniqueDetails;
-import fmi.ethnowear.ontology.admin.TechniqueNotFoundException;
+import fmi.ethnowear.application.exceptions.TechniqueNotFoundException;
 import fmi.ethnowear.ontology.admin.TechniqueOntologyAdminService;
 import fmi.ethnowear.ontology.admin.TechniqueUpdateCommand;
 import org.springframework.http.HttpStatus;

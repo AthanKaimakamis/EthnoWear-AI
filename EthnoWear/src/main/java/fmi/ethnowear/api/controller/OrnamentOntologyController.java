@@ -2,7 +2,7 @@ package fmi.ethnowear.api.controller;
 
 import fmi.ethnowear.ontology.admin.OrnamentCreateCommand;
 import fmi.ethnowear.ontology.admin.OrnamentDetails;
-import fmi.ethnowear.ontology.admin.OrnamentNotFoundException;
+import fmi.ethnowear.application.exceptions.OrnamentNotFoundException;
 import fmi.ethnowear.ontology.admin.OrnamentOntologyAdminService;
 import fmi.ethnowear.ontology.admin.OrnamentUpdateCommand;
 import org.springframework.http.HttpStatus;

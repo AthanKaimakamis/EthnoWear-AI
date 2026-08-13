@@ -1,5 +1,9 @@
 package fmi.ethnowear.ontology.model;
 
+import java.util.Locale;
+
+import static fmi.ethnowear.util.TextUtils.isBlank;
+
 public enum OntologyLanguage {
     BG("bg"),
     EN("en");
@@ -12,5 +16,16 @@ public enum OntologyLanguage {
 
     public String tag() {
         return tag;
+    }
+
+    public static OntologyLanguage fromTag(String tag) {
+        if(isBlank(tag))
+            return BG;
+
+        return switch(tag.trim().toLowerCase(Locale.ROOT)) {
+            case "bg" -> BG;
+            case "en" -> EN;
+            default -> throw new IllegalArgumentException("Unsupported language: " + tag);
+        };
     }
 }

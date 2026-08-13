@@ -114,4 +114,34 @@ public interface EmbroideryOntologyClient {
     Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalEmbroidery(String regionalEmbroideryClassLocalName, OntologyLanguage language);
 
     Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language);
+
+    List<OntologyResource> listRegionsOfMotif(String motifLocalName);
+
+    List<OntologyResource> listOrnamentsOfEmbroidery(String embroideryLocalName);
+
+    List<OntologyResource> listColorsOfEmbroidery(String embroideryLocalName);
+
+    List<OntologyResource> listTechniquesOfEmbroidery(String embroideryLocalName);
+
+    List<OntologyResource> listRegionalEmbroideriesForRegion(String regionLocalName);
+
+    List<OntologyResource> listRegionsUsingOrnament(String ornamentLocalName);
+
+    List<OntologyResource> listMotifsUsingOrnament(String ornamentLocalName);
+
+    List<OntologyResource> listRegionalEmbroideriesUsingOrnament(String ornamentLocalName);
+
+    List<OntologyResource> listRegionsUsingTechnique(String techniqueLocalName);
+
+    List<OntologyResource> listMotifsUsingTechnique(String techniqueLocalName);
+
+    List<OntologyResource> listRegionalEmbroideriesUsingTechnique(String techniqueLocalName);
+
+    List<OntologyResource> listRegionsUsingColor(String colorLocalName);
+
+    List<OntologyResource> listMotifsUsingColor(String colorLocalName);
+
+    List<OntologyResource> listRegionalEmbroideriesUsingColor(String colorLocalName);
+
+    List<OntologyResource> listRegionalEmbroideriesUsingMotif(String motifLocalName);
 }

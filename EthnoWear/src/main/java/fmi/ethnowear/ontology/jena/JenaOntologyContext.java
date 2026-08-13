@@ -165,35 +165,91 @@ public abstract class JenaOntologyContext {
     }
 
     protected Optional<OntologyResource> hasValueRestriction(String classLocalName, String propertyLocalName) {
+        return hasValueRestrictions(classLocalName, propertyLocalName).stream().findFirst();
+    }
+
+    protected List<OntologyResource> hasValueRestrictions(String classLocalName, String propertyLocalName) {
         return store.read(model -> {
             OntClass ontClass = model.getOntClass(toUri(classLocalName));
-            Property targetProperty = model.getProperty(toUri(propertyLocalName));
-            if (ontClass == null || targetProperty == null) {
-                return Optional.empty();
-            }
+            Property property = model.getProperty(toUri(propertyLocalName));
+            if(ontClass == null || property == null)
+                return List.of();
 
-            StmtIterator superClasses = model.listStatements(ontClass, RDFS.subClassOf, (RDFNode) null);
-            while (superClasses.hasNext()) {
-                RDFNode node = superClasses.nextStatement().getObject();
-                if (!node.isResource()) {
-                    continue;
-                }
-
-                Resource restriction = node.asResource();
-                if (!model.contains(restriction, OWL.onProperty, targetProperty)) {
-                    continue;
-                }
-
-                StmtIterator values = model.listStatements(restriction, OWL.hasValue, (RDFNode) null);
-                while (values.hasNext()) {
-                    RDFNode value = values.nextStatement().getObject();
-                    if (value.isResource() && value.asResource().getURI() != null) {
-                        return Optional.of(toResource(model, value.asResource()));
-                    }
-                }
-            }
-            return Optional.empty();
+            return restrictionValues(model, ontClass, property).stream()
+                    .map(resource -> toResource(model, resource))
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
         });
+    }
+
+    protected List<OntologyResource> individualsWithPropertyValue(
+            String classLocalName,
+            String propertyLocalName,
+            String valueLocalName
+    ) {
+        return store.read(model -> {
+            OntClass ontClass = model.getOntClass(toUri(classLocalName));
+            Property property = model.getProperty(toUri(propertyLocalName));
+            Resource value = model.getResource(toUri(valueLocalName));
+            if(ontClass == null || property == null || !model.containsResource(value))
+                return List.of();
+
+            return ontClass.listInstances()
+                    .filterKeep(resource -> resource.getURI() != null)
+                    .filterKeep(resource -> model.contains(resource, property, value))
+                    .mapWith(resource -> toResource(model, resource))
+                    .toList()
+                    .stream()
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
+        });
+    }
+
+    protected List<OntologyResource> subclassesWithHasValueRestriction(
+            String parentClassLocalName,
+            String propertyLocalName,
+            String valueLocalName
+    ) {
+        return store.read(model -> {
+            OntClass parent = model.getOntClass(toUri(parentClassLocalName));
+            Property property = model.getProperty(toUri(propertyLocalName));
+            Resource expectedValue = model.getResource(toUri(valueLocalName));
+            if(parent == null || property == null || !model.containsResource(expectedValue))
+                return List.of();
+
+            return parent.listSubClasses(true)
+                    .filterKeep(ontologyClass -> ontologyClass.getURI() != null)
+                    .filterKeep(ontologyClass -> restrictionValues(model, ontologyClass, property)
+                            .stream()
+                            .anyMatch(expectedValue::equals))
+                    .mapWith(ontologyClass -> toResource(model, ontologyClass))
+                    .toList()
+                    .stream()
+                    .sorted(Comparator.comparing(OntologyResource::localName))
+                    .toList();
+        });
+    }
+
+    private List<Resource> restrictionValues(OntModel model, Resource ontologyClass, Property property) {
+        List<Resource> result = new ArrayList<>();
+        StmtIterator superClasses = model.listStatements(ontologyClass, RDFS.subClassOf, (RDFNode) null);
+
+        while(superClasses.hasNext()) {
+            RDFNode node = superClasses.nextStatement().getObject();
+            if(!node.isResource())
+                continue;
+
+            Resource restriction = node.asResource();
+            if(!model.contains(restriction, OWL.onProperty, property))
+                continue;
+
+            model.listObjectsOfProperty(restriction, OWL.hasValue)
+                    .filterKeep(RDFNode::isURIResource)
+                    .mapWith(RDFNode::asResource)
+                    .forEachRemaining(result::add);
+        }
+
+        return result;
     }
 
     protected LocalizedOntologyResource toLocalizedResource(

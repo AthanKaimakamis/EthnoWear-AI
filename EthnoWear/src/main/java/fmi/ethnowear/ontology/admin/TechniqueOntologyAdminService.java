@@ -1,5 +1,9 @@
 package fmi.ethnowear.ontology.admin;
 
+import fmi.ethnowear.application.exceptions.InvalidTechniqueException;
+import fmi.ethnowear.application.exceptions.TechniqueAlreadyExistsException;
+import fmi.ethnowear.application.exceptions.TechniqueInUseException;
+import fmi.ethnowear.application.exceptions.TechniqueNotFoundException;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.ontology.Individual;
@@ -22,6 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
 public class TechniqueOntologyAdminService {
@@ -409,12 +415,8 @@ public class TechniqueOntologyAdminService {
     }
 
     private void validateLiteralValues(List<String> values, String fieldName) {
-        if (values.stream().anyMatch(this::isBlank)) {
+        if (values.stream().anyMatch(value -> isBlank(value))) {
             throw new InvalidTechniqueException(fieldName + " cannot contain blank values");
         }
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
     }
 }

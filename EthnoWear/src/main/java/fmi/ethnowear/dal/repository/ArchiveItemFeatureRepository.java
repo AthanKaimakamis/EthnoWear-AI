@@ -2,6 +2,7 @@ package fmi.ethnowear.dal.repository;
 
 import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.dal.entity.ArchiveItemFeature;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
@@ -35,6 +36,14 @@ public interface ArchiveItemFeatureRepository extends JpaRepository<ArchiveItemF
     List<ArchiveItemFeature> findByArchiveItem_IdInAndValidatedTrue(Collection<Long> archiveItemIds);
 
     /**
+     * Checks whether an archive item has at least one feature observation.
+     *
+     * @param archiveItemId database identifier of the archive item
+     * @return {@code true} when at least one feature observation belongs to the item
+     */
+    boolean existsByArchiveItem_Id(Long archiveItemId);
+
+    /**
      * Finds all feature observations of the specified type, regardless of validation status.
      *
      * @param featureType feature category used to filter the observations
@@ -49,7 +58,23 @@ public interface ArchiveItemFeatureRepository extends JpaRepository<ArchiveItemF
      * @param ontologyIri complete ontology IRI of the observed feature
      * @return matching validated observations, or an empty list when none exist
      */
+    @EntityGraph(attributePaths = { "sourceReference", "sourceReference.source" })
     List<ArchiveItemFeature> findByFeatureTypeAndOntologyIriAndValidatedTrue(FeatureType featureType, String ontologyIri);
+
+    /**
+     * Finds validated matching evidence for a page of archive items in one query.
+     *
+     * @param archiveItemIds database identifiers of the archive items
+     * @param featureType ontology feature category being matched
+     * @param ontologyIri authoritative ontology IRI of the entity
+     * @return matching validated feature observations
+     */
+    @EntityGraph(attributePaths = "sourceReference")
+    List<ArchiveItemFeature> findByArchiveItem_IdInAndFeatureTypeAndOntologyIriAndValidatedTrue(
+            Collection<Long> archiveItemIds,
+            FeatureType featureType,
+            String ontologyIri
+    );
 
     /**
      * Finds validated observations of a feature type by the feature's cached ontology local name.
@@ -74,4 +99,12 @@ public interface ArchiveItemFeatureRepository extends JpaRepository<ArchiveItemF
      * @return observations supported by the reference, or an empty list when none exist
      */
     List<ArchiveItemFeature> findBySourceReference_Id(Long sourceReferenceId);
+
+    /**
+     * Checks whether an exact source reference supports at least one feature observation.
+     *
+     * @param sourceReferenceId database identifier of the source reference
+     * @return {@code true} when at least one feature observation uses the reference
+     */
+    boolean existsBySourceReference_Id(Long sourceReferenceId);
 }

@@ -1,14 +1,14 @@
 package fmi.ethnowear.api.controller;
 
-import fmi.ethnowear.ontology.admin.InvalidOrnamentException;
-import fmi.ethnowear.ontology.admin.InvalidTechniqueException;
-import fmi.ethnowear.ontology.admin.OrnamentAlreadyExistsException;
-import fmi.ethnowear.ontology.admin.OrnamentInUseException;
-import fmi.ethnowear.ontology.admin.OrnamentNotFoundException;
-import fmi.ethnowear.ontology.admin.OntologyEntityException;
-import fmi.ethnowear.ontology.admin.TechniqueAlreadyExistsException;
-import fmi.ethnowear.ontology.admin.TechniqueInUseException;
-import fmi.ethnowear.ontology.admin.TechniqueNotFoundException;
+import fmi.ethnowear.application.exceptions.InvalidOrnamentException;
+import fmi.ethnowear.application.exceptions.InvalidTechniqueException;
+import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
+import fmi.ethnowear.application.exceptions.OrnamentInUseException;
+import fmi.ethnowear.application.exceptions.OrnamentNotFoundException;
+import fmi.ethnowear.application.exceptions.OntologyEntityException;
+import fmi.ethnowear.application.exceptions.TechniqueAlreadyExistsException;
+import fmi.ethnowear.application.exceptions.TechniqueInUseException;
+import fmi.ethnowear.application.exceptions.TechniqueNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

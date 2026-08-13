@@ -1,5 +1,9 @@
 package fmi.ethnowear.ontology.admin;
 
+import fmi.ethnowear.application.exceptions.InvalidOrnamentException;
+import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
+import fmi.ethnowear.application.exceptions.OrnamentInUseException;
+import fmi.ethnowear.application.exceptions.OrnamentNotFoundException;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.ontology.Individual;
@@ -22,6 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
 public class OrnamentOntologyAdminService {
@@ -403,12 +409,8 @@ public class OrnamentOntologyAdminService {
     }
 
     private void validateValues(List<String> values, String fieldName) {
-        if (values.stream().anyMatch(this::isBlank)) {
+        if (values.stream().anyMatch(value -> isBlank(value))) {
             throw new InvalidOrnamentException(fieldName + " cannot contain blank values");
         }
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
     }
 }

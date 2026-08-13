@@ -43,6 +43,8 @@ CREATE TABLE [ethnowear].[MediaFeatureAnnotations]
                 AND [Y] >= 0 AND [Y] <= 1
                 AND [Width] > 0 AND [Width] <= 1
                 AND [Height] > 0 AND [Height] <= 1
+                AND [X] + [Width] <= 1
+                AND [Y] + [Height] <= 1
             )
         )
 );

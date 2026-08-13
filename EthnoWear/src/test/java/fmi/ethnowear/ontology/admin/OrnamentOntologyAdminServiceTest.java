@@ -1,5 +1,8 @@
 package fmi.ethnowear.ontology.admin;
 
+import fmi.ethnowear.application.exceptions.InvalidOrnamentException;
+import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
+import fmi.ethnowear.application.exceptions.OrnamentInUseException;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.rdf.model.Property;
