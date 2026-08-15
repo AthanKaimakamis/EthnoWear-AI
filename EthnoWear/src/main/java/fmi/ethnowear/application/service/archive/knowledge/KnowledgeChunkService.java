@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkDetails;
 import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkWriteDto;
 import fmi.ethnowear.application.enums.KnowledgeChunkType;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.KnowledgeChunk;
 import fmi.ethnowear.dal.entity.SourceReference;
 import fmi.ethnowear.dal.repository.KnowledgeChunkRepository;
@@ -22,7 +22,7 @@ import static fmi.ethnowear.util.TextUtils.isNotBlank;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class KnowledgeChunkService implements ICrudService<KnowledgeChunkWriteDto, KnowledgeChunkDetails> {
+public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto, KnowledgeChunkDetails> {
 
     private final KnowledgeChunkRepository chunkRepository;
     private final SourceReferenceRepository referenceRepository;

@@ -1,5 +1,6 @@
 package fmi.ethnowear.api.dto.archive.media;
 
+import fmi.ethnowear.api.dto.IdentifiableDto;
 import fmi.ethnowear.application.enums.MediaType;
 
 import java.time.LocalDateTime;
@@ -18,5 +19,5 @@ public record MediaAssetDetails(
         String checksum,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements IdentifiableDto {
 }

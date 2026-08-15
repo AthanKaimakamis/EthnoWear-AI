@@ -16,7 +16,21 @@ public interface ArchiveItemMediaRepository extends JpaRepository<ArchiveItemMed
      * @param archiveItemId database identifier of the archive item
      * @return media links for the item, or an empty list when none exist
      */
+    @EntityGraph(attributePaths = "mediaAsset")
     List<ArchiveItemMedia> findByArchiveItemId(Long archiveItemId);
+
+    /**
+     * Finds candidate preview media for multiple archive items and loads each media asset eagerly.
+     *
+     * @param archiveItemIds database identifiers of the archive items
+     * @param roles presentation roles eligible for preview use
+     * @return matching archive-item media links with their media assets
+     */
+    @EntityGraph(attributePaths = "mediaAsset")
+    List<ArchiveItemMedia> findByArchiveItem_IdInAndRoleIn(
+            Collection<Long> archiveItemIds,
+            Collection<MediaRole> roles
+    );
 
     /**
      * Finds media links for one archive item having the specified presentation role.
@@ -50,17 +64,4 @@ public interface ArchiveItemMediaRepository extends JpaRepository<ArchiveItemMed
      * @return {@code true} when at least one archive-item link uses the asset
      */
     boolean existsByMediaAsset_Id(Long mediaAssetId);
-
-    /**
-     * Finds candidate preview media for multiple archive items and loads each media asset eagerly.
-     *
-     * @param archiveItemIds database identifiers of the archive items
-     * @param roles presentation roles eligible for preview use
-     * @return matching archive-item media links with their media assets
-     */
-    @EntityGraph(attributePaths = "mediaAsset")
-    List<ArchiveItemMedia> findByArchiveItem_IdInAndRoleIn(
-            Collection<Long> archiveItemIds,
-            Collection<MediaRole> roles
-    );
 }

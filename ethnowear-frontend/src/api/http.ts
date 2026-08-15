@@ -1,8 +1,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
+type QueryParams = Record<string, string | number | boolean | undefined | null>
+
 type RequestOptions = {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
-    query?: Record<string, string | number | boolean | undefined | null>
+    query?: QueryParams
     body?: unknown
     signal?: AbortSignal
 }
@@ -19,7 +21,7 @@ export class ApiError extends Error {
     }
 }
 
-function buildUrl(path: string, query?: RequestOptions['query']) {
+export function apiUrl(path: string, query?: QueryParams) {
     if (API_BASE_URL) {
         const url = new URL(path, API_BASE_URL)
 
@@ -49,7 +51,7 @@ function buildUrl(path: string, query?: RequestOptions['query']) {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const response = await fetch(buildUrl(path, options.query), {
+    const response = await fetch(apiUrl(path, options.query), {
         method: options.method ?? 'GET',
         headers: {
             Accept: 'application/json',

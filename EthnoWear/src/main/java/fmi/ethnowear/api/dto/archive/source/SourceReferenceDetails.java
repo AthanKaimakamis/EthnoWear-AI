@@ -1,5 +1,7 @@
 package fmi.ethnowear.api.dto.archive.source;
 
+import fmi.ethnowear.api.dto.IdentifiableDto;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -18,5 +20,5 @@ public record SourceReferenceDetails(
         String note,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements IdentifiableDto {
 }

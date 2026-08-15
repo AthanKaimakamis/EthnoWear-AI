@@ -1,5 +1,6 @@
 package fmi.ethnowear.api.dto.archive.item;
 
+import fmi.ethnowear.api.dto.IdentifiableDto;
 import fmi.ethnowear.application.enums.ArchiveType;
 import fmi.ethnowear.application.enums.TrustedLevel;
 import jakarta.validation.constraints.NotNull;
@@ -26,5 +27,5 @@ public record ArchiveItemDetails(
         String ontologyRegionalEmbroideryLocalName,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements IdentifiableDto {
 }

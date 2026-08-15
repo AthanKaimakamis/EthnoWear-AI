@@ -6,6 +6,8 @@ import AdminLayout from "../components/admin/AdminLayout.tsx";
 import OntologyEntityPage from "../pages/admin/OntologyEntityPage.tsx";
 import ArchiveLayout from "../components/archive/ArchiveLayout.tsx";
 import ArchiveReferencePage from "../pages/archive/ArchiveReferencePage.tsx";
+import EntityDetailPage from "../pages/archive/EntityDetailPage.tsx";
+import ArchiveItemDetailPage from "../pages/archive/ArchiveItemDetailPage.tsx";
 
 
 export const router = createBrowserRouter([
@@ -23,6 +25,8 @@ export const router = createBrowserRouter([
                     { path: 'motifs', element: <ArchiveReferencePage kind="motifs" /> },
                     { path: 'techniques', element: <ArchiveReferencePage kind="techniques" /> },
                     { path: 'ornaments', element: <ArchiveReferencePage kind="ornaments" /> },
+                    { path: 'items/:id', element: <ArchiveItemDetailPage /> },
+                    { path: ':entityType/:localName', element: <EntityDetailPage /> },
                 ],
             },
             {

@@ -1,10 +1,13 @@
 package fmi.ethnowear.ontology.embroidery;
 
 import fmi.ethnowear.ontology.OntologyTerms;
+import fmi.ethnowear.ontology.embroidery.model.LocalizedRegionGroupProfile;
+import fmi.ethnowear.ontology.embroidery.model.LocalizedRegionProfile;
+import fmi.ethnowear.ontology.embroidery.model.RegionProfile;
 import fmi.ethnowear.ontology.jena.JenaOntologyContext;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.model.OntologyLanguage;
+import fmi.ethnowear.ontology.enums.OntologyLanguage;
 import fmi.ethnowear.ontology.model.OntologyResource;
 import org.springframework.stereotype.Service;
 

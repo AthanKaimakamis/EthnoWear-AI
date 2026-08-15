@@ -1,12 +1,14 @@
 package fmi.ethnowear.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fmi.ethnowear.api.controller.ontology.admin.OntologyAdminExceptionHandler;
+import fmi.ethnowear.api.controller.ontology.admin.OrnamentOntologyController;
 import fmi.ethnowear.ontology.OntologyTerms;
 import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
-import fmi.ethnowear.ontology.admin.OrnamentCreateCommand;
-import fmi.ethnowear.ontology.admin.OrnamentDetails;
+import fmi.ethnowear.ontology.admin.command.OrnamentCreateCommand;
+import fmi.ethnowear.ontology.admin.model.OrnamentDetails;
 import fmi.ethnowear.ontology.admin.OrnamentOntologyAdminService;
-import fmi.ethnowear.ontology.admin.OrnamentUpdateCommand;
+import fmi.ethnowear.ontology.admin.command.OrnamentUpdateCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -117,7 +119,7 @@ class OrnamentOntologyControllerTest {
         private String deletedLocalName;
 
         private StubOrnamentService() {
-            super(null);
+            super(null, null);
         }
 
         @Override

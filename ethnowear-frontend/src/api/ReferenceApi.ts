@@ -13,6 +13,12 @@ export function getRegions(language: Language = 'bg') {
     })
 }
 
+export function getRegionGroups(language: Language = 'bg') {
+    return apiRequest<ReferenceResource[]>('/api/reference/region-groups', {
+        query: { language }
+    })
+}
+
 export function getOrnaments(language: Language = 'bg') {
     return apiRequest<ReferenceResource[]>('/api/reference/ornaments', {
         query: { language }

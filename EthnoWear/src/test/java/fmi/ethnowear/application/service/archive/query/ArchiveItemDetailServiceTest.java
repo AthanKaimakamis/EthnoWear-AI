@@ -1,0 +1,156 @@
+package fmi.ethnowear.application.service.archive.query;
+
+import fmi.ethnowear.api.dto.archive.query.ArchiveItemDetailDetails;
+import fmi.ethnowear.application.enums.MediaFeatureAnnotationType;
+import fmi.ethnowear.application.enums.SourceType;
+import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
+import fmi.ethnowear.application.service.archive.item.ArchiveItemFeatureMapper;
+import fmi.ethnowear.application.service.archive.item.ArchiveItemMapper;
+import fmi.ethnowear.application.service.archive.media.ArchiveItemMediaMapper;
+import fmi.ethnowear.application.service.archive.media.MediaAssetMapper;
+import fmi.ethnowear.application.service.archive.media.MediaFeatureAnnotationMapper;
+import fmi.ethnowear.dal.entity.ArchiveItem;
+import fmi.ethnowear.dal.entity.ArchiveItemFeature;
+import fmi.ethnowear.dal.entity.ArchiveItemMedia;
+import fmi.ethnowear.dal.entity.MediaAsset;
+import fmi.ethnowear.dal.entity.MediaFeatureAnnotation;
+import fmi.ethnowear.dal.entity.Source;
+import fmi.ethnowear.dal.entity.SourceReference;
+import fmi.ethnowear.dal.repository.ArchiveItemFeatureRepository;
+import fmi.ethnowear.dal.repository.ArchiveItemMediaRepository;
+import fmi.ethnowear.dal.repository.ArchiveItemRepository;
+import fmi.ethnowear.dal.repository.MediaFeatureAnnotationRepository;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+
+import static fmi.ethnowear.support.RepositoryTestProxies.proxy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class ArchiveItemDetailServiceTest {
+
+    @Test
+    void buildsDetailWithOrderedFeaturesAndMediaAndGroupedAnnotations() {
+        ArchiveItem item = archiveItem(7L);
+        ArchiveItemFeature laterFeature = feature(22L, item);
+        ArchiveItemFeature earlierFeature = feature(11L, item);
+        ArchiveItemMedia laterMedia = media(44L, item);
+        ArchiveItemMedia earlierMedia = media(33L, item);
+        MediaFeatureAnnotation annotation = annotation(55L, earlierMedia, earlierFeature);
+
+        ArchiveItemDetailService service = service(
+                Optional.of(item),
+                List.of(laterFeature, earlierFeature),
+                List.of(laterMedia, earlierMedia),
+                List.of(annotation)
+        );
+
+        ArchiveItemDetailDetails result = service.findById(7L);
+
+        assertEquals(7L, result.archiveItem().id());
+        assertEquals(item.getSourceReference().getId(), result.source().sourceReferenceId());
+        assertEquals(List.of(11L, 22L), result.features().stream().map(feature -> feature.id()).toList());
+        assertEquals(List.of(33L, 44L), result.media().stream().map(media -> media.media().id()).toList());
+        assertEquals(List.of(55L), result.media().getFirst().annotations().stream()
+                .map(value -> value.id()).toList());
+        assertEquals(List.of(), result.media().getLast().annotations());
+    }
+
+    @Test
+    void throwsWhenArchiveItemDoesNotExist() {
+        ArchiveItemDetailService service = service(
+                Optional.empty(),
+                List.of(),
+                List.of(),
+                List.of()
+        );
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(99L));
+    }
+
+    private ArchiveItemDetailService service(
+            Optional<ArchiveItem> item,
+            List<ArchiveItemFeature> features,
+            List<ArchiveItemMedia> media,
+            List<MediaFeatureAnnotation> annotations
+    ) {
+        ArchiveItemRepository itemRepository = proxy(
+                ArchiveItemRepository.class,
+                (ignored, method, arguments) -> item
+        );
+        ArchiveItemFeatureRepository featureRepository = proxy(
+                ArchiveItemFeatureRepository.class,
+                (ignored, method, arguments) -> features
+        );
+        ArchiveItemMediaRepository mediaRepository = proxy(
+                ArchiveItemMediaRepository.class,
+                (ignored, method, arguments) -> media
+        );
+        MediaFeatureAnnotationRepository annotationRepository = proxy(
+                MediaFeatureAnnotationRepository.class,
+                (ignored, method, arguments) -> annotations
+        );
+
+        return new ArchiveItemDetailService(
+                itemRepository,
+                featureRepository,
+                mediaRepository,
+                annotationRepository,
+                new ArchiveItemMapper(),
+                new ArchiveItemFeatureMapper(),
+                new ArchiveItemMediaMapper(),
+                new MediaAssetMapper(),
+                new MediaFeatureAnnotationMapper(),
+                new EntitySourceCitationMapper()
+        );
+    }
+
+    private ArchiveItem archiveItem(Long id) {
+        Source source = new Source();
+        source.setId(80L);
+        source.setTitle("Archive source");
+        source.setSourceType(SourceType.BOOK);
+
+        SourceReference reference = new SourceReference();
+        reference.setId(70L);
+        reference.setSource(source);
+
+        ArchiveItem item = new ArchiveItem();
+        item.setId(id);
+        item.setSourceReference(reference);
+        return item;
+    }
+
+    private ArchiveItemFeature feature(Long id, ArchiveItem item) {
+        ArchiveItemFeature feature = new ArchiveItemFeature();
+        feature.setId(id);
+        feature.setArchiveItem(item);
+        return feature;
+    }
+
+    private ArchiveItemMedia media(Long id, ArchiveItem item) {
+        MediaAsset asset = new MediaAsset();
+        asset.setId(id + 100);
+
+        ArchiveItemMedia media = new ArchiveItemMedia();
+        media.setId(id);
+        media.setArchiveItem(item);
+        media.setMediaAsset(asset);
+        return media;
+    }
+
+    private MediaFeatureAnnotation annotation(
+            Long id,
+            ArchiveItemMedia media,
+            ArchiveItemFeature feature
+    ) {
+        MediaFeatureAnnotation annotation = new MediaFeatureAnnotation();
+        annotation.setId(id);
+        annotation.setArchiveItemMedia(media);
+        annotation.setArchiveItemFeature(feature);
+        annotation.setAnnotationType(MediaFeatureAnnotationType.VISIBLE_IN_IMAGE);
+        return annotation;
+    }
+}

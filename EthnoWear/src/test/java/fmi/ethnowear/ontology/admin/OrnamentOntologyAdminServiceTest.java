@@ -4,6 +4,9 @@ import fmi.ethnowear.application.exceptions.InvalidOrnamentException;
 import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
 import fmi.ethnowear.application.exceptions.OrnamentInUseException;
 import fmi.ethnowear.ontology.OntologyTerms;
+import fmi.ethnowear.ontology.admin.command.OrnamentCreateCommand;
+import fmi.ethnowear.ontology.admin.command.OrnamentUpdateCommand;
+import fmi.ethnowear.ontology.admin.model.OrnamentDetails;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -41,7 +44,10 @@ class OrnamentOntologyAdminServiceTest {
         Files.copy(source, ontologyCopy);
 
         store = new JenaOntologyStore(ontologyCopy, NAMESPACE);
-        service = new OrnamentOntologyAdminService(store);
+        service = new OrnamentOntologyAdminService(
+                store,
+                new OntologyAdminModelSupport(store)
+        );
     }
 
     @Test

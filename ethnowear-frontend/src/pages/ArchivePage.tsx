@@ -20,8 +20,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import type { SelectChangeEvent } from '@mui/material/Select'
 import { useTranslation } from 'react-i18next'
-import { getFullReference } from '../api/ReferenceApi'
-import type { Language, ReferenceData, ReferenceResource } from '../types/reference'
+import { searchCatalogue } from '../api/CatalogueApi'
+import type { Language, ReferenceResource } from '../types/reference'
+import type {
+    CatalogFacetType,
+    ConceptCatalogResultDetails,
+    OntologyFeatureType,
+} from '../types/catalogue'
 import {
     emptyEmbroideryFilters,
     type EmbroideryFilterOptions,
@@ -31,91 +36,26 @@ import {
 import EmbroideryFilterPanel from '../components/embroidery/EmbroideryFilterPanel'
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
 
-type FilterKey = keyof EmbroideryFilters
-
-function matchesEmbroidery(
-    embroideryLocalName: string,
-    filters: EmbroideryFilters,
-    reference: ReferenceData,
-    combinationMode: FilterCombinationMode,
-) {
-    const regionLocalName = reference.regionByRegionalEmbroidery[embroideryLocalName]
-    const regionOrnaments = reference.ornamentsByRegion[regionLocalName] ?? []
-    const regionTechniques = reference.techniquesByRegion?.[regionLocalName] ?? []
-    const activeGroupMatches: boolean[] = []
-
-    if (filters.regionGroupLocalNames.length > 0) {
-        activeGroupMatches.push(filters.regionGroupLocalNames.some((groupLocalName) =>
-            reference.regionsByRegionGroup[groupLocalName]?.includes(regionLocalName)
-        ))
-    }
-
-    if (filters.regionLocalNames.length > 0) {
-        activeGroupMatches.push(filters.regionLocalNames.includes(regionLocalName))
-    }
-
-    if (filters.ornamentLocalNames.length > 0) {
-        activeGroupMatches.push(filters.ornamentLocalNames.some((ornamentLocalName) =>
-            regionOrnaments.includes(ornamentLocalName)
-        ))
-    }
-
-    if (filters.ornamentTypeLocalNames.length > 0) {
-        const selectedTypeOrnaments = new Set(
-            filters.ornamentTypeLocalNames.flatMap(
-                (typeLocalName) => reference.ornamentsByType[typeLocalName] ?? []
-            )
-        )
-
-        activeGroupMatches.push(
-            regionOrnaments.some((ornamentLocalName) => selectedTypeOrnaments.has(ornamentLocalName))
-        )
-    }
-
-    if (filters.techniqueLocalNames.length > 0) {
-        activeGroupMatches.push(filters.techniqueLocalNames.some((techniqueLocalName) =>
-            regionTechniques.includes(techniqueLocalName)
-        ))
-    }
-
-    if (activeGroupMatches.length === 0) {
-        return true
-    }
-
-    return combinationMode === 'and'
-        ? activeGroupMatches.every(Boolean)
-        : activeGroupMatches.some(Boolean)
-}
-
-function visibleOptions(
-    options: ReferenceResource[],
-    filterKey: FilterKey,
-    filters: EmbroideryFilters,
-    reference: ReferenceData,
-    combinationMode: FilterCombinationMode,
-) {
-    const selectedValues = filters[filterKey]
-
-    return options.filter((option) => {
-        if (selectedValues.includes(option.localName)) {
-            return true
-        }
-
-        const candidateFilters: EmbroideryFilters = {
-            ...filters,
-            [filterKey]: [option.localName],
-        }
-
-        return reference.regionalEmbroideryTypes.some((embroidery) =>
-            matchesEmbroidery(embroidery.localName, candidateFilters, reference, combinationMode)
-        )
-    })
+function facetOptions(
+    catalogue: ConceptCatalogResultDetails | null,
+    facetType: CatalogFacetType,
+    entityType: OntologyFeatureType,
+): ReferenceResource[] {
+    return catalogue?.facets
+        .find((facet) => facet.facetType === facetType && facet.entityType === entityType)
+        ?.values
+        .filter((value) => value.selected || value.count > 0)
+        .map((value) => ({
+            iri: value.iri,
+            localName: value.localName,
+            label: value.label,
+        })) ?? []
 }
 
 function ArchivePage() {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
-    const [reference, setReference] = useState<ReferenceData | null>(null)
+    const [catalogue, setCatalogue] = useState<ConceptCatalogResultDetails | null>(null)
     const [filters, setFilters] = useState<EmbroideryFilters>(emptyEmbroideryFilters)
     const [combinationMode, setCombinationMode] = useState<FilterCombinationMode>('and')
     const [page, setPage] = useState(1)
@@ -125,20 +65,33 @@ function ArchivePage() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        let ignore = false
+        const controller = new AbortController()
 
-        async function loadReferenceData() {
+        async function loadCatalogue() {
             try {
-                setLoading(true)
                 setError(null)
+                const data = await searchCatalogue({
+                    entityType: 'REGIONAL_EMBROIDERY',
+                    language,
+                    relatedEntityLocalNames: {
+                        REGION: filters.regionLocalNames,
+                        ORNAMENT: filters.ornamentLocalNames,
+                        TECHNIQUE: filters.techniqueLocalNames,
+                    },
+                    relatedCategoryLocalNames: {
+                        REGION: filters.regionGroupLocalNames,
+                        ORNAMENT: filters.ornamentTypeLocalNames,
+                    },
+                    combinationMode: combinationMode.toUpperCase() as 'AND' | 'OR',
+                }, {
+                    page: page - 1,
+                    size: itemsPerPage,
+                    sort: 'label,asc',
+                }, controller.signal)
 
-                const data = await getFullReference(language)
-
-                if (!ignore) {
-                    setReference(data)
-                }
+                setCatalogue(data)
             } catch (err) {
-                if (!ignore) {
+                if (!controller.signal.aborted) {
                     const message =
                         err instanceof Error
                             ? err.message
@@ -147,84 +100,34 @@ function ArchivePage() {
                     setError(message)
                 }
             } finally {
-                if (!ignore) {
+                if (!controller.signal.aborted) {
                     setLoading(false)
                 }
             }
         }
 
-        loadReferenceData()
+        void loadCatalogue()
 
         return () => {
-            ignore = true
+            controller.abort()
         }
-    }, [language, t])
+    }, [combinationMode, filters, itemsPerPage, language, page, t])
 
     const allFilterOptions: EmbroideryFilterOptions = useMemo(() => {
         return {
-            regionGroups: reference?.regionGroups ?? [],
-            regions: reference?.regions ?? [],
-            ornamentTypes: reference?.ornamentTypes ?? [],
-            ornaments: reference?.ornaments ?? [],
-            techniques: reference?.techniques ?? [],
+            regionGroups: facetOptions(catalogue, 'RELATED_CATEGORY', 'REGION'),
+            regions: facetOptions(catalogue, 'RELATED_ENTITY', 'REGION'),
+            ornamentTypes: facetOptions(catalogue, 'RELATED_CATEGORY', 'ORNAMENT'),
+            ornaments: facetOptions(catalogue, 'RELATED_ENTITY', 'ORNAMENT'),
+            techniques: facetOptions(catalogue, 'RELATED_ENTITY', 'TECHNIQUE'),
         }
-    }, [reference])
+    }, [catalogue])
 
-    const filteredRegionalEmbroideries = useMemo(() => {
-        const allItems = reference?.regionalEmbroideryTypes ?? []
-
-        if (!reference) {
-            return []
-        }
-
-        return allItems.filter((item) => matchesEmbroidery(
-            item.localName, filters, reference, combinationMode
-        ))
-    }, [combinationMode, filters, reference])
+    const filteredRegionalEmbroideries = catalogue?.items ?? []
 
     const filterOptions: EmbroideryFilterOptions = useMemo(() => {
-        if (!reference) {
-            return allFilterOptions
-        }
-
-        return {
-            regionGroups: visibleOptions(
-                allFilterOptions.regionGroups,
-                'regionGroupLocalNames',
-                filters,
-                reference,
-                combinationMode
-            ),
-            regions: visibleOptions(
-                allFilterOptions.regions,
-                'regionLocalNames',
-                filters,
-                reference,
-                combinationMode
-            ),
-            ornamentTypes: visibleOptions(
-                allFilterOptions.ornamentTypes,
-                'ornamentTypeLocalNames',
-                filters,
-                reference,
-                combinationMode
-            ),
-            ornaments: visibleOptions(
-                allFilterOptions.ornaments,
-                'ornamentLocalNames',
-                filters,
-                reference,
-                combinationMode
-            ),
-            techniques: visibleOptions(
-                allFilterOptions.techniques,
-                'techniqueLocalNames',
-                filters,
-                reference,
-                combinationMode
-            ),
-        }
-    }, [allFilterOptions, combinationMode, filters, reference])
+        return allFilterOptions
+    }, [allFilterOptions])
 
     const selectedFilterCount =
         filters.regionGroupLocalNames.length +
@@ -233,13 +136,9 @@ function ArchivePage() {
         filters.ornamentLocalNames.length +
         filters.techniqueLocalNames.length
 
-    const pageCount = Math.ceil(filteredRegionalEmbroideries.length / itemsPerPage)
+    const pageCount = catalogue?.page.totalPages ?? 0
     const firstResultIndex = (page - 1) * itemsPerPage
-
-    const paginatedRegionalEmbroideries = filteredRegionalEmbroideries.slice(
-        firstResultIndex,
-        firstResultIndex + itemsPerPage
-    )
+    const totalResults = catalogue?.page.totalElements ?? 0
 
     function handleFiltersChange(nextFilters: EmbroideryFilters) {
         setFilters(nextFilters)
@@ -410,9 +309,9 @@ function ArchivePage() {
                                         from: firstResultIndex + 1,
                                         to: Math.min(
                                             firstResultIndex + itemsPerPage,
-                                            filteredRegionalEmbroideries.length
+                                            totalResults
                                         ),
-                                        total: filteredRegionalEmbroideries.length,
+                                        total: totalResults,
                                     })}
                                 </Typography>
 
@@ -455,7 +354,7 @@ function ArchivePage() {
                         )}
 
                         <Grid container spacing={3}>
-                            {paginatedRegionalEmbroideries.map((item) => (
+                            {filteredRegionalEmbroideries.map((item) => (
                                 <Grid
                                     key={item.localName}
                                     size={{ xs: 12, sm: 6, lg: 4 }}

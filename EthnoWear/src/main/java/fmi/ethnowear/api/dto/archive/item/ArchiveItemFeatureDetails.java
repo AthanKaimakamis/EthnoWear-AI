@@ -1,5 +1,6 @@
 package fmi.ethnowear.api.dto.archive.item;
 
+import fmi.ethnowear.api.dto.IdentifiableDto;
 import fmi.ethnowear.application.enums.FeatureType;
 
 import java.math.BigDecimal;
@@ -17,5 +18,5 @@ public record ArchiveItemFeatureDetails(
         Long sourceReferenceId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements IdentifiableDto {
 }

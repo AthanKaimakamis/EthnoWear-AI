@@ -1,5 +1,6 @@
 package fmi.ethnowear.ontology.model;
 
+import fmi.ethnowear.ontology.enums.OntologyLanguage;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

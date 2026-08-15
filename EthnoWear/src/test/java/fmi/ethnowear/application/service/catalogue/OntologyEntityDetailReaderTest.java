@@ -37,7 +37,16 @@ class OntologyEntityDetailReaderTest {
         EmbroideryOntology ontology = new EmbroideryOntology(
                 new JenaOntologyStore(ontologyCopy, NAMESPACE)
         );
-        reader = new OntologyEntityDetailReader(ontology, new OntologyReferenceMapper());
+        OntologyReferenceMapper referenceMapper = new OntologyReferenceMapper();
+        OntologyCategoryReader categoryReader = new OntologyCategoryReader(
+                ontology,
+                referenceMapper
+        );
+        reader = new OntologyEntityDetailReader(
+                ontology,
+                referenceMapper,
+                categoryReader
+        );
     }
 
     @Test
@@ -53,7 +62,10 @@ class OntologyEntityDetailReaderTest {
         assertTrue(details.relatedEntities()
                 .get(FeatureType.REGIONAL_EMBROIDERY)
                 .stream()
-                .anyMatch(reference -> reference.localName().equals("SofiaEmbroidery")));
+                .anyMatch(reference ->
+                        reference.entityType() == FeatureType.REGIONAL_EMBROIDERY
+                                && reference.localName().equals("SofiaEmbroidery")
+                ));
     }
 
     @Test
@@ -67,10 +79,16 @@ class OntologyEntityDetailReaderTest {
         assertFalse(details.categories().stream()
                 .anyMatch(reference -> reference.localName().equals(OntologyTerms.Classes.ORNAMENT)));
         assertTrue(details.categories().stream()
-                .anyMatch(reference -> reference.localName().equals(OntologyTerms.Classes.PLANT_ORNAMENT)));
+                .anyMatch(reference ->
+                        reference.targetEntityType() == FeatureType.ORNAMENT
+                                && reference.localName().equals(OntologyTerms.Classes.PLANT_ORNAMENT)
+                ));
         assertTrue(details.relatedEntities()
                 .get(FeatureType.REGION)
                 .stream()
-                .anyMatch(reference -> reference.localName().equals("ElhovoRegion")));
+                .anyMatch(reference ->
+                        reference.entityType() == FeatureType.REGION
+                                && reference.localName().equals("ElhovoRegion")
+                ));
     }
 }

@@ -1,7 +1,7 @@
 package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.api.dto.catalogue.ConceptCatalogQueryDto;
-import fmi.ethnowear.api.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.api.dto.catalogue.ConceptCatalogResultDetails;
 import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.application.enums.FilterCombinationMode;
 import fmi.ethnowear.ontology.embroidery.EmbroideryOntology;
@@ -9,7 +9,6 @@ import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -43,27 +42,40 @@ class ConceptCatalogServiceTest {
         EmbroideryOntology ontology = new EmbroideryOntology(
                 new JenaOntologyStore(ontologyCopy, NAMESPACE)
         );
+        OntologyReferenceMapper referenceMapper = new OntologyReferenceMapper();
+        OntologyCategoryReader categoryReader = new OntologyCategoryReader(
+                ontology,
+                referenceMapper
+        );
         OntologyEntityDetailReader reader = new OntologyEntityDetailReader(
                 ontology,
-                new OntologyReferenceMapper()
+                referenceMapper,
+                categoryReader
         );
-        service = new ConceptCatalogService(reader, ontology);
+        ConceptCatalogMatcher matcher = new ConceptCatalogMatcher(categoryReader);
+        ConceptCatalogFacetService facetService = new ConceptCatalogFacetService(
+                matcher,
+                categoryReader
+        );
+        EntityCardMapper mapper = new EntityCardMapper();
+        service = new ConceptCatalogService(reader, matcher, facetService, mapper);
     }
 
     @Test
     void searchesCaseInsensitively() {
-        Page<EntityOntologyDetails> result = service.search(
+        ConceptCatalogResultDetails result = service.search(
                 query("SOFIA", Map.of()),
                 PageRequest.of(0, 12)
         );
 
-        assertTrue(result.stream()
+        assertTrue(result.items().stream()
                 .anyMatch(entity -> entity.localName().equals("SofiaEmbroidery")));
+        assertFalse(result.facets().isEmpty());
     }
 
     @Test
     void filtersByCategoryOfRelatedRegion() {
-        Page<EntityOntologyDetails> result = service.search(
+        ConceptCatalogResultDetails result = service.search(
                 query(null, Map.of(
                         FeatureType.REGION,
                         List.of("WesternRegionGroup")
@@ -71,23 +83,30 @@ class ConceptCatalogServiceTest {
                 PageRequest.of(0, 100)
         );
 
-        assertTrue(result.stream()
+        assertTrue(result.items().stream()
                 .anyMatch(entity -> entity.localName().equals("SofiaEmbroidery")));
-        assertFalse(result.stream()
+        assertFalse(result.items().stream()
                 .anyMatch(entity -> entity.localName().equals("ElhovoEmbroidery")));
+        assertTrue(result.facets().stream()
+                .filter(group -> group.entityType() == FeatureType.REGION)
+                .flatMap(group -> group.values().stream())
+                .anyMatch(value -> value.localName().equals("WesternRegionGroup")
+                        && value.selected()
+                        && value.count() > 0));
     }
 
     @Test
     void sortsByLocalNameAndPaginates() {
-        Page<EntityOntologyDetails> result = service.search(
+        ConceptCatalogResultDetails result = service.search(
                 query(null, Map.of()),
                 PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "localName"))
         );
 
-        assertEquals(2, result.getNumberOfElements());
-        assertTrue(result.getTotalElements() > result.getNumberOfElements());
-        assertTrue(result.getContent().get(0).localName()
-                .compareToIgnoreCase(result.getContent().get(1).localName()) >= 0);
+        assertEquals(2, result.page().size());
+        assertEquals(2, result.items().size());
+        assertTrue(result.page().totalElements() > result.items().size());
+        assertTrue(result.items().get(0).localName()
+                .compareToIgnoreCase(result.items().get(1).localName()) >= 0);
     }
 
     private ConceptCatalogQueryDto query(

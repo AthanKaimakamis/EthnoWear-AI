@@ -1,7 +1,7 @@
 package fmi.ethnowear.ontology.jena;
 
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.model.OntologyLanguage;
+import fmi.ethnowear.ontology.enums.OntologyLanguage;
 import fmi.ethnowear.ontology.model.OntologyResource;
 import lombok.NonNull;
 import org.apache.jena.ontology.Individual;
@@ -15,6 +15,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
+import org.jetbrains.annotations.Contract;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -230,7 +231,7 @@ public abstract class JenaOntologyContext {
         });
     }
 
-    private List<Resource> restrictionValues(OntModel model, Resource ontologyClass, Property property) {
+    private @org.jspecify.annotations.NonNull List<Resource> restrictionValues(@org.jspecify.annotations.NonNull OntModel model, Resource ontologyClass, Property property) {
         List<Resource> result = new ArrayList<>();
         StmtIterator superClasses = model.listStatements(ontologyClass, RDFS.subClassOf, (RDFNode) null);
 
@@ -289,9 +290,10 @@ public abstract class JenaOntologyContext {
         return store.uri(localName);
     }
 
-    private LocalizedOntologyResource toLocalizedResource(
+    @Contract("_, _, _ -> new")
+    private @org.jspecify.annotations.NonNull LocalizedOntologyResource toLocalizedResource(
             OntModel model,
-            Resource resource,
+            @org.jspecify.annotations.NonNull Resource resource,
             OntologyLanguage language
     ) {
         return new LocalizedOntologyResource(
@@ -304,16 +306,16 @@ public abstract class JenaOntologyContext {
         );
     }
 
-    private Optional<String> preferredLabel(OntModel model, Resource resource, OntologyLanguage language) {
+    private @org.jspecify.annotations.NonNull Optional<String> preferredLabel(OntModel model, Resource resource, OntologyLanguage language) {
         return literalValues(model, resource, RDFS.label, language).stream().findFirst();
     }
 
-    private Optional<String> comment(OntModel model, Resource resource, OntologyLanguage language) {
+    private @org.jspecify.annotations.NonNull Optional<String> comment(OntModel model, Resource resource, OntologyLanguage language) {
         return literalValues(model, resource, RDFS.comment, language).stream().findFirst();
     }
 
-    private List<String> literalValues(
-            OntModel model,
+    private @org.jspecify.annotations.NonNull List<String> literalValues(
+            @org.jspecify.annotations.NonNull OntModel model,
             Resource resource,
             Property property,
             OntologyLanguage language
@@ -332,7 +334,7 @@ public abstract class JenaOntologyContext {
 
     private boolean matchesLabelOrAltLabel(
             OntModel model,
-            Resource resource,
+            @org.jspecify.annotations.NonNull Resource resource,
             String text,
             OntologyLanguage language
     ) {
@@ -356,7 +358,8 @@ public abstract class JenaOntologyContext {
                 .anyMatch(normalizedText::equals);
     }
 
-    private OntologyResource toResource(OntModel model, Resource resource) {
+    @Contract("_, _ -> new")
+    private @org.jspecify.annotations.NonNull OntologyResource toResource(OntModel model, @org.jspecify.annotations.NonNull Resource resource) {
         return new OntologyResource(
                 resource.getURI(),
                 resource.getLocalName(),
@@ -364,7 +367,7 @@ public abstract class JenaOntologyContext {
         );
     }
 
-    private Optional<String> labelFor(OntModel model, Resource resource) {
+    private Optional<String> labelFor(@org.jspecify.annotations.NonNull OntModel model, Resource resource) {
         StmtIterator labels = model.listStatements(resource, RDFS.label, (RDFNode) null);
         while (labels.hasNext()) {
             RDFNode value = labels.nextStatement().getObject();

@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.archive.media.MediaAssetDetails;
 import fmi.ethnowear.api.dto.archive.media.MediaAssetWriteDto;
 import fmi.ethnowear.application.exceptions.ResourceInUseException;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.MediaAsset;
 import fmi.ethnowear.dal.entity.SourceReference;
 import fmi.ethnowear.dal.repository.MediaAssetRepository;
@@ -21,7 +21,7 @@ import static fmi.ethnowear.util.TextUtils.isBlank;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MediaAssetService implements ICrudService<MediaAssetWriteDto, MediaAssetDetails> {
+public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaAssetDetails> {
 
     private final MediaAssetRepository mediaAssetRepository;
     private final SourceReferenceRepository sourceReferenceRepository;

@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.archive.item.ArchiveItemDetails;
 import fmi.ethnowear.api.dto.archive.item.ArchiveItemWriteDto;
 import fmi.ethnowear.application.exceptions.ResourceInUseException;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.ArchiveItem;
 import fmi.ethnowear.dal.entity.SourceReference;
 import fmi.ethnowear.dal.repository.ArchiveItemRepository;
@@ -21,12 +21,13 @@ import static fmi.ethnowear.util.TextUtils.isBlank;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ArchiveItemService implements ICrudService<ArchiveItemWriteDto, ArchiveItemDetails> {
+public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, ArchiveItemDetails> {
 
     private final ArchiveItemRepository archiveItemRepository;
     private final SourceReferenceRepository referenceRepository;
     private final ArchiveItemMapper archiveItemMapper;
     private final ArchiveItemUsageChecker usageChecker;
+    private final ArchiveItemOntologyValidator ontologyValidator;
 
     @Override
     public Page<ArchiveItemDetails> findAll(Pageable pageable) {
@@ -97,6 +98,8 @@ public class ArchiveItemService implements ICrudService<ArchiveItemWriteDto, Arc
 
         if(input.trustedLevel() == null)
             throw new IllegalArgumentException("Trusted level is required");
+
+        ontologyValidator.validateClassifications(input);
     }
 
 }

@@ -1,14 +1,15 @@
 package fmi.ethnowear.application.service.catalogue;
 
+import fmi.ethnowear.api.dto.catalogue.EntityLinkDetails;
 import fmi.ethnowear.api.dto.catalogue.EntityOntologyDetails;
-import fmi.ethnowear.api.dto.catalogue.OntologyReferenceDetails;
 import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.application.exceptions.OntologyEntityNotFoundException;
 import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.model.OntologyLanguage;
+import fmi.ethnowear.ontology.enums.OntologyLanguage;
 import fmi.ethnowear.ontology.model.OntologyResource;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ public class OntologyEntityDetailReader {
 
     private final EmbroideryOntologyClient ontology;
     private final OntologyReferenceMapper referenceMapper;
+    private final OntologyCategoryReader categoryReader;
 
     public EntityOntologyDetails find(FeatureType entityType, String localName, String languageTag) {
         validate(entityType, localName);
@@ -53,13 +55,13 @@ public class OntologyEntityDetailReader {
                 .toList();
     }
 
-    private @NonNull @Unmodifiable Map<FeatureType, List<OntologyReferenceDetails>> relationships(
+    private @NonNull @Unmodifiable Map<FeatureType, List<EntityLinkDetails>> relationships(
             @NonNull FeatureType entityType,
             String localName,
             OntologyLanguage language,
             Map<FeatureType, List<LocalizedOntologyResource>> localizedCache
     ) {
-        Map<FeatureType, List<OntologyReferenceDetails>> result = new EnumMap<>(FeatureType.class);
+        Map<FeatureType, List<EntityLinkDetails>> result = new EnumMap<>(FeatureType.class);
 
         switch (entityType) {
             case REGION -> {
@@ -103,26 +105,8 @@ public class OntologyEntityDetailReader {
         return Collections.unmodifiableMap(new EnumMap<>(result));
     }
 
-    private List<OntologyReferenceDetails> categories(
-            @NonNull FeatureType entityType,
-            String localName,
-            OntologyLanguage language
-    ) {
-        return switch (entityType) {
-            case ORNAMENT ->
-                    referenceMapper.toDetails(ontology.listTypesOfOrnament(localName), ontology.listLocalizedOrnamentTypes(language));
-            case TECHNIQUE ->
-                    referenceMapper.toDetails(ontology.listTypesOfTechnique(localName), ontology.listLocalizedTechniqueTypes(language));
-            case REGION ->
-                    ontology.findRegionGroupForRegion(localName)
-                            .map(group -> referenceMapper.toDetails(List.of(group), ontology.listLocalizedRegionGroups(language)))
-                            .orElse(List.of());
-            default -> List.of();
-        };
-    }
-
     private void put(
-            Map<FeatureType, List<OntologyReferenceDetails>> result,
+            Map<FeatureType, List<EntityLinkDetails>> result,
             FeatureType targetType,
             @NonNull List<OntologyResource> resources,
             OntologyLanguage language,
@@ -133,7 +117,11 @@ public class OntologyEntityDetailReader {
 
         result.put(
                 targetType,
-                referenceMapper.toDetails(resources, localized(localizedCache, targetType, language))
+                referenceMapper.toEntityLinks(
+                        targetType,
+                        resources,
+                        localized(localizedCache, targetType, language)
+                )
         );
     }
 
@@ -160,10 +148,11 @@ public class OntologyEntityDetailReader {
             throw new IllegalArgumentException("Ontology local name is required");
     }
 
-    private EntityOntologyDetails toDetails(
+    @Contract("_, _, _, _ -> new")
+    private @NonNull EntityOntologyDetails toDetails(
             FeatureType entityType,
-            LocalizedOntologyResource entity,
-            OntologyLanguage language,
+            @NonNull LocalizedOntologyResource entity,
+            @NonNull OntologyLanguage language,
             Map<FeatureType, List<LocalizedOntologyResource>> localizedCache
     ) {
         return new EntityOntologyDetails(
@@ -174,8 +163,17 @@ public class OntologyEntityDetailReader {
                 entity.altLabels(),
                 entity.comment(),
                 language.tag(),
-                categories(entityType, entity.localName(), language),
-                relationships(entityType, entity.localName(), language, localizedCache)
+                categoryReader.findCategoryLinks(
+                        entityType,
+                        entity.localName(),
+                        language.tag()
+                ),
+                relationships(
+                        entityType,
+                        entity.localName(),
+                        language,
+                        localizedCache
+                )
         );
     }
 }

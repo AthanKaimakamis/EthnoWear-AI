@@ -13,7 +13,7 @@ public record EntityOntologyDetails(
         List<String> altLabels,
         String comment,
         String language,
-        List<OntologyReferenceDetails> categories,
-        Map<FeatureType, List<OntologyReferenceDetails>> relatedEntities
+        List<CategoryLinkDetails> categories,
+        Map<FeatureType, List<EntityLinkDetails>> relatedEntities
 ) {
 }

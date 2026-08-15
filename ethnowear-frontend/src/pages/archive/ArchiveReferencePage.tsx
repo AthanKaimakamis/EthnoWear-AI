@@ -23,8 +23,14 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import SearchIcon from '@mui/icons-material/Search'
 import { useTranslation } from 'react-i18next'
-import { getFullReference } from '../../api/ReferenceApi.ts'
-import type { Language, ReferenceData, ReferenceResource } from '../../types/reference.ts'
+import { searchCatalogue } from '../../api/CatalogueApi.ts'
+import type { Language, ReferenceResource } from '../../types/reference.ts'
+import type {
+    CatalogFacetType,
+    ConceptCatalogResultDetails,
+    EntityCardDetails,
+    OntologyFeatureType,
+} from '../../types/catalogue.ts'
 import ArchiveReferencePageSkeleton from '../../components/loading/ArchiveReferencePageSkeleton.tsx'
 import SearchableFilterList from '../../components/filtres/SearchableFilterList.tsx'
 
@@ -51,119 +57,63 @@ type ArchiveReferenceFiltersProps = {
 
 const imageNotFoundUrl = '/Image-not-found.png'
 
-function normalizeSearch(value: string) {
-    return value.trim().toLocaleLowerCase()
+function entityTypeForKind(kind: ArchiveReferenceKind): OntologyFeatureType {
+    if (kind === 'techniques') return 'TECHNIQUE'
+    if (kind === 'ornaments') return 'ORNAMENT'
+    return 'MOTIF'
 }
 
-function searchableValues(item: ReferenceResource) {
-    return [
-        item.localName,
-        item.label,
-        item.comment,
-        item.labels?.bg,
-        item.labels?.en,
-        item.comments?.bg,
-        item.comments?.en,
-        ...(item.altLabels ?? []),
-        ...(item.altLabelsByLanguage?.bg ?? []),
-        ...(item.altLabelsByLanguage?.en ?? []),
-    ].filter((value): value is string => Boolean(value))
+function toReferenceResource(item: EntityCardDetails): ReferenceResource {
+    return {
+        iri: item.iri,
+        localName: item.localName,
+        label: item.label,
+        comment: item.comment ?? undefined,
+    }
 }
 
-function matchesSearch(item: ReferenceResource, query: string) {
-    const normalizedQuery = normalizeSearch(query)
-
-    if (!normalizedQuery) {
-        return true
-    }
-
-    return searchableValues(item).some((value) =>
-        normalizeSearch(value).includes(normalizedQuery)
-    )
-}
-
-function itemRegions(
-    itemLocalName: string,
-    kind: ArchiveReferenceKind,
-    reference: ReferenceData
-) {
-    const relationMap = kind === 'techniques'
-        ? reference.techniquesByRegion ?? {}
-        : reference.ornamentsByRegion
-
-    return Object.entries(relationMap)
-        .filter(([, itemLocalNames]) => itemLocalNames.includes(itemLocalName))
-        .map(([regionLocalName]) => regionLocalName)
-}
-
-function relationMapForKind(kind: ArchiveReferenceKind, reference: ReferenceData) {
-    if (kind === 'techniques') {
-        return reference.techniquesByType ?? {}
-    }
-
-    if (kind === 'ornaments') {
-        return reference.ornamentsByType ?? {}
-    }
-
-    return {}
-}
-
-function categoriesForKind(kind: ArchiveReferenceKind, reference: ReferenceData) {
-    if (kind === 'techniques') {
-        return reference.techniqueTypes ?? []
-    }
-
-    if (kind === 'ornaments') {
-        return reference.ornamentTypes ?? []
-    }
-
-    return []
-}
-
-function sourceItemsForKind(kind: ArchiveReferenceKind, reference: ReferenceData) {
-    if (kind === 'techniques') {
-        return reference.techniques
-    }
-
-    if (kind === 'ornaments') {
-        return reference.ornaments
-    }
-
-    return reference.motifs
+function facetOptions(
+    catalogue: ConceptCatalogResultDetails | null,
+    facetType: CatalogFacetType,
+    entityType: OntologyFeatureType,
+): ReferenceResource[] {
+    return catalogue?.facets
+        .find((facet) => facet.facetType === facetType && facet.entityType === entityType)
+        ?.values
+        .filter((value) => value.selected || value.count > 0)
+        .map((value) => ({ iri: value.iri, localName: value.localName, label: value.label })) ?? []
 }
 
 function buildCategorySections(
-    kind: ArchiveReferenceKind,
-    reference: ReferenceData,
-    items: ReferenceResource[],
-    searchText: string,
+    items: EntityCardDetails[],
     uncategorizedLabel: string
 ) {
-    const categories = categoriesForKind(kind, reference)
-    const relationMap = relationMapForKind(kind, reference)
-    const itemsByLocalName = new Map(items.map((item) => [item.localName, item]))
+    const sectionsByCategory = new Map<string, CategorySection>()
+    const uncategorizedItems: ReferenceResource[] = []
 
-    const sections: CategorySection[] = categories.map((category) => {
-        const categoryItemLocalNames = relationMap[category.localName] ?? []
-        const categoryMatchesSearch = matchesSearch(category, searchText)
-        const categoryItems = categoryItemLocalNames
-            .map((localName) => itemsByLocalName.get(localName))
-            .filter((item): item is ReferenceResource => Boolean(item))
-            .filter((item) => categoryMatchesSearch || matchesSearch(item, searchText))
+    items.forEach((item) => {
+        const resource = toReferenceResource(item)
 
-        return {
-            category,
-            items: categoryItems,
+        if (item.categories.length === 0) {
+            uncategorizedItems.push(resource)
+            return
         }
+
+        item.categories.forEach((category) => {
+            const section = sectionsByCategory.get(category.localName) ?? {
+                category: {
+                    iri: category.iri,
+                    localName: category.localName,
+                    label: category.label,
+                },
+                items: [],
+            }
+            section.items.push(resource)
+            sectionsByCategory.set(category.localName, section)
+        })
     })
 
-    const categorizedItemLocalNames = new Set(
-        Object.values(relationMap).flatMap((localNames) => localNames)
-    )
-
-    const uncategorizedItems = items.filter((item) =>
-        !categorizedItemLocalNames.has(item.localName) && matchesSearch(item, searchText)
-    )
+    const sections = [...sectionsByCategory.values()]
 
     if (uncategorizedItems.length > 0) {
         sections.push({
@@ -176,7 +126,7 @@ function buildCategorySections(
         })
     }
 
-    return sections.filter((section) => section.items.length > 0)
+    return sections
 }
 
 function ArchiveConceptCard({ item }: { item: ReferenceResource }) {
@@ -315,7 +265,7 @@ function ArchiveReferenceFilters(props: ArchiveReferenceFiltersProps) {
 function ArchiveReferencePage({ kind }: Props) {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
-    const [reference, setReference] = useState<ReferenceData | null>(null)
+    const [catalogue, setCatalogue] = useState<ConceptCatalogResultDetails | null>(null)
     const [selectedRegions, setSelectedRegions] = useState<string[]>([])
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
@@ -324,88 +274,60 @@ function ArchiveReferencePage({ kind }: Props) {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        let ignore = false
+        const controller = new AbortController()
 
-        async function loadReferenceData() {
+        async function loadCatalogue() {
             try {
-                setLoading(true)
                 setError(null)
 
-                const data = await getFullReference(language)
+                const data = await searchCatalogue({
+                    entityType: entityTypeForKind(kind),
+                    language,
+                    searchText,
+                    categoryLocalNames: selectedCategories,
+                    relatedEntityLocalNames: { REGION: selectedRegions },
+                    combinationMode: 'AND',
+                }, {
+                    page: 0,
+                    size: 200,
+                    sort: 'label,asc',
+                }, controller.signal)
 
-                if (!ignore) {
-                    setReference(data)
-                }
+                setCatalogue(data)
             } catch (err) {
-                if (!ignore) {
+                if (!controller.signal.aborted) {
                     setError(err instanceof Error ? err.message : t('archive.loadError'))
                 }
             } finally {
-                if (!ignore) {
+                if (!controller.signal.aborted) {
                     setLoading(false)
                 }
             }
         }
 
-        loadReferenceData()
+        void loadCatalogue()
 
         return () => {
-            ignore = true
+            controller.abort()
         }
-    }, [language, t])
+    }, [kind, language, searchText, selectedCategories, selectedRegions, t])
 
-    const sourceItems = useMemo(() => reference ? sourceItemsForKind(kind, reference) : [], [kind, reference])
-    const categoryRelationMap = useMemo(() => reference ? relationMapForKind(kind, reference) : {}, [kind, reference])
+    const availableRegions = useMemo(
+        () => facetOptions(catalogue, 'RELATED_ENTITY', 'REGION'),
+        [catalogue],
+    )
 
-    const items: ReferenceResource[] = useMemo(() => {
-        if (!reference) {
-            return []
-        }
-
-        return sourceItems.filter((item) => {
-            const regions = itemRegions(item.localName, kind, reference)
-            const matchesRegion = selectedRegions.length === 0 || selectedRegions.some(
-                (regionLocalName) => regions.includes(regionLocalName)
-            )
-            const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(
-                (categoryLocalName) => categoryRelationMap[categoryLocalName]?.includes(item.localName)
-            )
-            return matchesRegion && matchesCategory
-        })
-    }, [categoryRelationMap, kind, reference, selectedCategories, selectedRegions, sourceItems])
-
-    const availableRegions = useMemo(() => {
-        if (!reference || kind === 'motifs') return []
-        return reference.regions.filter(region => selectedRegions.includes(region.localName) || sourceItems.some(item => {
-            const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(
-                category => categoryRelationMap[category]?.includes(item.localName)
-            )
-            return matchesCategory && itemRegions(item.localName, kind, reference).includes(region.localName)
-        }))
-    }, [categoryRelationMap, kind, reference, selectedCategories, selectedRegions, sourceItems])
-
-    const availableCategories = useMemo(() => {
-        if (!reference) return []
-        return categoriesForKind(kind, reference).filter(category => selectedCategories.includes(category.localName)
-            || (categoryRelationMap[category.localName] ?? []).some(itemLocalName => {
-                if (selectedRegions.length === 0) return true
-                return selectedRegions.some(region => itemRegions(itemLocalName, kind, reference).includes(region))
-            }))
-    }, [categoryRelationMap, kind, reference, selectedCategories, selectedRegions])
+    const availableCategories = useMemo(
+        () => facetOptions(catalogue, 'CATEGORY', entityTypeForKind(kind)),
+        [catalogue, kind],
+    )
 
     const categorySections = useMemo(() => {
-        if (!reference) {
-            return []
-        }
-
         return buildCategorySections(
-            kind,
-            reference,
-            items,
-            searchText,
+            catalogue?.items ?? [],
             t('archiveReference.uncategorized')
         )
-    }, [items, kind, reference, searchText, t])
+    }, [catalogue, t])
 
     function toggleRegion(regionLocalName: string) {
         setSelectedRegions((current) => current.includes(regionLocalName)

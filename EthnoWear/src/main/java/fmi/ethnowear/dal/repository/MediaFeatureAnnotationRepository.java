@@ -60,4 +60,16 @@ public interface MediaFeatureAnnotationRepository extends JpaRepository<MediaFea
      */
     @EntityGraph(attributePaths = {"archiveItemFeature", "archiveItemMedia.archiveItem", "archiveItemMedia.mediaAsset"})
     List<MediaFeatureAnnotation> findByArchiveItemFeature_FeatureTypeAndArchiveItemFeature_OntologyIriAndArchiveItemFeature_ValidatedTrueOrderByIdAsc(FeatureType featureType, String ontologyIri);
+
+    /**
+     * Finds all media annotations belonging to one archive item.
+     *
+     * @param archiveItemId database identifier of the archive item
+     * @return annotations belonging to the archive item's media
+     */
+    @EntityGraph(attributePaths = {
+            "archiveItemMedia",
+            "archiveItemFeature"
+    })
+    List<MediaFeatureAnnotation> findByArchiveItemMedia_ArchiveItem_Id(Long archiveItemId);
 }

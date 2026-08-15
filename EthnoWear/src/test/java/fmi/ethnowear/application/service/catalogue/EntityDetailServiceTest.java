@@ -62,7 +62,7 @@ class EntityDetailServiceTest {
         );
         Page<ArchiveEvidenceDetails> evidence = Page.empty(pageable);
 
-        OntologyEntityDetailReader ontologyReader = new OntologyEntityDetailReader(null, null) {
+        OntologyEntityDetailReader ontologyReader = new OntologyEntityDetailReader(null, null, null) {
             @Override
             public EntityOntologyDetails find(FeatureType entityType, String localName, String languageTag) {
                 assertEquals(FeatureType.TECHNIQUE, entityType);

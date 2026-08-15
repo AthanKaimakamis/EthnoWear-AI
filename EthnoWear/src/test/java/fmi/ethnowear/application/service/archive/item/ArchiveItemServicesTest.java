@@ -13,7 +13,10 @@ import fmi.ethnowear.dal.repository.ArchiveItemFeatureRepository;
 import fmi.ethnowear.dal.repository.ArchiveItemMediaRepository;
 import fmi.ethnowear.dal.repository.ArchiveItemRepository;
 import fmi.ethnowear.dal.repository.SourceReferenceRepository;
+import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -117,6 +120,38 @@ class ArchiveItemServicesTest {
         assertEquals("Confidence must be between 0 and 1", exception.getMessage());
     }
 
+    @ParameterizedTest
+    @EnumSource(value = FeatureType.class, names = { "REGION", "REGIONAL_EMBROIDERY" })
+    void rejectsPrimaryClassificationAsArchiveItemFeature(FeatureType featureType) {
+        ArchiveItemFeatureService service = new ArchiveItemFeatureService(
+                rejecting(ArchiveItemFeatureRepository.class),
+                rejecting(ArchiveItemRepository.class),
+                rejecting(SourceReferenceRepository.class),
+                new ArchiveItemFeatureMapper(),
+                new ArchiveItemFeatureUsageChecker(null)
+        );
+        ArchiveItemFeatureWriteDto input = new ArchiveItemFeatureWriteDto(
+                4L,
+                featureType,
+                "http://example.org/ontology#Classification",
+                "Classification",
+                BigDecimal.ONE,
+                true,
+                null,
+                null
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.create(input)
+        );
+
+        assertEquals(
+                "Region and regional embroidery must be assigned directly to the archive item",
+                exception.getMessage()
+        );
+    }
+
     private ArchiveItemService itemService(ArchiveItemRepository itemRepository,
                                            SourceReferenceRepository referenceRepository,
                                            ArchiveItemUsageChecker usageChecker) {
@@ -124,7 +159,8 @@ class ArchiveItemServicesTest {
                 itemRepository,
                 referenceRepository,
                 new ArchiveItemMapper(),
-                usageChecker
+                usageChecker,
+                new ArchiveItemOntologyValidator(rejecting(EmbroideryOntologyClient.class))
         );
     }
 

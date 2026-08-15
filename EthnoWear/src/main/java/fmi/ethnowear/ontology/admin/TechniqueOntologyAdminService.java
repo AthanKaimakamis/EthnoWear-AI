@@ -5,23 +5,23 @@ import fmi.ethnowear.application.exceptions.TechniqueAlreadyExistsException;
 import fmi.ethnowear.application.exceptions.TechniqueInUseException;
 import fmi.ethnowear.application.exceptions.TechniqueNotFoundException;
 import fmi.ethnowear.ontology.OntologyTerms;
+import fmi.ethnowear.ontology.admin.command.TechniqueCreateCommand;
+import fmi.ethnowear.ontology.admin.command.TechniqueUpdateCommand;
+import fmi.ethnowear.ontology.admin.model.OntologyReference;
+import fmi.ethnowear.ontology.admin.model.TechniqueDetails;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
+import fmi.ethnowear.util.TextUtils;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Unmodifiable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,8 +32,6 @@ import static fmi.ethnowear.util.TextUtils.isBlank;
 @Service
 public class TechniqueOntologyAdminService {
 
-    private static final String SKOS_NS = "http://www.w3.org/2004/02/skos/core#";
-    private static final Property SKOS_ALT_LABEL = ResourceFactory.createProperty(SKOS_NS, "altLabel");
     private static final Pattern LOCAL_NAME_PATTERN = Pattern.compile("[A-Za-z][A-Za-z0-9_]*");
 
     private static final Set<String> ALLOWED_TYPES = Set.of(
@@ -48,9 +46,14 @@ public class TechniqueOntologyAdminService {
     );
 
     private final JenaOntologyStore store;
+    private final OntologyAdminModelSupport modelSupport;
 
-    public TechniqueOntologyAdminService(JenaOntologyStore store) {
+    public TechniqueOntologyAdminService(
+            JenaOntologyStore store,
+            OntologyAdminModelSupport modelSupport
+    ) {
         this.store = store;
+        this.modelSupport = modelSupport;
     }
 
     public TechniqueDetails create(TechniqueCreateCommand command) {
@@ -59,17 +62,27 @@ public class TechniqueOntologyAdminService {
         store.write(model -> {
             String techniqueUri = store.uri(command.localName());
             Resource techniqueResource = model.getResource(techniqueUri);
-            if (model.containsResource(techniqueResource)) {
+
+            if (model.containsResource(techniqueResource))
                 throw new TechniqueAlreadyExistsException(command.localName());
-            }
 
             List<OntClass> types = requiredTypes(model, command.typeLocalNames());
             List<Individual> regions = requiredRegions(model, command.characteristicRegionLocalNames());
             Individual technique = model.createIndividual(techniqueUri, types.getFirst());
             types.stream().skip(1).forEach(technique::addRDFType);
-            addManagedValues(model, technique, command);
+            modelSupport.addManagedLocalizedValues(
+                    model,
+                    technique,
+                    command.labelBg(),
+                    command.labelEn(),
+                    command.altLabelsBg(),
+                    command.altLabelsEn(),
+                    command.commentBg(),
+                    command.commentEn()
+            );
             Property regionProperty = characteristicRegionProperty(model);
             regions.forEach(region -> technique.addProperty(regionProperty, region));
+
             return null;
         });
 
@@ -77,29 +90,20 @@ public class TechniqueOntologyAdminService {
     }
 
     public Optional<TechniqueDetails> get(String localName) {
-        return store.read(model -> {
-            Individual technique = model.getIndividual(store.uri(localName));
-            OntClass techniqueClass = model.getOntClass(store.uri(OntologyTerms.Classes.TECHNIQUE));
-            if (technique == null || techniqueClass == null || !technique.hasOntClass(techniqueClass, false)) {
-                return Optional.empty();
-            }
-            return Optional.of(toDetails(model, technique));
-        });
+        return modelSupport.findIndividual(
+                localName,
+                OntologyTerms.Classes.TECHNIQUE,
+                this::toDetails
+        );
     }
 
     public List<TechniqueDetails> list() {
-        return store.read(model -> {
-            OntClass techniqueClass = model.getOntClass(store.uri(OntologyTerms.Classes.TECHNIQUE));
-            if (techniqueClass == null) {
-                return List.of();
-            }
-            return model.listIndividuals(techniqueClass)
-                    .filterKeep(individual -> individual.getURI() != null && !directAllowedTypes(individual).isEmpty())
-                    .mapWith(individual -> toDetails(model, individual))
-                    .toList().stream()
-                    .sorted((left, right) -> left.localName().compareToIgnoreCase(right.localName()))
-                    .toList();
-        });
+        return modelSupport.listIndividuals(
+                OntologyTerms.Classes.TECHNIQUE,
+                ALLOWED_TYPES,
+                this::toDetails,
+                TechniqueDetails::localName
+        );
     }
 
     public TechniqueDetails update(String localName, TechniqueUpdateCommand command) {
@@ -111,14 +115,26 @@ public class TechniqueOntologyAdminService {
             List<OntClass> types = requiredTypes(model, command.typeLocalNames());
             List<Individual> regions = requiredRegions(model, command.characteristicRegionLocalNames());
 
-            removeManagedTypes(model, technique);
+            modelSupport.removeManagedTypes(model, technique, ALLOWED_TYPES);
             types.forEach(technique::addRDFType);
-            replaceLocalizedValues(model, technique, RDFS.label, command.labelBg(), command.labelEn());
-            replaceLocalizedValues(model, technique, RDFS.comment, command.commentBg(), command.commentEn());
-            replaceLocalizedValues(
+            modelSupport.replaceLocalizedValues(
                     model,
                     technique,
-                    SKOS_ALT_LABEL,
+                    RDFS.label,
+                    command.labelBg(),
+                    command.labelEn()
+            );
+            modelSupport.replaceLocalizedValues(
+                    model,
+                    technique,
+                    RDFS.comment,
+                    command.commentBg(),
+                    command.commentEn()
+            );
+            modelSupport.replaceLocalizedValues(
+                    model,
+                    technique,
+                    OntologyAdminModelSupport.SKOS_ALT_LABEL,
                     command.altLabelsBg(),
                     command.altLabelsEn()
             );
@@ -141,6 +157,7 @@ public class TechniqueOntologyAdminService {
             technique.addProperty(characteristicRegionProperty(model), region);
             return null;
         });
+
         return get(localName).orElseThrow(() -> new TechniqueNotFoundException(localName));
     }
 
@@ -153,6 +170,7 @@ public class TechniqueOntologyAdminService {
             model.removeAll(technique, characteristicRegionProperty(model), region);
             return null;
         });
+
         return get(localName).orElseThrow(() -> new TechniqueNotFoundException(localName));
     }
 
@@ -160,19 +178,20 @@ public class TechniqueOntologyAdminService {
         validateLocalName(localName);
         store.write(model -> {
             Individual technique = requiredTechnique(model, localName);
-            List<OntologyReference> references = incomingReferences(model, technique);
-            if (!references.isEmpty()) {
+            List<OntologyReference> references = modelSupport.incomingReferences(model, technique);
+
+            if (!references.isEmpty())
                 throw new TechniqueInUseException(localName, references);
-            }
-            model.removeAll(technique, null, (RDFNode) null);
+
+            model.removeAll(technique, null, null);
             return null;
         });
     }
 
     private void validateCreateCommand(TechniqueCreateCommand command) {
-        if (command == null) {
+        if (command == null)
             throw new InvalidTechniqueException("Technique command is required");
-        }
+
         validateLocalName(command.localName());
         validateValues(
                 command.typeLocalNames(),
@@ -184,9 +203,9 @@ public class TechniqueOntologyAdminService {
     }
 
     private void validateUpdateCommand(TechniqueUpdateCommand command) {
-        if (command == null) {
+        if (command == null)
             throw new InvalidTechniqueException("Technique update command is required");
-        }
+
         validateValues(
                 command.typeLocalNames(),
                 command.labelBg(),
@@ -197,226 +216,92 @@ public class TechniqueOntologyAdminService {
     }
 
     private void validateValues(
-            Set<String> typeLocalNames,
+            @NonNull Set<String> typeLocalNames,
             String labelBg,
             String labelEn,
             List<String> altLabelsBg,
             List<String> altLabelsEn
     ) {
-        if (typeLocalNames.isEmpty()) {
+        if (typeLocalNames.isEmpty())
             throw new InvalidTechniqueException("At least one technique type is required");
-        }
-        if (!ALLOWED_TYPES.containsAll(typeLocalNames)) {
+
+        if (!ALLOWED_TYPES.containsAll(typeLocalNames))
             throw new InvalidTechniqueException("Unsupported technique type");
-        }
-        if (isBlank(labelBg) && isBlank(labelEn)) {
+
+        if (isBlank(labelBg) && isBlank(labelEn))
             throw new InvalidTechniqueException("At least one localized label is required");
-        }
+
         validateLiteralValues(altLabelsBg, "Bulgarian alternative labels");
         validateLiteralValues(altLabelsEn, "English alternative labels");
     }
 
     private void validateLocalName(String localName) {
-        if (localName == null || !LOCAL_NAME_PATTERN.matcher(localName).matches()) {
+        if (localName == null || !LOCAL_NAME_PATTERN.matcher(localName).matches())
             throw new InvalidTechniqueException("Invalid ontology local name: " + localName);
-        }
     }
 
-    private List<OntClass> requiredTypes(OntModel model, Set<String> localNames) {
+    private @NonNull @Unmodifiable List<OntClass> requiredTypes(OntModel model, @NonNull Set<String> localNames) {
         return localNames.stream().map(localName -> requiredType(model, localName)).toList();
     }
 
-    private OntClass requiredType(OntModel model, String localName) {
-        if (!ALLOWED_TYPES.contains(localName)) {
+    private @NonNull OntClass requiredType(OntModel model, String localName) {
+        if (!ALLOWED_TYPES.contains(localName))
             throw new InvalidTechniqueException("Unsupported technique type: " + localName);
-        }
+
         OntClass type = model.getOntClass(store.uri(localName));
-        if (type == null) {
+
+        if (type == null)
             throw new InvalidTechniqueException("Technique type does not exist: " + localName);
-        }
+
         return type;
     }
 
-    private List<Individual> requiredRegions(OntModel model, Set<String> localNames) {
+    private @NonNull @Unmodifiable List<Individual> requiredRegions(OntModel model, @NonNull Set<String> localNames) {
         return localNames.stream().map(localName -> requiredRegion(model, localName)).toList();
     }
 
-    private Individual requiredRegion(OntModel model, String localName) {
-        Individual region = model.getIndividual(store.uri(localName));
-        OntClass regionClass = model.getOntClass(store.uri(OntologyTerms.Classes.REGION));
-        if (region == null || regionClass == null || !region.hasOntClass(regionClass, false)) {
-            throw new InvalidTechniqueException("Region does not exist: " + localName);
-        }
-        return region;
+    private @NonNull Individual requiredRegion(@NonNull OntModel model, String localName) {
+        return modelSupport.individualOfType(
+                        model,
+                        localName,
+                        OntologyTerms.Classes.REGION
+                )
+                .orElseThrow(() -> new InvalidTechniqueException(
+                        "Region does not exist: " + localName
+                ));
     }
 
-    private Individual requiredTechnique(OntModel model, String localName) {
+    private @NonNull Individual requiredTechnique(@NonNull OntModel model, String localName) {
         Individual technique = model.getIndividual(store.uri(localName));
-        if (technique == null || directAllowedTypes(technique).isEmpty()) {
+
+        if (technique == null || modelSupport.directTypes(technique, ALLOWED_TYPES).isEmpty())
             throw new TechniqueNotFoundException(localName);
-        }
+
         return technique;
     }
 
-    private TechniqueDetails toDetails(OntModel model, Individual technique) {
-        Set<String> regions = new LinkedHashSet<>();
-        model.listObjectsOfProperty(technique, characteristicRegionProperty(model))
-                .filterKeep(RDFNode::isResource)
-                .mapWith(RDFNode::asResource)
-                .filterKeep(resource -> resource.getLocalName() != null)
-                .forEachRemaining(resource -> regions.add(resource.getLocalName()));
-
+    @Contract("_, _ -> new")
+    private @NonNull TechniqueDetails toDetails(OntModel model, @NonNull Individual technique) {
         return new TechniqueDetails(
                 technique.getURI(),
                 technique.getLocalName(),
-                directAllowedTypes(technique),
-                firstLiteral(model, technique, RDFS.label, "bg").orElse(null),
-                firstLiteral(model, technique, RDFS.label, "en").orElse(null),
-                literals(model, technique, SKOS_ALT_LABEL, "bg"),
-                literals(model, technique, SKOS_ALT_LABEL, "en"),
-                firstLiteral(model, technique, RDFS.comment, "bg").orElse(null),
-                firstLiteral(model, technique, RDFS.comment, "en").orElse(null),
-                Set.copyOf(regions)
+                modelSupport.directTypes(technique, ALLOWED_TYPES),
+                modelSupport.firstLiteral(model, technique, RDFS.label, "bg").orElse(null),
+                modelSupport.firstLiteral(model, technique, RDFS.label, "en").orElse(null),
+                modelSupport.literals(model, technique, OntologyAdminModelSupport.SKOS_ALT_LABEL, "bg"),
+                modelSupport.literals(model, technique, OntologyAdminModelSupport.SKOS_ALT_LABEL, "en"),
+                modelSupport.firstLiteral(model, technique, RDFS.comment, "bg").orElse(null),
+                modelSupport.firstLiteral(model, technique, RDFS.comment, "en").orElse(null),
+                modelSupport.objectLocalNames(model, technique, characteristicRegionProperty(model))
         );
     }
 
-    private Set<String> directAllowedTypes(Individual technique) {
-        Set<String> types = new LinkedHashSet<>();
-        technique.listRDFTypes(true)
-                .filterKeep(resource -> resource.getLocalName() != null)
-                .forEachRemaining(resource -> {
-                    if (ALLOWED_TYPES.contains(resource.getLocalName())) {
-                        types.add(resource.getLocalName());
-                    }
-                });
-        return Set.copyOf(types);
+    private Property characteristicRegionProperty(@NonNull OntModel model) {
+        return model.getProperty(store.uri(OntologyTerms.ObjectProperties.IS_CHARACTERISTIC_TECHNIQUE_OF_REGION));
     }
 
-    private Property characteristicRegionProperty(OntModel model) {
-        return model.getProperty(store.uri(
-                OntologyTerms.ObjectProperties.IS_CHARACTERISTIC_TECHNIQUE_OF_REGION
-        ));
-    }
-
-    private List<OntologyReference> incomingReferences(OntModel model, Resource technique) {
-        List<OntologyReference> references = new ArrayList<>();
-        StmtIterator statements = model.listStatements(null, null, technique);
-        while (statements.hasNext()) {
-            Statement statement = statements.nextStatement();
-            Resource subject = statement.getSubject();
-            references.add(new OntologyReference(
-                    subject.getLocalName() == null ? subject.toString() : subject.getLocalName(),
-                    statement.getPredicate().getLocalName()
-            ));
-        }
-        return List.copyOf(references);
-    }
-
-    private void addManagedValues(OntModel model, Resource technique, TechniqueCreateCommand command) {
-        addLocalizedLiteral(model, technique, RDFS.label, command.labelBg(), "bg");
-        addLocalizedLiteral(model, technique, RDFS.label, command.labelEn(), "en");
-        addLocalizedLiterals(model, technique, SKOS_ALT_LABEL, command.altLabelsBg(), "bg");
-        addLocalizedLiterals(model, technique, SKOS_ALT_LABEL, command.altLabelsEn(), "en");
-        addLocalizedLiteral(model, technique, RDFS.comment, command.commentBg(), "bg");
-        addLocalizedLiteral(model, technique, RDFS.comment, command.commentEn(), "en");
-    }
-
-    private void removeManagedTypes(OntModel model, Individual technique) {
-        List<Statement> managedTypes = model.listStatements(technique, RDF.type, (RDFNode) null)
-                .filterKeep(statement -> statement.getObject().isResource())
-                .filterKeep(statement -> {
-                    String localName = statement.getResource().getLocalName();
-                    return localName != null && ALLOWED_TYPES.contains(localName);
-                })
-                .toList();
-        model.remove(managedTypes);
-    }
-
-    private void replaceLocalizedValues(
-            OntModel model,
-            Resource resource,
-            Property property,
-            String valueBg,
-            String valueEn
-    ) {
-        removeLocalizedValues(model, resource, property);
-        addLocalizedLiteral(model, resource, property, valueBg, "bg");
-        addLocalizedLiteral(model, resource, property, valueEn, "en");
-    }
-
-    private void replaceLocalizedValues(
-            OntModel model,
-            Resource resource,
-            Property property,
-            List<String> valuesBg,
-            List<String> valuesEn
-    ) {
-        removeLocalizedValues(model, resource, property);
-        addLocalizedLiterals(model, resource, property, valuesBg, "bg");
-        addLocalizedLiterals(model, resource, property, valuesEn, "en");
-    }
-
-    private void removeLocalizedValues(OntModel model, Resource resource, Property property) {
-        List<Statement> statements = model.listStatements(resource, property, (RDFNode) null)
-                .filterKeep(statement -> statement.getObject().isLiteral())
-                .filterKeep(statement -> Set.of("bg", "en").contains(
-                        statement.getLiteral().getLanguage().toLowerCase()
-                ))
-                .toList();
-        model.remove(statements);
-    }
-
-    private void addLocalizedLiterals(
-            OntModel model,
-            Resource resource,
-            Property property,
-            List<String> values,
-            String language
-    ) {
-        values.forEach(value -> addLocalizedLiteral(model, resource, property, value, language));
-    }
-
-    private void addLocalizedLiteral(
-            OntModel model,
-            Resource resource,
-            Property property,
-            String value,
-            String language
-    ) {
-        if (!isBlank(value)) {
-            resource.addProperty(property, model.createLiteral(value.trim(), language));
-        }
-    }
-
-    private Optional<String> firstLiteral(
-            OntModel model,
-            Resource resource,
-            Property property,
-            String language
-    ) {
-        return literals(model, resource, property, language).stream().findFirst();
-    }
-
-    private List<String> literals(
-            OntModel model,
-            Resource resource,
-            Property property,
-            String language
-    ) {
-        List<String> values = new ArrayList<>();
-        StmtIterator statements = model.listStatements(resource, property, (RDFNode) null);
-        while (statements.hasNext()) {
-            RDFNode value = statements.nextStatement().getObject();
-            if (value instanceof Literal literal && language.equalsIgnoreCase(literal.getLanguage())) {
-                values.add(literal.getString());
-            }
-        }
-        return List.copyOf(values);
-    }
-
-    private void validateLiteralValues(List<String> values, String fieldName) {
-        if (values.stream().anyMatch(value -> isBlank(value))) {
+    private void validateLiteralValues(@NonNull List<String> values, String fieldName) {
+        if (values.stream().anyMatch(TextUtils::isBlank))
             throw new InvalidTechniqueException(fieldName + " cannot contain blank values");
-        }
     }
 }

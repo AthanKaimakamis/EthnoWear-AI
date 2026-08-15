@@ -68,7 +68,7 @@ class EntityContentServiceTest {
                 chunkRepository,
                 featureRepository,
                 annotationRepository,
-                new EntityContentMapper()
+                new EntityContentMapper(new EntitySourceCitationMapper())
         );
 
         EntityContentDetails details = service.findByOntologyEntity(

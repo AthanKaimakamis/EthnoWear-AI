@@ -34,6 +34,10 @@ ethnowear:
   ontology:
     path: ${ETHNOWEAR_ONTOLOGY_PATH:Ontology/EthnoWear.owx}
     namespace: ${ETHNOWEAR_ONTOLOGY_NAMESPACE:http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#}
+
+  media:
+    storage-root: ${ETHNOWEAR_MEDIA_STORAGE_ROOT:media}
+
   cors:
     allowed-origins:
       - http://localhost:5173

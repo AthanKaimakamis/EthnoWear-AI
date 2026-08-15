@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.archive.source.SourceReferenceDetails;
 import fmi.ethnowear.api.dto.archive.source.SourceReferenceWriteDto;
 import fmi.ethnowear.application.exceptions.ResourceInUseException;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.Source;
 import fmi.ethnowear.dal.entity.SourceReference;
 import fmi.ethnowear.dal.repository.SourceReferenceRepository;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SourceReferenceService implements ICrudService<SourceReferenceWriteDto, SourceReferenceDetails> {
+public class SourceReferenceService implements CrudService<SourceReferenceWriteDto, SourceReferenceDetails> {
 
     private final SourceReferenceRepository referenceRepository;
     private final SourceRepository sourceRepository;

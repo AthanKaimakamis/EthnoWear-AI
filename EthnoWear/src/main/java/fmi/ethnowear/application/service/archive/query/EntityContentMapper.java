@@ -6,6 +6,7 @@ import fmi.ethnowear.api.dto.archive.query.EntityMediaAnnotationDetails;
 import fmi.ethnowear.api.dto.archive.query.EntitySourceCitationDetails;
 import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.dal.entity.*;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
@@ -13,21 +14,24 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class EntityContentMapper {
+
+    private final EntitySourceCitationMapper sourceCitationMapper;
 
     public EntityContentDetails toDetails(
             FeatureType entityType,
             String ontologyIri,
             @NonNull List<KnowledgeChunk> chunks,
-            List<MediaFeatureAnnotation> annotations,
-            List<SourceReference> references
+            @NonNull List<MediaFeatureAnnotation> annotations,
+            @NonNull List<SourceReference> references
     ) {
         return new EntityContentDetails(
                 entityType,
                 ontologyIri,
                 chunks.stream().map(this::toChunkDetails).toList(),
                 annotations.stream().map(this::toMediaDetails).toList(),
-                references.stream().map(this::toSourceDetails).toList()
+                references.stream().map(sourceCitationMapper::toDetails).toList()
         );
     }
 
@@ -69,35 +73,6 @@ public class EntityContentMapper {
                 annotation.getWidth(),
                 annotation.getHeight(),
                 annotation.getNote()
-        );
-    }
-
-    private EntitySourceCitationDetails toSourceDetails(SourceReference reference) {
-        Source source = reference.getSource();
-
-        return new EntitySourceCitationDetails(
-                reference.getId(),
-                source.getId(),
-                source.getTitle(),
-                source.getAuthor(),
-                source.getPublisher(),
-                source.getYear(),
-                source.getSourceType(),
-                source.getLanguage(),
-                source.getFilePath(),
-                source.getUrl(),
-                source.getIsbn(),
-                source.isTrusted(),
-                reference.getChapter(),
-                reference.getPageFrom(),
-                reference.getPageTo(),
-                reference.getFigureNumber(),
-                reference.getSectionTitle(),
-                reference.getCatalogNumber(),
-                reference.getReferenceUrl(),
-                reference.getAccessedDate(),
-                reference.getLocator(),
-                reference.getNote()
         );
     }
 }

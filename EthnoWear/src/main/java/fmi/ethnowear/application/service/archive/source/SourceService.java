@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.archive.source.SourceDetails;
 import fmi.ethnowear.api.dto.archive.source.SourceWriteDto;
 import fmi.ethnowear.application.exceptions.ResourceInUseException;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.Source;
 import fmi.ethnowear.dal.repository.SourceRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import static fmi.ethnowear.util.TextUtils.isBlank;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SourceService implements ICrudService<SourceWriteDto, SourceDetails> {
+public class SourceService implements CrudService<SourceWriteDto, SourceDetails> {
 
     private final SourceRepository sourceRepository;
     private final SourceMapper sourceMapper;

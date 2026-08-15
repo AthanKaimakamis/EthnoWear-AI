@@ -3,7 +3,7 @@ package fmi.ethnowear.application.service.archive.media;
 import fmi.ethnowear.api.dto.archive.media.MediaFeatureAnnotationDetails;
 import fmi.ethnowear.api.dto.archive.media.MediaFeatureAnnotationWriteDto;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.ArchiveItemFeature;
 import fmi.ethnowear.dal.entity.ArchiveItemMedia;
 import fmi.ethnowear.dal.entity.MediaFeatureAnnotation;
@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MediaFeatureAnnotationService implements ICrudService<MediaFeatureAnnotationWriteDto, MediaFeatureAnnotationDetails> {
+public class MediaFeatureAnnotationService implements CrudService<MediaFeatureAnnotationWriteDto, MediaFeatureAnnotationDetails> {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final BigDecimal ONE = BigDecimal.ONE;

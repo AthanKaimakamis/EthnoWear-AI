@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.reference.ReferenceItemDto;
 import fmi.ethnowear.api.dto.reference.ReferenceResponse;
 import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
 import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.model.OntologyLanguage;
+import fmi.ethnowear.ontology.enums.OntologyLanguage;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;

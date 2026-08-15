@@ -4,7 +4,7 @@ import fmi.ethnowear.api.dto.archive.media.ArchiveItemMediaDetails;
 import fmi.ethnowear.api.dto.archive.media.ArchiveItemMediaWriteDto;
 import fmi.ethnowear.application.exceptions.ResourceInUseException;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.ArchiveItem;
 import fmi.ethnowear.dal.entity.ArchiveItemMedia;
 import fmi.ethnowear.dal.entity.MediaAsset;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ArchiveItemMediaService implements ICrudService<ArchiveItemMediaWriteDto, ArchiveItemMediaDetails> {
+public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWriteDto, ArchiveItemMediaDetails> {
 
     private final ArchiveItemMediaRepository archiveItemMediaRepository;
     private final ArchiveItemRepository archiveItemRepository;

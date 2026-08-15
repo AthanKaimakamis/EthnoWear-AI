@@ -4,13 +4,16 @@ import fmi.ethnowear.application.enums.ArchiveType;
 import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.application.enums.TrustedLevel;
 import fmi.ethnowear.dal.entity.ArchiveItem;
+import fmi.ethnowear.dal.entity.MediaFeatureAnnotation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ArchiveItemRepository extends JpaRepository<ArchiveItem, Long> {
 
@@ -105,6 +108,18 @@ public interface ArchiveItemRepository extends JpaRepository<ArchiveItem, Long> 
      * @return archive items matching either title, or an empty list when none exist
      */
     List<ArchiveItem> findByTitleBgContainingIgnoreCaseOrTitleEnContainingIgnoreCase(String titleBg, String titleEn);
+
+    /**
+     * Finds an archive item and eagerly loads its source citation.
+     *
+     * @param id database identifier of the archive item
+     * @return matching archive item, or empty when it does not exist
+     */
+    @EntityGraph(attributePaths = {
+            "sourceReference",
+            "sourceReference.source"
+    })
+    Optional<ArchiveItem> findOneById(Long id);
 
     /**
      * Checks whether an exact source reference supports at least one archive item.

@@ -1,6 +1,6 @@
 package fmi.ethnowear.application.exceptions;
 
-import fmi.ethnowear.ontology.admin.OntologyReference;
+import fmi.ethnowear.ontology.admin.model.OntologyReference;
 
 import java.util.List;
 

@@ -3,6 +3,9 @@ package fmi.ethnowear.ontology.admin;
 import fmi.ethnowear.application.exceptions.InvalidTechniqueException;
 import fmi.ethnowear.application.exceptions.TechniqueInUseException;
 import fmi.ethnowear.ontology.OntologyTerms;
+import fmi.ethnowear.ontology.admin.command.TechniqueCreateCommand;
+import fmi.ethnowear.ontology.admin.command.TechniqueUpdateCommand;
+import fmi.ethnowear.ontology.admin.model.TechniqueDetails;
 import fmi.ethnowear.ontology.jena.JenaOntologyStore;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -39,7 +42,10 @@ class TechniqueOntologyAdminServiceTest {
         Files.copy(source, ontologyCopy);
 
         store = new JenaOntologyStore(ontologyCopy, NAMESPACE);
-        service = new TechniqueOntologyAdminService(store);
+        service = new TechniqueOntologyAdminService(
+                store,
+                new OntologyAdminModelSupport(store)
+        );
     }
 
     @Test

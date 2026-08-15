@@ -13,6 +13,7 @@ export type ReferenceResource = {
 }
 
 export type ReferenceData = {
+    language: string
     regions: ReferenceResource[]
     regionGroups: ReferenceResource[]
     ornaments: ReferenceResource[]

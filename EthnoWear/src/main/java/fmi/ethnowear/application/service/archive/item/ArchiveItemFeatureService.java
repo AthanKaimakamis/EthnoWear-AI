@@ -2,9 +2,10 @@ package fmi.ethnowear.application.service.archive.item;
 
 import fmi.ethnowear.api.dto.archive.item.ArchiveItemFeatureDetails;
 import fmi.ethnowear.api.dto.archive.item.ArchiveItemFeatureWriteDto;
+import fmi.ethnowear.application.enums.FeatureType;
 import fmi.ethnowear.application.exceptions.ResourceInUseException;
 import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
-import fmi.ethnowear.application.service.ICrudService;
+import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.dal.entity.ArchiveItem;
 import fmi.ethnowear.dal.entity.ArchiveItemFeature;
 import fmi.ethnowear.dal.entity.SourceReference;
@@ -19,13 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ArchiveItemFeatureService implements ICrudService<ArchiveItemFeatureWriteDto, ArchiveItemFeatureDetails> {
+public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeatureWriteDto, ArchiveItemFeatureDetails> {
 
     private final ArchiveItemFeatureRepository featureRepository;
     private final ArchiveItemRepository archiveItemRepository;
@@ -33,6 +35,12 @@ public class ArchiveItemFeatureService implements ICrudService<ArchiveItemFeatur
     private final ArchiveItemFeatureMapper featureMapper;
     private final ArchiveItemFeatureUsageChecker usageChecker;
 
+    private static final Set<FeatureType> ALLOWED_FEATURE_TYPES = Set.of(
+            FeatureType.ORNAMENT,
+            FeatureType.COLOR,
+            FeatureType.TECHNIQUE,
+            FeatureType.MOTIF
+    );
 
     @Override
     public Page<ArchiveItemFeatureDetails> findAll(Pageable pageable) {
@@ -98,19 +106,22 @@ public class ArchiveItemFeatureService implements ICrudService<ArchiveItemFeatur
     }
 
     private void validate(ArchiveItemFeatureWriteDto input) {
-        if(input == null || input.archiveItemId() == null)
+        if (input == null || input.archiveItemId() == null)
             throw new IllegalArgumentException("Archive item is required");
 
-        if(input.featureType() == null)
+        if (input.featureType() == null)
             throw new IllegalArgumentException("Feature type is required");
 
-        if(isBlank(input.ontologyIri()))
+        if (!ALLOWED_FEATURE_TYPES.contains(input.featureType()))
+            throw new IllegalArgumentException("Region and regional embroidery must be assigned directly to the archive item");
+
+        if (isBlank(input.ontologyIri()))
             throw new IllegalArgumentException("Ontology IRI is required");
 
-        if(isBlank(input.ontologyLocalName()))
+        if (isBlank(input.ontologyLocalName()))
             throw new IllegalArgumentException("Ontology local name is required");
 
-        if(input.confidence() != null
+        if (input.confidence() != null
                 && (input.confidence().compareTo(BigDecimal.ZERO) < 0
                 || input.confidence().compareTo(BigDecimal.ONE) > 0))
             throw new IllegalArgumentException("Confidence must be between 0 and 1");

@@ -1,5 +1,6 @@
 package fmi.ethnowear.api.dto.archive.source;
 
+import fmi.ethnowear.api.dto.IdentifiableDto;
 import fmi.ethnowear.application.enums.SourceType;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,6 @@ public record SourceDetails(
         boolean trusted,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements IdentifiableDto {
 
 }
