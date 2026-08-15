@@ -1,11 +1,13 @@
 package fmi.ethnowear.application.service.archive.query;
 
-import fmi.ethnowear.api.dto.archive.query.EntityContentDetails;
-import fmi.ethnowear.api.dto.archive.query.EntityKnowledgeChunkDetails;
-import fmi.ethnowear.api.dto.archive.query.EntityMediaAnnotationDetails;
-import fmi.ethnowear.api.dto.archive.query.EntitySourceCitationDetails;
-import fmi.ethnowear.application.enums.FeatureType;
-import fmi.ethnowear.dal.entity.*;
+import fmi.ethnowear.application.dto.archive.query.EntityContentDetails;
+import fmi.ethnowear.application.dto.archive.query.EntityKnowledgeChunkDetails;
+import fmi.ethnowear.application.dto.archive.query.EntityMediaAnnotationDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
+import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
+import fmi.ethnowear.persistence.jpa.entity.MediaFeatureAnnotation;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;

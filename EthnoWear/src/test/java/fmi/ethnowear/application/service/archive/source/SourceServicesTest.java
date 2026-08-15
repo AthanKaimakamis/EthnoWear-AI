@@ -1,14 +1,14 @@
 package fmi.ethnowear.application.service.archive.source;
 
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceDetails;
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceWriteDto;
-import fmi.ethnowear.api.dto.archive.source.SourceWriteDto;
-import fmi.ethnowear.application.enums.SourceType;
-import fmi.ethnowear.application.exceptions.ResourceInUseException;
-import fmi.ethnowear.dal.entity.Source;
-import fmi.ethnowear.dal.entity.SourceReference;
-import fmi.ethnowear.dal.repository.SourceReferenceRepository;
-import fmi.ethnowear.dal.repository.SourceRepository;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceDetails;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceWriteDto;
+import fmi.ethnowear.application.dto.archive.source.SourceWriteDto;
+import fmi.ethnowear.domain.model.archive.SourceType;
+import fmi.ethnowear.application.exception.ResourceInUseException;
+import fmi.ethnowear.persistence.jpa.entity.Source;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
+import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
+import fmi.ethnowear.persistence.jpa.repository.SourceRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

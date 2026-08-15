@@ -1,10 +1,10 @@
 package fmi.ethnowear.api.controller.ontology.admin;
 
-import fmi.ethnowear.ontology.admin.command.TechniqueCreateCommand;
-import fmi.ethnowear.ontology.admin.model.TechniqueDetails;
-import fmi.ethnowear.application.exceptions.TechniqueNotFoundException;
-import fmi.ethnowear.ontology.admin.TechniqueOntologyAdminService;
-import fmi.ethnowear.ontology.admin.command.TechniqueUpdateCommand;
+import fmi.ethnowear.application.dto.ontology.admin.TechniqueCreateCommand;
+import fmi.ethnowear.application.dto.ontology.admin.TechniqueDetails;
+import fmi.ethnowear.application.exception.TechniqueNotFoundException;
+import fmi.ethnowear.application.port.ontology.admin.TechniqueOntologyAdminPort;
+import fmi.ethnowear.application.dto.ontology.admin.TechniqueUpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,9 +25,9 @@ import static fmi.ethnowear.api.util.ResponseUtil.created;
 @RequestMapping("/api/admin/ontology/techniques")
 public class TechniqueOntologyController {
 
-    private final TechniqueOntologyAdminService techniqueService;
+    private final TechniqueOntologyAdminPort techniqueService;
 
-    public TechniqueOntologyController(TechniqueOntologyAdminService techniqueService) {
+    public TechniqueOntologyController(TechniqueOntologyAdminPort techniqueService) {
         this.techniqueService = techniqueService;
     }
 

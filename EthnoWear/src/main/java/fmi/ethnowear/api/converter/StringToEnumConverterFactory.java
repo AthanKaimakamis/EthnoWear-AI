@@ -1,6 +1,6 @@
 package fmi.ethnowear.api.converter;
 
-import fmi.ethnowear.application.enums.EnumAlias;
+import fmi.ethnowear.domain.annotation.EnumAlias;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;

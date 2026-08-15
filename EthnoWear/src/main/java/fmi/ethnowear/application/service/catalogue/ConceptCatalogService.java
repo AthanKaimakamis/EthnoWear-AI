@@ -1,6 +1,6 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.*;
+import fmi.ethnowear.application.dto.catalogue.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;

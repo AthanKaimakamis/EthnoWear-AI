@@ -1,8 +1,8 @@
 package fmi.ethnowear.api.controller.archive.admin;
 
 import fmi.ethnowear.api.controller.BaseCrudController;
-import fmi.ethnowear.api.dto.archive.item.ArchiveItemFeatureDetails;
-import fmi.ethnowear.api.dto.archive.item.ArchiveItemFeatureWriteDto;
+import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureDetails;
+import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureWriteDto;
 import fmi.ethnowear.application.service.archive.item.ArchiveItemFeatureService;
 import org.springframework.web.bind.annotation.*;
 

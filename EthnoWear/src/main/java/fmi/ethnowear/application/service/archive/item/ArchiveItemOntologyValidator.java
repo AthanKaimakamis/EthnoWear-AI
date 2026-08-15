@@ -1,8 +1,8 @@
 package fmi.ethnowear.application.service.archive.item;
 
-import fmi.ethnowear.api.dto.archive.item.ArchiveItemWriteDto;
-import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
-import fmi.ethnowear.ontology.model.OntologyResource;
+import fmi.ethnowear.application.dto.archive.item.ArchiveItemWriteDto;
+import fmi.ethnowear.application.port.ontology.EmbroideryOntologyClient;
+import fmi.ethnowear.domain.model.ontology.OntologyResource;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;

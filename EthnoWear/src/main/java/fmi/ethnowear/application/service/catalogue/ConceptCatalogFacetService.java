@@ -1,8 +1,8 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.*;
-import fmi.ethnowear.application.enums.CatalogFacetType;
-import fmi.ethnowear.application.enums.FeatureType;
+import fmi.ethnowear.application.dto.catalogue.*;
+import fmi.ethnowear.domain.model.catalogue.CatalogFacetType;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;

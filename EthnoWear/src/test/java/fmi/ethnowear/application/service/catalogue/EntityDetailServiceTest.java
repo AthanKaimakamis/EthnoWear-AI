@@ -1,10 +1,10 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.archive.query.ArchiveEvidenceDetails;
-import fmi.ethnowear.api.dto.archive.query.EntityContentDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityDetailDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityOntologyDetails;
-import fmi.ethnowear.application.enums.FeatureType;
+import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceDetails;
+import fmi.ethnowear.application.dto.archive.query.EntityContentDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityDetailDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.application.service.archive.query.ArchiveEvidenceService;
 import fmi.ethnowear.application.service.archive.query.EntityContentService;
 import org.junit.jupiter.api.Test;

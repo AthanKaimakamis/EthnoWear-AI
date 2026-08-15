@@ -1,6 +1,6 @@
 package fmi.ethnowear.application.service.archive.media;
 
-import fmi.ethnowear.dal.repository.MediaFeatureAnnotationRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaFeatureAnnotationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

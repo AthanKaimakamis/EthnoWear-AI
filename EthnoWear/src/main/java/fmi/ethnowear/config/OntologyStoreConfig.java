@@ -1,6 +1,6 @@
 package fmi.ethnowear.config;
 
-import fmi.ethnowear.ontology.jena.JenaOntologyStore;
+import fmi.ethnowear.infrastructure.ontology.jena.JenaOntologyStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

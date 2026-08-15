@@ -1,9 +1,9 @@
 package fmi.ethnowear.application.service.archive.source;
 
-import fmi.ethnowear.dal.repository.ArchiveItemFeatureRepository;
-import fmi.ethnowear.dal.repository.ArchiveItemRepository;
-import fmi.ethnowear.dal.repository.KnowledgeChunkRepository;
-import fmi.ethnowear.dal.repository.MediaAssetRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
+import fmi.ethnowear.persistence.jpa.repository.KnowledgeChunkRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

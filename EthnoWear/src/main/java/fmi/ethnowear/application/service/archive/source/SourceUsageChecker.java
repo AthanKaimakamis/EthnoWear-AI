@@ -1,6 +1,6 @@
 package fmi.ethnowear.application.service.archive.source;
 
-import fmi.ethnowear.dal.repository.SourceReferenceRepository;
+import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

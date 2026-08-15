@@ -1,14 +1,14 @@
 package fmi.ethnowear.application.service.archive.query;
 
-import fmi.ethnowear.api.dto.archive.query.EntityContentDetails;
-import fmi.ethnowear.application.enums.FeatureType;
-import fmi.ethnowear.dal.entity.ArchiveItemFeature;
-import fmi.ethnowear.dal.entity.KnowledgeChunk;
-import fmi.ethnowear.dal.entity.MediaFeatureAnnotation;
-import fmi.ethnowear.dal.entity.SourceReference;
-import fmi.ethnowear.dal.repository.ArchiveItemFeatureRepository;
-import fmi.ethnowear.dal.repository.KnowledgeChunkRepository;
-import fmi.ethnowear.dal.repository.MediaFeatureAnnotationRepository;
+import fmi.ethnowear.application.dto.archive.query.EntityContentDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemFeature;
+import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
+import fmi.ethnowear.persistence.jpa.entity.MediaFeatureAnnotation;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
+import fmi.ethnowear.persistence.jpa.repository.KnowledgeChunkRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaFeatureAnnotationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

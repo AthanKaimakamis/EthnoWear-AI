@@ -1,14 +1,14 @@
 package fmi.ethnowear.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fmi.ethnowear.api.controller.ontology.admin.OntologyAdminExceptionHandler;
+import fmi.ethnowear.api.exception.OntologyAdminExceptionHandler;
 import fmi.ethnowear.api.controller.ontology.admin.OrnamentOntologyController;
-import fmi.ethnowear.ontology.OntologyTerms;
-import fmi.ethnowear.application.exceptions.OrnamentAlreadyExistsException;
-import fmi.ethnowear.ontology.admin.command.OrnamentCreateCommand;
-import fmi.ethnowear.ontology.admin.model.OrnamentDetails;
-import fmi.ethnowear.ontology.admin.OrnamentOntologyAdminService;
-import fmi.ethnowear.ontology.admin.command.OrnamentUpdateCommand;
+import fmi.ethnowear.domain.constant.ontology.OntologyTerms;
+import fmi.ethnowear.application.exception.OrnamentAlreadyExistsException;
+import fmi.ethnowear.application.dto.ontology.admin.OrnamentCreateCommand;
+import fmi.ethnowear.application.dto.ontology.admin.OrnamentDetails;
+import fmi.ethnowear.infrastructure.ontology.jena.admin.OrnamentOntologyAdminService;
+import fmi.ethnowear.application.dto.ontology.admin.OrnamentUpdateCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

@@ -7,9 +7,9 @@ import {
     Box,
     Button,
     Card,
+    CardActionArea,
     CardContent,
     CardMedia,
-    Chip,
     Collapse,
     Divider,
     InputAdornment,
@@ -23,7 +23,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import SearchIcon from '@mui/icons-material/Search'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { searchCatalogue } from '../../api/CatalogueApi.ts'
+import { conceptPath } from '../../app/archiveRoutes.ts'
 import type { Language, ReferenceResource } from '../../types/reference.ts'
 import type {
     CatalogFacetType,
@@ -129,7 +131,13 @@ function buildCategorySections(
     return sections
 }
 
-function ArchiveConceptCard({ item }: { item: ReferenceResource }) {
+function ArchiveConceptCard({
+    item,
+    entityType,
+}: {
+    item: ReferenceResource
+    entityType: OntologyFeatureType
+}) {
     return (
         <Card
             sx={{
@@ -142,44 +150,49 @@ function ArchiveConceptCard({ item }: { item: ReferenceResource }) {
                 borderColor: 'divider',
             }}
         >
-            <CardMedia
-                component="img"
-                height="150"
-                image={item.imageUrl || imageNotFoundUrl}
-                alt={item.label || item.localName}
-                sx={{
-                    bgcolor: '#eef0f2',
-                    objectFit: 'cover',
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                }}
-            />
+            <CardActionArea
+                component={Link}
+                to={conceptPath(entityType, item.localName)}
+                sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+            >
+                <CardMedia
+                    component="img"
+                    height="150"
+                    image={item.imageUrl || imageNotFoundUrl}
+                    alt={item.label || item.localName}
+                    sx={{
+                        bgcolor: '#eef0f2',
+                        objectFit: 'cover',
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                    }}
+                />
 
-            <CardContent sx={{ flexGrow: 1 }}>
-                <Stack spacing={1}>
-                    <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
-                        {item.label || item.localName}
-                    </Typography>
+                <CardContent sx={{ flexGrow: 1 }}>
+                    <Stack spacing={1}>
+                        <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+                            {item.label || item.localName}
+                        </Typography>
 
-                    <Typography variant="body2" color="text.secondary">
-                        {item.comment || item.localName}
-                    </Typography>
-
-                    <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={item.localName}
-                            sx={{ maxWidth: '100%' }}
-                        />
+                        {item.comment && (
+                            <Typography variant="body2" color="text.secondary">
+                                {item.comment}
+                            </Typography>
+                        )}
                     </Stack>
-                </Stack>
-            </CardContent>
+                </CardContent>
+            </CardActionArea>
         </Card>
     )
 }
 
-function ArchiveCategorySection({ section }: { section: CategorySection }) {
+function ArchiveCategorySection({
+    section,
+    entityType,
+}: {
+    section: CategorySection
+    entityType: OntologyFeatureType
+}) {
     const { t } = useTranslation()
 
     return (
@@ -206,7 +219,11 @@ function ArchiveCategorySection({ section }: { section: CategorySection }) {
                     }}
                 >
                     {section.items.map((item) => (
-                        <ArchiveConceptCard key={item.localName} item={item} />
+                        <ArchiveConceptCard
+                            key={item.localName}
+                            item={item}
+                            entityType={entityType}
+                        />
                     ))}
                 </Box>
             </Stack>
@@ -463,6 +480,7 @@ function ArchiveReferencePage({ kind }: Props) {
                             <ArchiveCategorySection
                                 key={section.category.localName}
                                 section={section}
+                                entityType={entityTypeForKind(kind)}
                             />
                         ))}
                     </Stack>

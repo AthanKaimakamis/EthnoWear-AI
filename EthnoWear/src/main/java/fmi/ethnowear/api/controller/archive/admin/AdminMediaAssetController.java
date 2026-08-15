@@ -1,8 +1,8 @@
 package fmi.ethnowear.api.controller.archive.admin;
 
 import fmi.ethnowear.api.controller.BaseCrudController;
-import fmi.ethnowear.api.dto.archive.media.MediaAssetDetails;
-import fmi.ethnowear.api.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
 import fmi.ethnowear.application.service.archive.media.MediaAssetService;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,6 +1,6 @@
 package fmi.ethnowear.api.converter;
 
-import fmi.ethnowear.application.enums.FeatureType;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

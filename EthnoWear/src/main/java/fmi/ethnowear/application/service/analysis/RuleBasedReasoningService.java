@@ -1,15 +1,15 @@
 package fmi.ethnowear.application.service.analysis;
 
-import fmi.ethnowear.agents.protocol.AnalyzeFeaturesPayload;
-import fmi.ethnowear.agents.protocol.CandidatePayload;
-import fmi.ethnowear.agents.protocol.EvidencePayload;
-import fmi.ethnowear.agents.protocol.ReasoningResultPayload;
-import fmi.ethnowear.application.constants.AnalysisCandidateTypes;
-import fmi.ethnowear.application.constants.AnalysisFeatureTypes;
-import fmi.ethnowear.application.constants.ScoringWeights;
-import fmi.ethnowear.ontology.OntologyTerms;
-import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
-import fmi.ethnowear.ontology.model.OntologyResource;
+import fmi.ethnowear.application.model.analysis.AnalyzeFeaturesPayload;
+import fmi.ethnowear.application.model.analysis.CandidatePayload;
+import fmi.ethnowear.application.model.analysis.EvidencePayload;
+import fmi.ethnowear.application.model.analysis.ReasoningResultPayload;
+import fmi.ethnowear.application.constant.analysis.AnalysisCandidateTypes;
+import fmi.ethnowear.application.constant.analysis.AnalysisFeatureTypes;
+import fmi.ethnowear.application.constant.analysis.ScoringWeights;
+import fmi.ethnowear.domain.constant.ontology.OntologyTerms;
+import fmi.ethnowear.application.port.ontology.EmbroideryOntologyClient;
+import fmi.ethnowear.domain.model.ontology.OntologyResource;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 

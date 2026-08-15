@@ -1,7 +1,7 @@
 package fmi.ethnowear.api.controller.archive;
 
-import fmi.ethnowear.api.dto.archive.query.ArchiveItemDetailDetails;
-import fmi.ethnowear.api.dto.archive.query.RegionalEmbroideryArchiveOverviewDetails;
+import fmi.ethnowear.application.dto.archive.query.ArchiveItemDetailDetails;
+import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveOverviewDetails;
 import fmi.ethnowear.application.service.archive.media.MediaDelivery;
 import fmi.ethnowear.application.service.archive.media.MediaDeliveryService;
 import fmi.ethnowear.application.service.archive.query.ArchiveItemDetailService;

@@ -1,15 +1,15 @@
 package fmi.ethnowear.application.service.archive.media;
 
-import fmi.ethnowear.api.dto.archive.media.MediaFeatureAnnotationDetails;
-import fmi.ethnowear.api.dto.archive.media.MediaFeatureAnnotationWriteDto;
-import fmi.ethnowear.application.enums.MediaFeatureAnnotationType;
-import fmi.ethnowear.dal.entity.ArchiveItem;
-import fmi.ethnowear.dal.entity.ArchiveItemFeature;
-import fmi.ethnowear.dal.entity.ArchiveItemMedia;
-import fmi.ethnowear.dal.entity.MediaFeatureAnnotation;
-import fmi.ethnowear.dal.repository.ArchiveItemFeatureRepository;
-import fmi.ethnowear.dal.repository.ArchiveItemMediaRepository;
-import fmi.ethnowear.dal.repository.MediaFeatureAnnotationRepository;
+import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationDetails;
+import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationWriteDto;
+import fmi.ethnowear.domain.model.archive.MediaFeatureAnnotationType;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemFeature;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemMedia;
+import fmi.ethnowear.persistence.jpa.entity.MediaFeatureAnnotation;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaFeatureAnnotationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

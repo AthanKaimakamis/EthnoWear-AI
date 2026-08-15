@@ -1,14 +1,14 @@
 package fmi.ethnowear.application.service.archive.knowledge;
 
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkDetails;
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkWriteDto;
-import fmi.ethnowear.application.enums.KnowledgeChunkType;
-import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
+import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
+import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
-import fmi.ethnowear.dal.entity.KnowledgeChunk;
-import fmi.ethnowear.dal.entity.SourceReference;
-import fmi.ethnowear.dal.repository.KnowledgeChunkRepository;
-import fmi.ethnowear.dal.repository.SourceReferenceRepository;
+import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
+import fmi.ethnowear.persistence.jpa.repository.KnowledgeChunkRepository;
+import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;

@@ -1,13 +1,13 @@
 package fmi.ethnowear.application.service.archive.query;
 
-import fmi.ethnowear.api.dto.archive.query.ArchiveEvidenceDetails;
-import fmi.ethnowear.api.dto.archive.query.RegionalEmbroideryArchiveOverviewDetails;
-import fmi.ethnowear.api.dto.archive.query.RegionalEmbroideryArchiveSectionDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityOntologyDetails;
-import fmi.ethnowear.application.enums.FeatureType;
+import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceDetails;
+import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveOverviewDetails;
+import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveSectionDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.application.service.catalogue.EntityCardMapper;
 import fmi.ethnowear.application.service.catalogue.OntologyEntityDetailReader;
-import fmi.ethnowear.ontology.enums.OntologyLanguage;
+import fmi.ethnowear.domain.model.ontology.OntologyLanguage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

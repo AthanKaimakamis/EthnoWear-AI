@@ -1,7 +1,7 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.EntityCardDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityCardDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 

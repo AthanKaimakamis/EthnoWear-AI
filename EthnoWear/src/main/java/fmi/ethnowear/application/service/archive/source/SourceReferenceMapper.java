@@ -1,9 +1,9 @@
 package fmi.ethnowear.application.service.archive.source;
 
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceDetails;
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceWriteDto;
-import fmi.ethnowear.dal.entity.Source;
-import fmi.ethnowear.dal.entity.SourceReference;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceDetails;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceWriteDto;
+import fmi.ethnowear.persistence.jpa.entity.Source;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 

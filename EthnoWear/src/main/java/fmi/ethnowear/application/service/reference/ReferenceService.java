@@ -1,10 +1,11 @@
 package fmi.ethnowear.application.service.reference;
 
-import fmi.ethnowear.api.dto.reference.ReferenceItemDto;
-import fmi.ethnowear.api.dto.reference.ReferenceResponse;
-import fmi.ethnowear.ontology.embroidery.EmbroideryOntologyClient;
-import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.enums.OntologyLanguage;
+import fmi.ethnowear.application.dto.reference.ReferenceItemDto;
+import fmi.ethnowear.application.dto.reference.ReferenceResponse;
+import fmi.ethnowear.domain.model.ontology.OntologyResource;
+import fmi.ethnowear.application.port.ontology.EmbroideryOntologyClient;
+import fmi.ethnowear.domain.model.ontology.LocalizedOntologyResource;
+import fmi.ethnowear.domain.model.ontology.OntologyLanguage;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
@@ -118,7 +119,7 @@ public class ReferenceService {
         return result;
     }
 
-    private List<String> localNames(List<fmi.ethnowear.ontology.model.OntologyResource> resources) {
+    private List<String> localNames(List<OntologyResource> resources) {
         return resources.stream().map(resource -> resource.localName()).toList();
     }
 

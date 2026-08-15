@@ -1,9 +1,9 @@
 package fmi.ethnowear.api.controller.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.ConceptCatalogQueryDto;
-import fmi.ethnowear.api.dto.catalogue.ConceptCatalogResultDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityDetailDetails;
-import fmi.ethnowear.application.enums.FeatureType;
+import fmi.ethnowear.application.dto.catalogue.ConceptCatalogQueryDto;
+import fmi.ethnowear.application.dto.catalogue.ConceptCatalogResultDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityDetailDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.application.service.catalogue.ConceptCatalogService;
 import fmi.ethnowear.application.service.catalogue.EntityDetailService;
 import org.springframework.data.domain.Pageable;

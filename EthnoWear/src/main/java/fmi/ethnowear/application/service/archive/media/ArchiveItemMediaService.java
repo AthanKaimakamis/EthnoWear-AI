@@ -1,16 +1,16 @@
 package fmi.ethnowear.application.service.archive.media;
 
-import fmi.ethnowear.api.dto.archive.media.ArchiveItemMediaDetails;
-import fmi.ethnowear.api.dto.archive.media.ArchiveItemMediaWriteDto;
-import fmi.ethnowear.application.exceptions.ResourceInUseException;
-import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
+import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaDetails;
+import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaWriteDto;
+import fmi.ethnowear.application.exception.ResourceInUseException;
+import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
-import fmi.ethnowear.dal.entity.ArchiveItem;
-import fmi.ethnowear.dal.entity.ArchiveItemMedia;
-import fmi.ethnowear.dal.entity.MediaAsset;
-import fmi.ethnowear.dal.repository.ArchiveItemMediaRepository;
-import fmi.ethnowear.dal.repository.ArchiveItemRepository;
-import fmi.ethnowear.dal.repository.MediaAssetRepository;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemMedia;
+import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;

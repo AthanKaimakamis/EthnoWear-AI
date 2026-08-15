@@ -1,12 +1,12 @@
 package fmi.ethnowear.application.service.archive.query;
 
-import fmi.ethnowear.api.dto.archive.query.ArchiveEvidenceDetails;
-import fmi.ethnowear.api.dto.archive.query.ArchiveEvidenceFeatureDetails;
-import fmi.ethnowear.api.dto.archive.query.ArchiveEvidenceMediaDetails;
-import fmi.ethnowear.dal.entity.ArchiveItem;
-import fmi.ethnowear.dal.entity.ArchiveItemFeature;
-import fmi.ethnowear.dal.entity.ArchiveItemMedia;
-import fmi.ethnowear.dal.entity.MediaAsset;
+import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceDetails;
+import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceFeatureDetails;
+import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceMediaDetails;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemFeature;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemMedia;
+import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;

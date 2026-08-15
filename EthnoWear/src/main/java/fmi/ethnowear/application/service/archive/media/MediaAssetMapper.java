@@ -1,9 +1,9 @@
 package fmi.ethnowear.application.service.archive.media;
 
-import fmi.ethnowear.api.dto.archive.media.MediaAssetDetails;
-import fmi.ethnowear.api.dto.archive.media.MediaAssetWriteDto;
-import fmi.ethnowear.dal.entity.MediaAsset;
-import fmi.ethnowear.dal.entity.SourceReference;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 

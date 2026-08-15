@@ -1,11 +1,11 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.CategoryLinkDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityLinkDetails;
-import fmi.ethnowear.application.enums.FeatureType;
-import fmi.ethnowear.ontology.model.LocalizedOntologyResource;
-import fmi.ethnowear.ontology.enums.OntologyLanguage;
-import fmi.ethnowear.ontology.model.OntologyResource;
+import fmi.ethnowear.application.dto.catalogue.CategoryLinkDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityLinkDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.domain.model.ontology.LocalizedOntologyResource;
+import fmi.ethnowear.domain.model.ontology.OntologyLanguage;
+import fmi.ethnowear.domain.model.ontology.OntologyResource;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -2,9 +2,10 @@ package fmi.ethnowear.api.controller.archive;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.api.controller.archive.admin.AdminKnowledgeChunkController;
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkDetails;
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkWriteDto;
-import fmi.ethnowear.application.enums.KnowledgeChunkType;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
+import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
+import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
 import fmi.ethnowear.application.service.archive.knowledge.KnowledgeChunkService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

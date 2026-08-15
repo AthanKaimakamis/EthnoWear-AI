@@ -1,7 +1,7 @@
 package fmi.ethnowear.api.controller.reference;
 
-import fmi.ethnowear.api.dto.reference.ReferenceItemDto;
-import fmi.ethnowear.api.dto.reference.ReferenceResponse;
+import fmi.ethnowear.application.dto.reference.ReferenceItemDto;
+import fmi.ethnowear.application.dto.reference.ReferenceResponse;
 import fmi.ethnowear.application.service.reference.ReferenceService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

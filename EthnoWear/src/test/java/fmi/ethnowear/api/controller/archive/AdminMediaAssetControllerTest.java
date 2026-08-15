@@ -2,9 +2,10 @@ package fmi.ethnowear.api.controller.archive;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.api.controller.archive.admin.AdminMediaAssetController;
-import fmi.ethnowear.api.dto.archive.media.MediaAssetDetails;
-import fmi.ethnowear.api.dto.archive.media.MediaAssetWriteDto;
-import fmi.ethnowear.application.enums.MediaType;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
+import fmi.ethnowear.domain.model.archive.MediaType;
 import fmi.ethnowear.application.service.archive.media.MediaAssetService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package fmi.ethnowear.application.service.archive.knowledge;
 
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkDetails;
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkWriteDto;
-import fmi.ethnowear.dal.entity.KnowledgeChunk;
-import fmi.ethnowear.dal.entity.SourceReference;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
+import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 

@@ -1,12 +1,12 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.CategoryLinkDetails;
-import fmi.ethnowear.api.dto.catalogue.ConceptCatalogQueryDto;
-import fmi.ethnowear.api.dto.catalogue.EntityLinkDetails;
-import fmi.ethnowear.api.dto.catalogue.EntityOntologyDetails;
-import fmi.ethnowear.application.enums.FeatureType;
-import fmi.ethnowear.application.enums.FilterCombinationMode;
-import fmi.ethnowear.ontology.model.OntologyResource;
+import fmi.ethnowear.application.dto.catalogue.CategoryLinkDetails;
+import fmi.ethnowear.application.dto.catalogue.ConceptCatalogQueryDto;
+import fmi.ethnowear.application.dto.catalogue.EntityLinkDetails;
+import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.domain.model.catalogue.FilterCombinationMode;
+import fmi.ethnowear.domain.model.ontology.OntologyResource;
 import fmi.ethnowear.util.TextUtils;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;

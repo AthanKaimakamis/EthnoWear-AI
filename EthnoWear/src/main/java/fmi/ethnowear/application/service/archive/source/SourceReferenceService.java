@@ -1,14 +1,14 @@
 package fmi.ethnowear.application.service.archive.source;
 
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceDetails;
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceWriteDto;
-import fmi.ethnowear.application.exceptions.ResourceInUseException;
-import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceDetails;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceWriteDto;
+import fmi.ethnowear.application.exception.ResourceInUseException;
+import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
-import fmi.ethnowear.dal.entity.Source;
-import fmi.ethnowear.dal.entity.SourceReference;
-import fmi.ethnowear.dal.repository.SourceReferenceRepository;
-import fmi.ethnowear.dal.repository.SourceRepository;
+import fmi.ethnowear.persistence.jpa.entity.Source;
+import fmi.ethnowear.persistence.jpa.entity.SourceReference;
+import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
+import fmi.ethnowear.persistence.jpa.repository.SourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;

@@ -1,11 +1,11 @@
 package fmi.ethnowear.application.service.catalogue;
 
-import fmi.ethnowear.api.dto.catalogue.ConceptCatalogQueryDto;
-import fmi.ethnowear.api.dto.catalogue.ConceptCatalogResultDetails;
-import fmi.ethnowear.application.enums.FeatureType;
-import fmi.ethnowear.application.enums.FilterCombinationMode;
-import fmi.ethnowear.ontology.embroidery.EmbroideryOntology;
-import fmi.ethnowear.ontology.jena.JenaOntologyStore;
+import fmi.ethnowear.application.dto.catalogue.ConceptCatalogQueryDto;
+import fmi.ethnowear.application.dto.catalogue.ConceptCatalogResultDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.domain.model.catalogue.FilterCombinationMode;
+import fmi.ethnowear.infrastructure.ontology.jena.embroidery.EmbroideryOntology;
+import fmi.ethnowear.infrastructure.ontology.jena.JenaOntologyStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

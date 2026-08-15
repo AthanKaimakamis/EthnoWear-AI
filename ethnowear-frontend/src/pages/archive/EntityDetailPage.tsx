@@ -43,21 +43,19 @@ function EntityDetailPage() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        if (!entityType || !localName) {
-            setError(t('entityDetails.invalidRoute'))
-            setLoading(false)
-            return
-        }
+        if (!entityType || !localName) return
 
         const controller = new AbortController()
+        const requestedEntityType = entityType
+        const requestedLocalName = localName
 
         async function loadDetails() {
             try {
                 setLoading(true)
                 setError(null)
                 const response = await getEntityDetails(
-                    entityType,
-                    localName,
+                    requestedEntityType,
+                    requestedLocalName,
                     language,
                     { page: evidencePage - 1, size: 12, sort: 'id,desc' },
                     controller.signal,
@@ -96,11 +94,15 @@ function EntityDetailPage() {
         return [...items.values()]
     }, [details, language, t])
 
+    if (!entityType || !localName) {
+        return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><Alert severity="error">{t('entityDetails.invalidRoute')}</Alert></Box>
+    }
+
     if (loading && !details) {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><PageLoading message={t('entityDetails.loading')} /></Box>
     }
 
-    if (error || !details || !entityType) {
+    if (error || !details) {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><Alert severity="error">{error ?? t('entityDetails.loadError')}</Alert></Box>
     }
 

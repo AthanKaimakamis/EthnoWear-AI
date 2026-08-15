@@ -1,10 +1,10 @@
 package fmi.ethnowear.api.controller.ontology.admin;
 
-import fmi.ethnowear.ontology.admin.command.OrnamentCreateCommand;
-import fmi.ethnowear.ontology.admin.model.OrnamentDetails;
-import fmi.ethnowear.application.exceptions.OrnamentNotFoundException;
-import fmi.ethnowear.ontology.admin.OrnamentOntologyAdminService;
-import fmi.ethnowear.ontology.admin.command.OrnamentUpdateCommand;
+import fmi.ethnowear.application.dto.ontology.admin.OrnamentCreateCommand;
+import fmi.ethnowear.application.dto.ontology.admin.OrnamentDetails;
+import fmi.ethnowear.application.exception.OrnamentNotFoundException;
+import fmi.ethnowear.application.port.ontology.admin.OrnamentOntologyAdminPort;
+import fmi.ethnowear.application.dto.ontology.admin.OrnamentUpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +17,9 @@ import static fmi.ethnowear.api.util.ResponseUtil.created;
 @RequestMapping("/api/admin/ontology/ornaments")
 public class OrnamentOntologyController {
 
-    private final OrnamentOntologyAdminService ornamentService;
+    private final OrnamentOntologyAdminPort ornamentService;
 
-    public OrnamentOntologyController(OrnamentOntologyAdminService ornamentService) {
+    public OrnamentOntologyController(OrnamentOntologyAdminPort ornamentService) {
         this.ornamentService = ornamentService;
     }
 

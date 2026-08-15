@@ -1,6 +1,6 @@
 package fmi.ethnowear.api.controller;
 
-import fmi.ethnowear.api.dto.IdentifiableDto;
+import fmi.ethnowear.application.dto.IdentifiableDto;
 import fmi.ethnowear.application.service.CrudService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;

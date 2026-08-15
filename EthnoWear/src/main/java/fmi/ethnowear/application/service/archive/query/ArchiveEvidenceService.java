@@ -1,14 +1,14 @@
 package fmi.ethnowear.application.service.archive.query;
 
-import fmi.ethnowear.api.dto.archive.query.ArchiveEvidenceDetails;
-import fmi.ethnowear.application.enums.FeatureType;
-import fmi.ethnowear.application.enums.MediaRole;
-import fmi.ethnowear.dal.entity.ArchiveItem;
-import fmi.ethnowear.dal.entity.ArchiveItemFeature;
-import fmi.ethnowear.dal.entity.ArchiveItemMedia;
-import fmi.ethnowear.dal.repository.ArchiveItemFeatureRepository;
-import fmi.ethnowear.dal.repository.ArchiveItemMediaRepository;
-import fmi.ethnowear.dal.repository.ArchiveItemRepository;
+import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceDetails;
+import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.domain.model.archive.MediaRole;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemFeature;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemMedia;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

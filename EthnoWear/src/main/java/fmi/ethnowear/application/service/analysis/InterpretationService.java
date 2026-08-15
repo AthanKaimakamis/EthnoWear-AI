@@ -1,11 +1,11 @@
 package fmi.ethnowear.application.service.analysis;
 
-import fmi.ethnowear.agents.protocol.*;
-import fmi.ethnowear.api.dto.analysis.AnalysisCandidateDto;
-import fmi.ethnowear.api.dto.analysis.AnalysisEvidenceDto;
-import fmi.ethnowear.api.dto.analysis.AnalyzeRequest;
-import fmi.ethnowear.api.dto.analysis.AnalyzeResponse;
-import fmi.ethnowear.application.service.agent.AgentAnalysisGateway;
+import fmi.ethnowear.application.dto.analysis.AnalysisCandidateDto;
+import fmi.ethnowear.application.dto.analysis.AnalysisEvidenceDto;
+import fmi.ethnowear.application.dto.analysis.AnalyzeRequest;
+import fmi.ethnowear.application.dto.analysis.AnalyzeResponse;
+import fmi.ethnowear.application.model.analysis.*;
+import fmi.ethnowear.application.port.analysis.AnalysisGateway;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -17,17 +17,17 @@ import static fmi.ethnowear.util.TextUtils.defaultIfBlank;
 @Service
 public class InterpretationService {
 
-    private final AgentAnalysisGateway agentAnalysisGateway;
+    private final AnalysisGateway analysisGateway;
 
-    public InterpretationService(AgentAnalysisGateway agentAnalysisGateway) {
-        this.agentAnalysisGateway = agentAnalysisGateway;
+    public InterpretationService(AnalysisGateway analysisGateway) {
+        this.analysisGateway = analysisGateway;
     }
 
     public AnalyzeResponse analyze(AnalyzeRequest request){
         String conversationId = UUID.randomUUID().toString();
 
         AnalyzeFeaturesPayload payload = toAgentPayload(conversationId, request);
-        InterpretationResultPayload result = agentAnalysisGateway.analyze(payload);
+        InterpretationResultPayload result = analysisGateway.analyze(payload);
 
         return toResponse(result);
     }

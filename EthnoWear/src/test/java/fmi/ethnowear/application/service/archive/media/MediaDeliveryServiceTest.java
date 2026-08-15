@@ -1,9 +1,9 @@
 package fmi.ethnowear.application.service.archive.media;
 
-import fmi.ethnowear.application.exceptions.ResourceNotFoundException;
+import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.config.MediaStorageProperties;
-import fmi.ethnowear.dal.entity.MediaAsset;
-import fmi.ethnowear.dal.repository.MediaAssetRepository;
+import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
+import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

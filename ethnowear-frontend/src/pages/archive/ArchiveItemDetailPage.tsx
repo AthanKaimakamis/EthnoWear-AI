@@ -30,11 +30,7 @@ function ArchiveItemDetailPage() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        if (!Number.isInteger(archiveItemId) || archiveItemId <= 0) {
-            setError(t('archiveDetails.invalidId'))
-            setLoading(false)
-            return
-        }
+        if (!Number.isInteger(archiveItemId) || archiveItemId <= 0) return
 
         const controller = new AbortController()
 
@@ -68,6 +64,10 @@ function ArchiveItemDetailPage() {
             mimeType: asset.mimeType,
         }))
     }, [details, language, t])
+
+    if (!Number.isInteger(archiveItemId) || archiveItemId <= 0) {
+        return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><Alert severity="error">{t('archiveDetails.invalidId')}</Alert></Box>
+    }
 
     if (loading) {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><PageLoading message={t('archiveDetails.loading')} /></Box>

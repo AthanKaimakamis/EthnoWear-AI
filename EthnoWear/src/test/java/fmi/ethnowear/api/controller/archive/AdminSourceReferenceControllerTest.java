@@ -2,8 +2,9 @@ package fmi.ethnowear.api.controller.archive;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.api.controller.archive.admin.AdminSourceReferenceController;
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceDetails;
-import fmi.ethnowear.api.dto.archive.source.SourceReferenceWriteDto;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceDetails;
+import fmi.ethnowear.application.dto.archive.source.SourceReferenceWriteDto;
+import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
 import fmi.ethnowear.application.service.archive.source.SourceReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

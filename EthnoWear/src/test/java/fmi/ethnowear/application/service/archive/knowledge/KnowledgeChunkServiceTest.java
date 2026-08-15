@@ -1,10 +1,10 @@
 package fmi.ethnowear.application.service.archive.knowledge;
 
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkDetails;
-import fmi.ethnowear.api.dto.archive.knowledge.KnowledgeChunkWriteDto;
-import fmi.ethnowear.application.enums.KnowledgeChunkType;
-import fmi.ethnowear.dal.entity.KnowledgeChunk;
-import fmi.ethnowear.dal.repository.KnowledgeChunkRepository;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
+import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
+import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
+import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
+import fmi.ethnowear.persistence.jpa.repository.KnowledgeChunkRepository;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;

@@ -1,19 +1,19 @@
 package fmi.ethnowear.application.service.archive.media;
 
-import fmi.ethnowear.api.dto.archive.media.ArchiveItemMediaDetails;
-import fmi.ethnowear.api.dto.archive.media.ArchiveItemMediaWriteDto;
-import fmi.ethnowear.api.dto.archive.media.MediaAssetWriteDto;
-import fmi.ethnowear.application.enums.MediaRole;
-import fmi.ethnowear.application.enums.MediaType;
-import fmi.ethnowear.application.exceptions.ResourceInUseException;
-import fmi.ethnowear.dal.entity.ArchiveItem;
-import fmi.ethnowear.dal.entity.ArchiveItemMedia;
-import fmi.ethnowear.dal.entity.MediaAsset;
-import fmi.ethnowear.dal.repository.ArchiveItemMediaRepository;
-import fmi.ethnowear.dal.repository.ArchiveItemRepository;
-import fmi.ethnowear.dal.repository.MediaAssetRepository;
-import fmi.ethnowear.dal.repository.MediaFeatureAnnotationRepository;
-import fmi.ethnowear.dal.repository.SourceReferenceRepository;
+import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaDetails;
+import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaWriteDto;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.domain.model.archive.MediaRole;
+import fmi.ethnowear.domain.model.archive.MediaType;
+import fmi.ethnowear.application.exception.ResourceInUseException;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItemMedia;
+import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaFeatureAnnotationRepository;
+import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
