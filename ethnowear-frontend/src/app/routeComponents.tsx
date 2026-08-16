@@ -1,0 +1,16 @@
+import { lazy } from 'react'
+
+export const MaterialUiTestPage = lazy(() => import('../pages/MaterialUiTestPage'))
+export const ArchivePage = lazy(() => import('../pages/ArchivePage'))
+export const AdminLayout = lazy(() => import('../components/admin/AdminLayout'))
+export const OntologyEntityPage = lazy(() => import('../pages/admin/OntologyEntityPage'))
+export const ArchiveReferencePage = lazy(() => import('../pages/archive/ArchiveReferencePage'))
+export const EntityDetailPage = lazy(() => import('../pages/archive/EntityDetailPage'))
+export const ArchiveItemDetailPage = lazy(() => import('../pages/archive/ArchiveItemDetailPage'))
+export const ArchiveAdminPage = lazy(() => import('../pages/admin/ArchiveAdminPage'))
+export const AdminLoginPage = lazy(() => import('../pages/admin/AdminLoginPage'))
+export const ArchiveManagerPage = lazy(() => import('../pages/admin/ArchiveManagerPage'))
+export const MediaLibraryPage = lazy(() => import('../pages/admin/MediaLibraryPage'))
+export const DocumentsPage = lazy(() => import('../pages/admin/DocumentsPage'))
+export const ProcessingStatusPage = lazy(() => import('../pages/admin/ProcessingStatusPage'))
+export const ArchiveEditRedirect = lazy(() => import('../pages/admin/ArchiveEditRedirect'))

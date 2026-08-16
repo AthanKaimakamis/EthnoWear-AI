@@ -2,7 +2,9 @@ package fmi.ethnowear.application.service.archive.item;
 
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureDetails;
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureWriteDto;
+import fmi.ethnowear.application.service.archive.workflow.ArchiveItemWorkflowGuard;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
+import fmi.ethnowear.domain.model.ontology.OntologyIdentity;
 import fmi.ethnowear.application.exception.ResourceInUseException;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
@@ -34,6 +36,7 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
     private final SourceReferenceRepository sourceReferenceRepository;
     private final ArchiveItemFeatureMapper featureMapper;
     private final ArchiveItemFeatureUsageChecker usageChecker;
+    private final ArchiveItemWorkflowGuard workflowGuard;
 
     private static final Set<FeatureType> ALLOWED_FEATURE_TYPES = Set.of(
             FeatureType.ORNAMENT,
@@ -70,6 +73,7 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
         validate(input);
 
         ArchiveItemFeature feature = requireFeature(id);
+        workflowGuard.requireDraft(feature.getArchiveItem());
         apply(feature, input);
 
         return featureMapper.toDetails(featureRepository.save(feature));
@@ -79,6 +83,7 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
     @Transactional
     public void delete(Long id) {
         ArchiveItemFeature feature = requireFeature(id);
+        workflowGuard.requireDraft(feature.getArchiveItem());
 
         if (usageChecker.isInUse(id))
             throw new ResourceInUseException("Archive item feature", id);
@@ -90,6 +95,8 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
         ArchiveItem item = archiveItemRepository
                 .findById(input.archiveItemId())
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", input.archiveItemId()));
+
+        workflowGuard.requireDraft(item);
 
         SourceReference reference = input.sourceReferenceId() == null
                 ? null
@@ -115,11 +122,17 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
         if (!ALLOWED_FEATURE_TYPES.contains(input.featureType()))
             throw new IllegalArgumentException("Region and regional embroidery must be assigned directly to the archive item");
 
-        if (isBlank(input.ontologyIri()))
-            throw new IllegalArgumentException("Ontology IRI is required");
+        OntologyIdentity identity = new OntologyIdentity(
+                input.ontologyIri(),
+                input.ontologyLocalName()
+        );
 
-        if (isBlank(input.ontologyLocalName()))
+        if (!identity.isComplete()) {
+            if (isBlank(identity.iri()))
+                throw new IllegalArgumentException("Ontology IRI is required");
+
             throw new IllegalArgumentException("Ontology local name is required");
+        }
 
         if (input.confidence() != null
                 && (input.confidence().compareTo(BigDecimal.ZERO) < 0

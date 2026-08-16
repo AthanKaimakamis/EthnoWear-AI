@@ -30,7 +30,7 @@ class AdminMediaAssetControllerTest {
     void setUp() {
         mediaAssetService = new StubMediaAssetService();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new AdminMediaAssetController(mediaAssetService))
+                .standaloneSetup(new AdminMediaAssetController(mediaAssetService, null))
                 .setControllerAdvice(new ArchiveApiExceptionHandler())
                 .build();
     }
@@ -95,6 +95,8 @@ class AdminMediaAssetControllerTest {
                 input.sizeBytes(),
                 input.checksum(),
                 null,
+                null,
+                null,
                 null
         );
     }
@@ -105,7 +107,7 @@ class AdminMediaAssetControllerTest {
         private Long deletedId;
 
         private StubMediaAssetService() {
-            super(null, null, null, null);
+            super(null, null, null, null, null);
         }
 
         @Override

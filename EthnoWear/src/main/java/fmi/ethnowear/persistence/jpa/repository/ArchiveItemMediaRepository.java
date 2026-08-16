@@ -64,4 +64,13 @@ public interface ArchiveItemMediaRepository extends JpaRepository<ArchiveItemMed
      * @return {@code true} when at least one archive-item link uses the asset
      */
     boolean existsByMediaAsset_Id(Long mediaAssetId);
+
+    /**
+     * Checks whether an archive item has media with the specified role.
+     *
+     * @param archiveItemId database identifier of the archive item
+     * @param role required media role
+     * @return {@code true} when matching media exists
+     */
+    boolean existsByArchiveItem_IdAndRole(Long archiveItemId, MediaRole role);
 }

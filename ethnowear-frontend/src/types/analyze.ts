@@ -1,31 +1,36 @@
 import type { Language } from "./reference.ts";
 
 export type AnalyzeRequest = {
-    selectedOrnaments: string[]
-    selectedColors: string[]
-    selectedTechniques: string[]
-    selectedMotif?: string | null
-    selectedRegion?: string | null
-    selectedRegionalEmbroidery?: string | null
+    ornaments: string[]
+    colors: string[]
+    techniques: string[]
+    motif?: string | null
+    region?: string | null
+    regionalEmbroidery?: string | null
     language?: Language
 }
 
 export type Evidence = {
     featureType: string
     selectedFeature: string
+    selectedFeatureLabel: string | null
     matchedProperty: string
+    matchedPropertyLabel: string | null
     weight: number
-    explanation: string
 }
 
 export type Candidate = {
-    localName: string
-    label?: string | null
+    id: string
+    label: string | null
+    type: string
     score: number
     evidence: Evidence[]
 }
 
 export type AnalyzeResponse = {
-    explanation: string
+    conversationId: string
+    topCandidate: Candidate | null
     candidates: Candidate[]
+    explanation: string
+    warnings: string[]
 }

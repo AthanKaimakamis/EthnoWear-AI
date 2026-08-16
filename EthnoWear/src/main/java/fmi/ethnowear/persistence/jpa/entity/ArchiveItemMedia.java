@@ -32,4 +32,7 @@ public class ArchiveItemMedia extends BaseEntity {
     @Lob
     @Column(name = "CaptionEn")
     private String captionEn;
+
+    @Column(name = "DisplayOrder", nullable = false)
+    private int displayOrder;
 }

@@ -44,10 +44,14 @@ public class ArchiveItemMapper {
                 item.getOriginText(),
                 item.getCurrentLocation(),
                 item.getTrustedLevel(),
+                item.getPublicationStatus(),
                 item.getOntologyRegionIri(),
                 item.getOntologyRegionLocalName(),
                 item.getOntologyRegionalEmbroideryIri(),
                 item.getOntologyRegionalEmbroideryLocalName(),
+                item.getSubmittedAt(),
+                item.getPublishedAt(),
+                item.getArchivedAt(),
                 item.getCreatedAt(),
                 item.getUpdatedAt()
         );

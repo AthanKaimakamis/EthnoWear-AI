@@ -41,6 +41,12 @@ public class MediaAsset extends BaseEntity {
     @Column(name = "Checksum")
     private String checksum;
 
+    @Column(name = "ThumbnailPath")
+    private String thumbnailPath;
+
+    @Column(name = "Description", length = 2000)
+    private String description;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SourceReferenceId")
     private SourceReference sourceReference;

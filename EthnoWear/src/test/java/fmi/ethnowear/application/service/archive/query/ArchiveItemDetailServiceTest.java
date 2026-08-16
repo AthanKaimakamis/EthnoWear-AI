@@ -41,6 +41,7 @@ class ArchiveItemDetailServiceTest {
         MediaFeatureAnnotation annotation = annotation(55L, earlierMedia, earlierFeature);
 
         ArchiveItemDetailService service = service(
+                7L,
                 Optional.of(item),
                 List.of(laterFeature, earlierFeature),
                 List.of(laterMedia, earlierMedia),
@@ -61,6 +62,7 @@ class ArchiveItemDetailServiceTest {
     @Test
     void throwsWhenArchiveItemDoesNotExist() {
         ArchiveItemDetailService service = service(
+                99L,
                 Optional.empty(),
                 List.of(),
                 List.of(),
@@ -71,6 +73,7 @@ class ArchiveItemDetailServiceTest {
     }
 
     private ArchiveItemDetailService service(
+            Long expectedId,
             Optional<ArchiveItem> item,
             List<ArchiveItemFeature> features,
             List<ArchiveItemMedia> media,
@@ -78,7 +81,11 @@ class ArchiveItemDetailServiceTest {
     ) {
         ArchiveItemRepository itemRepository = proxy(
                 ArchiveItemRepository.class,
-                (ignored, method, arguments) -> item
+                (ignored, method, arguments) -> {
+                    assertEquals("findPublishedById", method.getName());
+                    assertEquals(expectedId, arguments[0]);
+                    return item;
+                }
         );
         ArchiveItemFeatureRepository featureRepository = proxy(
                 ArchiveItemFeatureRepository.class,

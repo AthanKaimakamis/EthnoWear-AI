@@ -1,17 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Alert, Box, Button, Collapse, Grid, Stack, Typography } from '@mui/material'
+import { useMemo, useState } from 'react'
+import { Alert, Box, Button, Grid, LinearProgress, Stack, Typography } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import FilterListIcon from '@mui/icons-material/FilterList'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { searchCatalogue } from '../api/CatalogueApi'
-import { getRegionalEmbroideryArchive } from '../api/PublicArchiveApi'
+import { useQuery } from '@tanstack/react-query'
+import { catalogueQueryOptions, regionalEmbroideryArchiveQueryOptions } from '../api/PublicQueryOptions'
 import { conceptPath } from '../app/archiveRoutes'
-import type { Language, ReferenceResource } from '../types/reference'
-import type { CatalogFacetType, ConceptCatalogResultDetails, OntologyFeatureType } from '../types/catalogue'
-import type { RegionalEmbroideryArchiveOverviewDetails } from '../types/archive'
+import type { Language } from '../types/reference'
 import {
     emptyEmbroideryFilters,
     type EmbroideryFilterOptions,
@@ -21,89 +16,47 @@ import {
 import ArchiveEvidenceCard from '../components/archive/ArchiveEvidenceCard'
 import EmbroideryFilterPanel from '../components/embroidery/EmbroideryFilterPanel'
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
-
-function facetOptions(
-    catalogue: ConceptCatalogResultDetails | null,
-    facetType: CatalogFacetType,
-    entityType: OntologyFeatureType,
-): ReferenceResource[] {
-    return catalogue?.facets
-        .find((facet) => facet.facetType === facetType && facet.entityType === entityType)
-        ?.values
-        .filter((value) => value.selected || value.count > 0)
-        .map((value) => ({ iri: value.iri, localName: value.localName, label: value.label })) ?? []
-}
+import ArchiveBrowseLayout from '../components/archive/browse/ArchiveBrowseLayout'
+import { catalogueFacetOptions } from '../components/archive/browse/catalogueFacets'
 
 function ArchivePage() {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
-    const [overview, setOverview] = useState<RegionalEmbroideryArchiveOverviewDetails | null>(null)
-    const [catalogue, setCatalogue] = useState<ConceptCatalogResultDetails | null>(null)
     const [filters, setFilters] = useState<EmbroideryFilters>(emptyEmbroideryFilters)
     const [combinationMode, setCombinationMode] = useState<FilterCombinationMode>('and')
-    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        const controller = new AbortController()
-
-        async function loadOverview() {
-            try {
-                setOverview(await getRegionalEmbroideryArchive(language, 4, controller.signal))
-            } catch (err) {
-                if (!controller.signal.aborted) {
-                    setError(err instanceof Error ? err.message : t('archive.loadError'))
-                }
-            }
-        }
-
-        void loadOverview()
-        return () => controller.abort()
-    }, [language, t])
-
-    useEffect(() => {
-        const controller = new AbortController()
-
-        async function loadCatalogue() {
-            try {
-                setLoading(true)
-                setError(null)
-                const data = await searchCatalogue({
-                    entityType: 'REGIONAL_EMBROIDERY',
-                    language,
-                    relatedEntityLocalNames: {
-                        REGION: filters.regionLocalNames,
-                        ORNAMENT: filters.ornamentLocalNames,
-                        TECHNIQUE: filters.techniqueLocalNames,
-                    },
-                    relatedCategoryLocalNames: {
-                        REGION: filters.regionGroupLocalNames,
-                        ORNAMENT: filters.ornamentTypeLocalNames,
-                    },
-                    combinationMode: combinationMode.toUpperCase() as 'AND' | 'OR',
-                }, { page: 0, size: 500, sort: 'label,asc' }, controller.signal)
-
-                setCatalogue(data)
-            } catch (err) {
-                if (!controller.signal.aborted) {
-                    setError(err instanceof Error ? err.message : t('archive.loadError'))
-                }
-            } finally {
-                if (!controller.signal.aborted) setLoading(false)
-            }
-        }
-
-        void loadCatalogue()
-        return () => controller.abort()
-    }, [combinationMode, filters, language, t])
+    const overviewQuery = useQuery(regionalEmbroideryArchiveQueryOptions(language, 4))
+    const catalogueOptions = catalogueQueryOptions({
+        entityType: 'REGIONAL_EMBROIDERY',
+        language,
+        relatedEntityLocalNames: {
+            REGION: filters.regionLocalNames,
+            ORNAMENT: filters.ornamentLocalNames,
+            TECHNIQUE: filters.techniqueLocalNames,
+        },
+        relatedCategoryLocalNames: {
+            REGION: filters.regionGroupLocalNames,
+            ORNAMENT: filters.ornamentTypeLocalNames,
+        },
+        combinationMode: combinationMode.toUpperCase() as 'AND' | 'OR',
+    }, { page: 0, size: 500, sort: 'label,asc' })
+    const catalogueQuery = useQuery({
+        ...catalogueOptions,
+        placeholderData: (previousData, previousQuery) => {
+            const previousScope = previousQuery?.queryKey[2] as { entityType?: string, language?: string } | undefined
+            return previousScope?.entityType === 'REGIONAL_EMBROIDERY' && previousScope.language === language
+                ? previousData
+                : undefined
+        },
+    })
+    const overview = overviewQuery.data
+    const catalogue = catalogueQuery.data
 
     const filterOptions = useMemo<EmbroideryFilterOptions>(() => ({
-        regionGroups: facetOptions(catalogue, 'RELATED_CATEGORY', 'REGION'),
-        regions: facetOptions(catalogue, 'RELATED_ENTITY', 'REGION'),
-        ornamentTypes: facetOptions(catalogue, 'RELATED_CATEGORY', 'ORNAMENT'),
-        ornaments: facetOptions(catalogue, 'RELATED_ENTITY', 'ORNAMENT'),
-        techniques: facetOptions(catalogue, 'RELATED_ENTITY', 'TECHNIQUE'),
+        regionGroups: catalogueFacetOptions(catalogue ?? null, 'RELATED_CATEGORY', 'REGION'),
+        regions: catalogueFacetOptions(catalogue ?? null, 'RELATED_ENTITY', 'REGION'),
+        ornamentTypes: catalogueFacetOptions(catalogue ?? null, 'RELATED_CATEGORY', 'ORNAMENT'),
+        ornaments: catalogueFacetOptions(catalogue ?? null, 'RELATED_ENTITY', 'ORNAMENT'),
+        techniques: catalogueFacetOptions(catalogue ?? null, 'RELATED_ENTITY', 'TECHNIQUE'),
     }), [catalogue])
 
     const visibleSections = useMemo(() => {
@@ -135,48 +88,14 @@ function ArchivePage() {
         />
     )
 
-    if (loading && !catalogue) return <EmbroideryPageSkeleton />
+    const caughtError = catalogueQuery.error ?? overviewQuery.error
+    const error = caughtError instanceof Error ? caughtError.message : caughtError ? t('archive.loadError') : null
+    const initialLoading = catalogueQuery.isPending || overviewQuery.isPending
+
+    if (initialLoading) return <EmbroideryPageSkeleton />
 
     return (
-        <Box
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '300px minmax(0, 1fr)' },
-                gap: 3,
-                px: { xs: 2, md: 5 },
-                py: 3,
-                alignItems: 'start',
-                textAlign: 'left',
-            }}
-        >
-            <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'sticky', top: 140 }}>
-                {filterPanel}
-            </Box>
-
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                <Button
-                    variant="text"
-                    color="inherit"
-                    aria-expanded={mobileFiltersOpen}
-                    fullWidth
-                    onClick={() => setMobileFiltersOpen((open) => !open)}
-                    sx={{ minHeight: 52, border: 1, borderLeft: 4, borderColor: 'divider', borderLeftColor: 'primary.main', bgcolor: '#EEF1F1' }}
-                >
-                    <Stack direction="row" sx={{ width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                            <FilterListIcon color="primary" fontSize="small" />
-                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                {mobileFiltersOpen ? t('filters.hide') : t('filters.show')}
-                            </Typography>
-                        </Stack>
-                        {mobileFiltersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </Stack>
-                </Button>
-                <Collapse in={mobileFiltersOpen} unmountOnExit>
-                    <Box sx={{ mt: 1.5 }}>{filterPanel}</Box>
-                </Collapse>
-            </Box>
-
+        <ArchiveBrowseLayout filters={filterPanel}>
             <Stack spacing={4} sx={{ minWidth: 0 }}>
                 <Box>
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
@@ -184,6 +103,8 @@ function ArchivePage() {
                     </Typography>
                     <Typography color="text.secondary">{t('archive.subtitle')}</Typography>
                 </Box>
+
+                {(catalogueQuery.isFetching || overviewQuery.isFetching) && <LinearProgress aria-label={t('archive.loading')} />}
 
                 {error && <Alert severity="error">{error}</Alert>}
 
@@ -243,7 +164,7 @@ function ArchivePage() {
                     </Box>
                 ))}
             </Stack>
-        </Box>
+        </ArchiveBrowseLayout>
     )
 }
 

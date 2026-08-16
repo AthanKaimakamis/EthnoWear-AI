@@ -1,0 +1,405 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+    Alert, AlertTitle, Box, Button, Paper,
+    Stack, Tab, Tabs, Typography,
+} from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
+import { useNavigate, useParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
+import {
+    createFullArchiveEntry, getAdminArchiveItemDetail, getPublicationReadiness,
+    mediaAssetsApi, runPublicationCommand, sourceReferencesApi, sourcesApi,
+    updateFullArchiveEntry, type PublicationCommand,
+} from '../../api/ArchiveAdminApi'
+import { getFullReference } from '../../api/ReferenceApi'
+import AdminModal from '../../components/admin/AdminModal'
+import AdminPageHeader from '../../components/admin/AdminPageHeader'
+import ArchiveItemPreviewDialog from '../../components/admin/ArchiveItemPreviewDialog'
+import ArchiveStatusChip from '../../components/admin/ArchiveStatusChip'
+import ArchiveWorkflowActions from '../../components/admin/ArchiveWorkflowActions'
+import MediaUploadDialog from '../../components/admin/MediaUploadDialog'
+import PublicationReadinessPanel from '../../components/admin/PublicationReadinessPanel'
+import TrustedLevelChip from '../../components/admin/TrustedLevelChip'
+import {
+    adminWorkflowPermissions, publicationErrorMessages, tabForRequirement,
+    type ArchiveWorkflowPermissions,
+} from '../../components/admin/archiveWorkflow'
+import {
+    BasicSection, ClassificationSection, DescriptionSection, MediaLibraryDialog,
+    MediaSection, SourceSection, type FeatureSelections, type MediaDraft,
+} from '../../components/admin/archive-editor/ArchiveEditorSections'
+import FormSelectField from '../../components/forms/FormSelectField'
+import ArchiveEditorSkeleton from '../../components/loading/ArchiveEditorSkeleton'
+import type {
+    ArchiveEntryWriteDto, ArchiveItemDetails, ArchiveItemWriteDto, MediaAssetDetails,
+    PublicationReadinessDetails, PublicationStatus,
+    SourceDetails, SourceReferenceDetails,
+} from '../../types/archive'
+import type { OntologyFeatureType } from '../../types/catalogue'
+import type { ReferenceResource } from '../../types/reference'
+import { invalidatePublicQueries } from '../../app/queryClient'
+
+const emptyItem: ArchiveItemWriteDto = {
+    sourceReferenceId: 0,
+    collectionId: null,
+    inventoryNumber: null,
+    titleBg: '',
+    titleEn: '',
+    descriptionBg: '',
+    descriptionEn: '',
+    archiveType: 'EMBROIDERY_SAMPLE',
+    periodText: null,
+    originText: null,
+    currentLocation: null,
+    trustedLevel: 'UNVERIFIED',
+    ontologyRegionIri: null,
+    ontologyRegionLocalName: null,
+    ontologyRegionalEmbroideryIri: null,
+    ontologyRegionalEmbroideryLocalName: null,
+}
+
+const emptyFeatures: FeatureSelections = {
+    ORNAMENT: [],
+    TECHNIQUE: [],
+    MOTIF: [],
+    COLOR: [],
+}
+
+const editorTabs = ['basic', 'classification', 'media', 'source', 'description', 'review'] as const
+
+type Props = {
+    itemId?: number | null
+    embedded?: boolean
+    onClose?: () => void
+    onSaved?: (item: ArchiveItemDetails) => void
+    onPreview?: () => void
+    permissions?: ArchiveWorkflowPermissions
+}
+
+export default function ArchiveEditorPage({
+    itemId: itemIdOverride,
+    embedded = false,
+    onClose,
+    onSaved,
+    onPreview,
+    permissions = adminWorkflowPermissions,
+}: Props = {}) {
+    const { id } = useParams()
+    const itemId = itemIdOverride !== undefined ? itemIdOverride : id ? Number(id) : null
+    const navigate = useNavigate()
+    const { t, i18n } = useTranslation()
+    const [tab, setTab] = useState(0)
+    const [item, setItem] = useState<ArchiveItemWriteDto>(emptyItem)
+    const [publicationStatus, setPublicationStatus] = useState<PublicationStatus>('DRAFT')
+    const [features, setFeatures] = useState<FeatureSelections>(emptyFeatures)
+    const [media, setMedia] = useState<MediaDraft[]>([])
+    const [assets, setAssets] = useState<MediaAssetDetails[]>([])
+    const [sources, setSources] = useState<SourceDetails[]>([])
+    const [references, setReferences] = useState<SourceReferenceDetails[]>([])
+    const [referenceData, setReferenceData] = useState<Awaited<ReturnType<typeof getFullReference>> | null>(null)
+    const [readiness, setReadiness] = useState<PublicationReadinessDetails | null>(null)
+    const [readinessLoading, setReadinessLoading] = useState(false)
+    const [readinessErrors, setReadinessErrors] = useState<string[]>([])
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [pendingCommand, setPendingCommand] = useState<PublicationCommand | null>(null)
+    const [errorMessages, setErrorMessages] = useState<string[]>([])
+    const [dirty, setDirty] = useState(false)
+    const [uploadOpen, setUploadOpen] = useState(false)
+    const [libraryOpen, setLibraryOpen] = useState(false)
+    const [previewOpen, setPreviewOpen] = useState(false)
+
+    const loadReadiness = useCallback(async (archiveItemId: number, signal?: AbortSignal) => {
+        setReadinessLoading(true)
+        setReadinessErrors([])
+        try {
+            setReadiness(await getPublicationReadiness(archiveItemId, signal))
+        } catch (caught) {
+            if (!(caught instanceof DOMException && caught.name === 'AbortError')) {
+                setReadiness(null)
+                setReadinessErrors(publicationErrorMessages(caught, t('publication.readiness.loadFailed'), t))
+            }
+        } finally {
+            if (!signal?.aborted) setReadinessLoading(false)
+        }
+    }, [t])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        const language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
+        Promise.all([
+            sourcesApi.findAll({ size: 1000 }, controller.signal),
+            sourceReferencesApi.findAll({ size: 1000 }, controller.signal),
+            mediaAssetsApi.findAll({ size: 1000 }, controller.signal),
+            getFullReference(language),
+            itemId ? getAdminArchiveItemDetail(itemId, controller.signal) : Promise.resolve(null),
+        ]).then(([sourcePage, referencePage, assetPage, refs, details]) => {
+            setSources(sourcePage.content)
+            setReferences(referencePage.content)
+            setAssets(assetPage.content)
+            setReferenceData(refs)
+
+            if (!details) return
+            setItem(details.archiveItem)
+            setPublicationStatus(details.archiveItem.publicationStatus)
+            setFeatures({
+                ORNAMENT: selectedResources('ORNAMENT', details.features, refs.ornaments),
+                TECHNIQUE: selectedResources('TECHNIQUE', details.features, refs.techniques),
+                MOTIF: selectedResources('MOTIF', details.features, refs.motifs),
+                COLOR: selectedResources('COLOR', details.features, refs.colors),
+            })
+            setMedia(details.media.map(({ media: link, asset }) => ({
+                id: link.id,
+                asset,
+                role: link.role,
+                captionBg: link.captionBg ?? '',
+                captionEn: link.captionEn ?? '',
+            })))
+            void loadReadiness(details.archiveItem.id, controller.signal)
+        }).catch(caught => {
+            if (!(caught instanceof DOMException && caught.name === 'AbortError')) {
+                setErrorMessages(publicationErrorMessages(caught, t('publication.errors.load'), t))
+            }
+        }).finally(() => {
+            if (!controller.signal.aborted) setLoading(false)
+        })
+
+        return () => controller.abort()
+    }, [i18n.resolvedLanguage, itemId, loadReadiness, t])
+
+    useEffect(() => {
+        const warn = (event: BeforeUnloadEvent) => {
+            if (dirty) event.preventDefault()
+        }
+        window.addEventListener('beforeunload', warn)
+        return () => window.removeEventListener('beforeunload', warn)
+    }, [dirty])
+
+    const markDirty = () => {
+        setDirty(true)
+        setReadiness(null)
+        setReadinessErrors([])
+    }
+    const setField = <K extends keyof ArchiveItemWriteDto>(key: K, value: ArchiveItemWriteDto[K]) => {
+        setItem(current => ({ ...current, [key]: value }))
+        markDirty()
+    }
+
+    const sourceReferenceLabel = (reference: SourceReferenceDetails) => {
+        const source = sources.find(candidate => candidate.id === reference.sourceId)
+        const pages = reference.pageFrom
+            ? `${t('curator.fields.page')} ${reference.pageFrom}${reference.pageTo ? `-${reference.pageTo}` : ''}`
+            : reference.locator
+        return [source?.title ?? `#${reference.sourceId}`, pages].filter(Boolean).join(' · ')
+    }
+
+    const selectedReference = references.find(reference => reference.id === item.sourceReferenceId)
+    const selectedSource = selectedReference ? sources.find(source => source.id === selectedReference.sourceId) : null
+    const editable = publicationStatus === 'DRAFT' && permissions.edit
+
+    const aggregatePayload = useMemo<ArchiveEntryWriteDto>(() => ({
+        archiveItem: {
+            ...item,
+            titleBg: nullText(item.titleBg),
+            titleEn: nullText(item.titleEn),
+            descriptionBg: nullText(item.descriptionBg),
+            descriptionEn: nullText(item.descriptionEn),
+        },
+        features: Object.entries(features).flatMap(([featureType, resources]) => resources.map(resource => ({
+            featureType: featureType as OntologyFeatureType,
+            ontologyIri: resource.iri,
+            ontologyLocalName: resource.localName,
+            confidence: null,
+            validated: true,
+            notes: null,
+            sourceReferenceId: item.sourceReferenceId || null,
+        }))),
+        media: media.map(link => ({
+            mediaAssetId: link.asset.id,
+            role: link.role,
+            captionBg: nullText(link.captionBg),
+            captionEn: nullText(link.captionEn),
+        })),
+    }), [features, item, media])
+
+    async function saveDraft() {
+        setSaving(true)
+        setErrorMessages([])
+        try {
+            const saved = itemId
+                ? await updateFullArchiveEntry(itemId, aggregatePayload)
+                : await createFullArchiveEntry(aggregatePayload)
+            setItem(saved.archiveItem)
+            setPublicationStatus(saved.archiveItem.publicationStatus)
+            setDirty(false)
+            void invalidatePublicQueries()
+            await loadReadiness(saved.archiveItem.id)
+            onSaved?.(saved.archiveItem)
+            if (!onSaved && !itemId) navigate(`/admin/archive/${saved.archiveItem.id}/edit`, { replace: true })
+        } catch (caught) {
+            setErrorMessages(publicationErrorMessages(caught, t('publication.errors.save'), t))
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    async function runCommand(command: PublicationCommand) {
+        if (!itemId || dirty) return
+        setPendingCommand(command)
+        setErrorMessages([])
+        try {
+            const updated = await runPublicationCommand(itemId, command)
+            setItem(updated)
+            setPublicationStatus(updated.publicationStatus)
+            void invalidatePublicQueries()
+            await loadReadiness(updated.id)
+        } catch (caught) {
+            setErrorMessages(publicationErrorMessages(caught, t('publication.errors.command'), t))
+        } finally {
+            setPendingCommand(null)
+        }
+    }
+
+    function removeMedia(index: number) {
+        setMedia(current => current.filter((_, candidate) => candidate !== index))
+        markDirty()
+    }
+
+    function addAsset(asset: MediaAssetDetails) {
+        if (!media.some(link => link.asset.id === asset.id)) {
+            setMedia(current => [...current, {
+                asset,
+                role: current.length ? 'DETAIL' : 'PRIMARY',
+                captionBg: '',
+                captionEn: '',
+            }])
+            markDirty()
+        }
+        setAssets(current => current.some(candidate => candidate.id === asset.id) ? current : [...current, asset])
+        setUploadOpen(false)
+        setLibraryOpen(false)
+    }
+
+    function closeEditor() {
+        if (dirty && !window.confirm(t('curator.editor.unsavedConfirm'))) return
+        onClose?.()
+    }
+
+    const showPreview = onPreview ?? (() => setPreviewOpen(true))
+    const editorTitle = itemId ? t('curator.editor.editTitle') : t('curator.editor.newTitle')
+    const reviewContent = (
+        <Stack spacing={2.5}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+                <Typography variant="h6">{t('publication.currentStatus')}</Typography>
+                <ArchiveStatusChip value={publicationStatus} />
+                <TrustedLevelChip value={item.trustedLevel} />
+            </Stack>
+            <FormSelectField
+                name="trusted-level"
+                label={t('curator.fields.trustedLevel')}
+                value={item.trustedLevel}
+                disabled={!editable}
+                options={['VERIFIED', 'LIKELY', 'UNVERIFIED'].map(value => ({ value, label: t(`archiveDetails.trust.${value}`) }))}
+                onChange={event => setField('trustedLevel', event.target.value as ArchiveItemWriteDto['trustedLevel'])}
+            />
+            {dirty && <Alert severity="info">{t('publication.readiness.saveChangesFirst')}</Alert>}
+            <PublicationReadinessPanel
+                readiness={dirty ? null : readiness}
+                loading={readinessLoading}
+                errorMessages={readinessErrors}
+                onOpenRequirement={requirement => setTab(tabForRequirement(requirement))}
+            />
+            {itemId && (
+                <ArchiveWorkflowActions
+                    status={publicationStatus}
+                    readiness={readiness}
+                    requireReadiness
+                    pendingCommand={pendingCommand}
+                    permissions={permissions}
+                    disabled={dirty || saving}
+                    onCommand={runCommand}
+                />
+            )}
+        </Stack>
+    )
+
+    const editorContent = loading ? (
+        <ArchiveEditorSkeleton />
+    ) : (
+        <Stack spacing={2.5}>
+            {errorMessages.length > 0 && (
+                <Alert severity="error" onClose={() => setErrorMessages([])}>
+                    <AlertTitle>{t('publication.errors.title')}</AlertTitle>
+                    {errorMessages.map(message => <Typography key={message} variant="body2">{message}</Typography>)}
+                </Alert>
+            )}
+            {!editable && publicationStatus !== 'DRAFT' && <Alert severity="info">{t('publication.readOnly')}</Alert>}
+            <Paper variant="outlined">
+                <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider', px: 1 }}>
+                    {editorTabs.map(name => <Tab key={name} label={t(`curator.editor.tabs.${name}`)} />)}
+                </Tabs>
+                <Box component="fieldset" disabled={!editable && tab !== 5} sx={{ p: { xs: 2, md: 3 }, m: 0, minWidth: 0, border: 0 }}>
+                    {tab === 0 && <BasicSection item={item} setField={setField} t={t} />}
+                    {tab === 1 && referenceData && <ClassificationSection item={item} setField={setField} features={features} setFeatures={value => { setFeatures(value); markDirty() }} refs={referenceData} t={t} />}
+                    {tab === 2 && <MediaSection media={media} setMedia={value => { setMedia(value); markDirty() }} onRemove={removeMedia} onUpload={() => setUploadOpen(true)} onLibrary={() => setLibraryOpen(true)} t={t} />}
+                    {tab === 3 && <SourceSection references={references} sourceReferenceLabel={sourceReferenceLabel} value={item.sourceReferenceId} setValue={value => setField('sourceReferenceId', value)} selectedSource={selectedSource} t={t} />}
+                    {tab === 4 && <DescriptionSection item={item} setField={setField} t={t} />}
+                    {tab === 5 && reviewContent}
+                </Box>
+            </Paper>
+            <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sourceReferenceLabel={sourceReferenceLabel} onClose={() => setUploadOpen(false)} onUploaded={addAsset} />
+            <MediaLibraryDialog open={libraryOpen} assets={assets} used={new Set(media.map(link => link.asset.id))} onClose={() => setLibraryOpen(false)} onSelect={addAsset} />
+            {previewOpen && itemId && <ArchiveItemPreviewDialog itemId={itemId} onClose={() => setPreviewOpen(false)} onEdit={() => setPreviewOpen(false)} />}
+        </Stack>
+    )
+
+    const editorActions = (
+        <>
+            <Button onClick={closeEditor} disabled={saving || pendingCommand !== null}>{t('admin.cancel')}</Button>
+            {itemId && <Button startIcon={<OpenInNewOutlinedIcon />} onClick={showPreview} disabled={saving}>{t('curator.archive.preview')}</Button>}
+            {itemId && publicationStatus === 'PUBLISHED' && (
+                <Button startIcon={<OpenInNewOutlinedIcon />} onClick={() => navigate(`/archive/items/${itemId}`)}>{t('publication.actions.open-public')}</Button>
+            )}
+            {editable && (
+                <Button variant="contained" startIcon={<SaveOutlinedIcon />} disabled={loading || saving || pendingCommand !== null} onClick={saveDraft}>
+                    {saving ? t('forms.saving') : t('publication.actions.save-draft')}
+                </Button>
+            )}
+        </>
+    )
+
+    if (embedded) {
+        return (
+            <AdminModal open title={editorTitle} description={t('curator.editor.description')} onClose={closeEditor} closeDisabled={saving || pendingCommand !== null} maxWidth="xl" actions={editorActions}>
+                {editorContent}
+            </AdminModal>
+        )
+    }
+
+    if (loading) return editorContent
+    return (
+        <Stack spacing={2.5}>
+            <AdminPageHeader
+                title={editorTitle}
+                description={t('curator.editor.description')}
+                actions={<><Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/admin/archive')}>{t('curator.actions.back')}</Button>{editorActions}</>}
+            />
+            {editorContent}
+        </Stack>
+    )
+}
+
+function selectedResources(
+    type: OntologyFeatureType,
+    features: Array<{ featureType: OntologyFeatureType, ontologyLocalName: string }>,
+    resources: ReferenceResource[],
+) {
+    const names = new Set(features.filter(feature => feature.featureType === type).map(feature => feature.ontologyLocalName))
+    return resources.filter(resource => names.has(resource.localName))
+}
+
+function nullText(value: string | null | undefined) {
+    return value?.trim() || null
+}

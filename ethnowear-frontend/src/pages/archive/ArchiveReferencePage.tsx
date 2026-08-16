@@ -1,40 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardActionArea,
-    CardContent,
-    CardMedia,
-    Collapse,
-    Divider,
-    InputAdornment,
-    Paper,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import FilterListIcon from '@mui/icons-material/FilterList'
+import { useMemo, useState } from 'react'
+import { Alert, Box, InputAdornment, LinearProgress, Stack, TextField, Typography } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
-import { searchCatalogue } from '../../api/CatalogueApi.ts'
-import { conceptPath } from '../../app/archiveRoutes.ts'
-import type { Language, ReferenceResource } from '../../types/reference.ts'
-import type {
-    CatalogFacetType,
-    ConceptCatalogResultDetails,
-    EntityCardDetails,
-    OntologyFeatureType,
-} from '../../types/catalogue.ts'
-import ArchiveReferencePageSkeleton from '../../components/loading/ArchiveReferencePageSkeleton.tsx'
-import SearchableFilterList from '../../components/filtres/SearchableFilterList.tsx'
+import { useQuery } from '@tanstack/react-query'
+import { catalogueQueryOptions } from '../../api/PublicQueryOptions'
+import type { Language } from '../../types/reference'
+import type { OntologyFeatureType } from '../../types/catalogue'
+import ArchiveReferencePageSkeleton from '../../components/loading/ArchiveReferencePageSkeleton'
+import ArchiveBrowseLayout from '../../components/archive/browse/ArchiveBrowseLayout'
+import CatalogueCategorySection from '../../components/archive/browse/CatalogueCategorySection'
+import { buildCatalogueCategories } from '../../components/archive/browse/catalogueCategories'
+import CatalogueFilterPanel from '../../components/archive/browse/CatalogueFilterPanel'
+import { catalogueFacetOptions } from '../../components/archive/browse/catalogueFacets'
+import useDebouncedValue from '../../hooks/useDebouncedValue'
 
 type ArchiveReferenceKind = 'motifs' | 'techniques' | 'ornaments'
 
@@ -42,323 +20,58 @@ type Props = {
     kind: ArchiveReferenceKind
 }
 
-type CategorySection = {
-    category: ReferenceResource
-    items: ReferenceResource[]
-}
-
-type ArchiveReferenceFiltersProps = {
-    regions: ReferenceResource[]
-    categories: ReferenceResource[]
-    selectedRegions: string[]
-    selectedCategories: string[]
-    onToggleRegion: (localName: string) => void
-    onToggleCategory: (localName: string) => void
-    onClear: () => void
-}
-
-const imageNotFoundUrl = '/Image-not-found.png'
-
 function entityTypeForKind(kind: ArchiveReferenceKind): OntologyFeatureType {
     if (kind === 'techniques') return 'TECHNIQUE'
     if (kind === 'ornaments') return 'ORNAMENT'
     return 'MOTIF'
 }
 
-function toReferenceResource(item: EntityCardDetails): ReferenceResource {
-    return {
-        iri: item.iri,
-        localName: item.localName,
-        label: item.label,
-        comment: item.comment ?? undefined,
-    }
+function toggleSelection(current: string[], value: string) {
+    return current.includes(value) ? current.filter(item => item !== value) : [...current, value]
 }
 
-function facetOptions(
-    catalogue: ConceptCatalogResultDetails | null,
-    facetType: CatalogFacetType,
-    entityType: OntologyFeatureType,
-): ReferenceResource[] {
-    return catalogue?.facets
-        .find((facet) => facet.facetType === facetType && facet.entityType === entityType)
-        ?.values
-        .filter((value) => value.selected || value.count > 0)
-        .map((value) => ({ iri: value.iri, localName: value.localName, label: value.label })) ?? []
-}
-
-function buildCategorySections(
-    items: EntityCardDetails[],
-    uncategorizedLabel: string
-) {
-    const sectionsByCategory = new Map<string, CategorySection>()
-    const uncategorizedItems: ReferenceResource[] = []
-
-    items.forEach((item) => {
-        const resource = toReferenceResource(item)
-
-        if (item.categories.length === 0) {
-            uncategorizedItems.push(resource)
-            return
-        }
-
-        item.categories.forEach((category) => {
-            const section = sectionsByCategory.get(category.localName) ?? {
-                category: {
-                    iri: category.iri,
-                    localName: category.localName,
-                    label: category.label,
-                },
-                items: [],
-            }
-            section.items.push(resource)
-            sectionsByCategory.set(category.localName, section)
-        })
-    })
-
-    const sections = [...sectionsByCategory.values()]
-
-    if (uncategorizedItems.length > 0) {
-        sections.push({
-            category: {
-                iri: '#Uncategorized',
-                localName: 'Uncategorized',
-                label: uncategorizedLabel,
-            },
-            items: uncategorizedItems,
-        })
-    }
-
-    return sections
-}
-
-function ArchiveConceptCard({
-    item,
-    entityType,
-}: {
-    item: ReferenceResource
-    entityType: OntologyFeatureType
-}) {
-    return (
-        <Card
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 1,
-                overflow: 'hidden',
-                border: 1,
-                borderColor: 'divider',
-            }}
-        >
-            <CardActionArea
-                component={Link}
-                to={conceptPath(entityType, item.localName)}
-                sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-            >
-                <CardMedia
-                    component="img"
-                    height="150"
-                    image={item.imageUrl || imageNotFoundUrl}
-                    alt={item.label || item.localName}
-                    sx={{
-                        bgcolor: '#eef0f2',
-                        objectFit: 'cover',
-                        borderBottom: 1,
-                        borderColor: 'divider',
-                    }}
-                />
-
-                <CardContent sx={{ flexGrow: 1 }}>
-                    <Stack spacing={1}>
-                        <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
-                            {item.label || item.localName}
-                        </Typography>
-
-                        {item.comment && (
-                            <Typography variant="body2" color="text.secondary">
-                                {item.comment}
-                            </Typography>
-                        )}
-                    </Stack>
-                </CardContent>
-            </CardActionArea>
-        </Card>
-    )
-}
-
-function ArchiveCategorySection({
-    section,
-    entityType,
-}: {
-    section: CategorySection
-    entityType: OntologyFeatureType
-}) {
-    const { t } = useTranslation()
-
-    return (
-        <Box component="section">
-            <Stack spacing={1.5}>
-                <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                        {section.category.label || section.category.localName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {t('archiveReference.categoryCount', { count: section.items.length })}
-                    </Typography>
-                </Box>
-
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            sm: 'repeat(2, minmax(0, 1fr))',
-                            lg: 'repeat(3, minmax(0, 1fr))',
-                        },
-                        gap: 3,
-                    }}
-                >
-                    {section.items.map((item) => (
-                        <ArchiveConceptCard
-                            key={item.localName}
-                            item={item}
-                            entityType={entityType}
-                        />
-                    ))}
-                </Box>
-            </Stack>
-        </Box>
-    )
-}
-
-function ArchiveReferenceFilters(props: ArchiveReferenceFiltersProps) {
-    const { t } = useTranslation()
-
-    function filterAccordion(
-        title: string,
-        items: ReferenceResource[],
-        selected: string[],
-        onToggle: (localName: string) => void,
-    ) {
-        if (items.length === 0) {
-            return null
-        }
-
-        return (
-            <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: 'transparent', '&::before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0.5 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{title}</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ px: 0.5, pt: 0 }}>
-                    <SearchableFilterList
-                        title={title}
-                        items={items}
-                        selectedValues={selected}
-                        onToggle={onToggle}
-                    />
-                </AccordionDetails>
-            </Accordion>
-        )
-    }
-
-    return (
-        <Paper elevation={1} sx={{ p: 2, borderRadius: 1, border: 1, borderColor: 'divider', bgcolor: '#EEF1F1' }}>
-            <Stack spacing={1.5}>
-                <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{t('filters.title')}</Typography>
-                    <Typography variant="caption" color="text.secondary">{t('filters.availableOnly')}</Typography>
-                </Box>
-                <Divider />
-                {filterAccordion(t('filters.regions'), props.regions, props.selectedRegions, props.onToggleRegion)}
-                {filterAccordion(t('filters.categories'), props.categories, props.selectedCategories, props.onToggleCategory)}
-                <Button variant="outlined" disabled={props.selectedRegions.length + props.selectedCategories.length === 0} onClick={props.onClear}>
-                    {t('filters.clear')}
-                </Button>
-            </Stack>
-        </Paper>
-    )
-}
-
-function ArchiveReferencePage({ kind }: Props) {
+export default function ArchiveReferencePage({ kind }: Props) {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
-    const [catalogue, setCatalogue] = useState<ConceptCatalogResultDetails | null>(null)
+    const entityType = entityTypeForKind(kind)
     const [selectedRegions, setSelectedRegions] = useState<string[]>([])
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
     const [searchText, setSearchText] = useState('')
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        const controller = new AbortController()
-
-        async function loadCatalogue() {
-            try {
-                setError(null)
-
-                const data = await searchCatalogue({
-                    entityType: entityTypeForKind(kind),
-                    language,
-                    searchText,
-                    categoryLocalNames: selectedCategories,
-                    relatedEntityLocalNames: { REGION: selectedRegions },
-                    combinationMode: 'AND',
-                }, {
-                    page: 0,
-                    size: 200,
-                    sort: 'label,asc',
-                }, controller.signal)
-
-                setCatalogue(data)
-            } catch (err) {
-                if (!controller.signal.aborted) {
-                    setError(err instanceof Error ? err.message : t('archive.loadError'))
-                }
-            } finally {
-                if (!controller.signal.aborted) {
-                    setLoading(false)
-                }
-            }
-        }
-
-        void loadCatalogue()
-
-        return () => {
-            controller.abort()
-        }
-    }, [kind, language, searchText, selectedCategories, selectedRegions, t])
+    const debouncedSearchText = useDebouncedValue(searchText, 300)
+    const catalogueOptions = catalogueQueryOptions({
+        entityType,
+        language,
+        searchText: debouncedSearchText,
+        categoryLocalNames: selectedCategories,
+        relatedEntityLocalNames: { REGION: selectedRegions },
+        combinationMode: 'AND',
+    }, { page: 0, size: 200, sort: 'label,asc' })
+    const catalogueQuery = useQuery({
+        ...catalogueOptions,
+        placeholderData: (previousData, previousQuery) => {
+            const previousScope = previousQuery?.queryKey[2] as { entityType?: string, language?: string } | undefined
+            return previousScope?.entityType === entityType && previousScope.language === language
+                ? previousData
+                : undefined
+        },
+    })
+    const catalogue = catalogueQuery.data
+    const error = catalogueQuery.error instanceof Error
+        ? catalogueQuery.error.message
+        : catalogueQuery.error ? t('archive.loadError') : null
 
     const availableRegions = useMemo(
-        () => facetOptions(catalogue, 'RELATED_ENTITY', 'REGION'),
+        () => catalogueFacetOptions(catalogue ?? null, 'RELATED_ENTITY', 'REGION'),
         [catalogue],
     )
-
     const availableCategories = useMemo(
-        () => facetOptions(catalogue, 'CATEGORY', entityTypeForKind(kind)),
-        [catalogue, kind],
+        () => catalogueFacetOptions(catalogue ?? null, 'CATEGORY', entityType),
+        [catalogue, entityType],
     )
-
-    const categorySections = useMemo(() => {
-        return buildCategorySections(
-            catalogue?.items ?? [],
-            t('archiveReference.uncategorized')
-        )
-    }, [catalogue, t])
-
-    function toggleRegion(regionLocalName: string) {
-        setSelectedRegions((current) => current.includes(regionLocalName)
-            ? current.filter((item) => item !== regionLocalName)
-            : [...current, regionLocalName]
-        )
-    }
-
-    function toggleCategory(categoryLocalName: string) {
-        setSelectedCategories(current => current.includes(categoryLocalName)
-            ? current.filter(item => item !== categoryLocalName)
-            : [...current, categoryLocalName]
-        )
-    }
+    const categorySections = useMemo(
+        () => buildCatalogueCategories(catalogue?.items ?? [], t('archiveReference.uncategorized')),
+        [catalogue, t],
+    )
 
     function clearFilters() {
         setSelectedRegions([])
@@ -366,128 +79,59 @@ function ArchiveReferencePage({ kind }: Props) {
         setSearchText('')
     }
 
-    if (loading) {
-        return <ArchiveReferencePageSkeleton />
-    }
+    if (catalogueQuery.isPending) return <ArchiveReferencePageSkeleton />
+
+    const filterPanel = (
+        <CatalogueFilterPanel
+            groups={[
+                {
+                    key: 'regions',
+                    title: t('filters.regions'),
+                    items: availableRegions,
+                    selectedValues: selectedRegions,
+                    onToggle: value => setSelectedRegions(current => toggleSelection(current, value)),
+                },
+                {
+                    key: 'categories',
+                    title: t('filters.categories'),
+                    items: availableCategories,
+                    selectedValues: selectedCategories,
+                    onToggle: value => setSelectedCategories(current => toggleSelection(current, value)),
+                },
+            ]}
+            onClear={clearFilters}
+        />
+    )
 
     return (
-        <Box
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    md: '300px minmax(0, 1fr)',
-                },
-                gap: 3,
-                px: { xs: 2, md: 5 },
-                py: 3,
-                alignItems: 'start',
-                textAlign: 'left',
-            }}
-        >
-            <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'sticky', top: 140 }}>
-                <ArchiveReferenceFilters
-                    regions={availableRegions}
-                    categories={availableCategories}
-                    selectedRegions={selectedRegions}
-                    selectedCategories={selectedCategories}
-                    onToggleRegion={toggleRegion}
-                    onToggleCategory={toggleCategory}
-                    onClear={clearFilters}
-                />
-            </Box>
-
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                <Button
-                    variant="text"
-                    color="inherit"
-                    fullWidth
-                    aria-expanded={mobileFiltersOpen}
-                    onClick={() => setMobileFiltersOpen(open => !open)}
-                    sx={{ minHeight: 52, border: 1, borderLeft: 4, borderColor: 'divider', borderLeftColor: 'primary.main', bgcolor: '#EEF1F1' }}
-                >
-                    <Stack direction="row" sx={{ width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                            <FilterListIcon color="primary" fontSize="small" />
-                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                {mobileFiltersOpen ? t('filters.hide') : t('filters.show')}
-                            </Typography>
-                        </Stack>
-                        {mobileFiltersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </Stack>
-                </Button>
-                <Collapse in={mobileFiltersOpen} unmountOnExit>
-                    <Box sx={{ mt: 1.5 }}>
-                        <ArchiveReferenceFilters
-                            regions={availableRegions}
-                            categories={availableCategories}
-                            selectedRegions={selectedRegions}
-                            selectedCategories={selectedCategories}
-                            onToggleRegion={toggleRegion}
-                            onToggleCategory={toggleCategory}
-                            onClear={clearFilters}
-                        />
-                    </Box>
-                </Collapse>
-            </Box>
-
-            <Stack spacing={3} sx={{ minWidth: 0 }}>
+        <ArchiveBrowseLayout filters={filterPanel}>
+            <Stack spacing={3}>
                 <Stack spacing={2}>
                     <Box>
-                        <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                            {t(`archiveReference.${kind}.title`)}
-                        </Typography>
-                        <Typography color="text.secondary">
-                            {t(`archiveReference.${kind}.subtitle`)}
-                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 800 }}>{t(`archiveReference.${kind}.title`)}</Typography>
+                        <Typography color="text.secondary">{t(`archiveReference.${kind}.subtitle`)}</Typography>
                     </Box>
-
                     <TextField
                         value={searchText}
-                        onChange={(event) => setSearchText(event.target.value)}
+                        onChange={event => setSearchText(event.target.value)}
                         placeholder={t('archiveReference.search')}
                         aria-label={t('archiveReference.search')}
                         fullWidth
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon fontSize="small" />
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
+                        slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }}
                     />
+                    {catalogueQuery.isFetching && <LinearProgress aria-label={t('archiveReference.loading')} />}
                 </Stack>
-
                 {error && <Alert severity="error">{error}</Alert>}
-
-                {kind === 'motifs' && (
-                    <Alert severity="info">
-                        {t('archiveReference.motifs.empty')}
-                    </Alert>
-                )}
-
-                {!loading && !error && categorySections.length === 0 && (
-                    <Alert severity="warning">
-                        {t('archiveReference.noResults')}
-                    </Alert>
-                )}
-
-                {!loading && !error && (
+                {kind === 'motifs' && <Alert severity="info">{t('archiveReference.motifs.empty')}</Alert>}
+                {!error && categorySections.length === 0 && <Alert severity="warning">{t('archiveReference.noResults')}</Alert>}
+                {!error && (
                     <Stack spacing={5}>
-                        {categorySections.map((section) => (
-                            <ArchiveCategorySection
-                                key={section.category.localName}
-                                section={section}
-                                entityType={entityTypeForKind(kind)}
-                            />
+                        {categorySections.map(section => (
+                            <CatalogueCategorySection key={section.category.localName} section={section} entityType={entityType} />
                         ))}
                     </Stack>
                 )}
             </Stack>
-        </Box>
+        </ArchiveBrowseLayout>
     )
 }
-
-export default ArchiveReferencePage

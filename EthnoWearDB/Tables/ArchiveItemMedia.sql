@@ -7,6 +7,7 @@ CREATE TABLE [ethnowear].[ArchiveItemMedia]
     [Role] NVARCHAR(50) NOT NULL,
     [CaptionBg] NVARCHAR(MAX) NULL,
     [CaptionEn] NVARCHAR(MAX) NULL,
+    [DisplayOrder] INT NOT NULL CONSTRAINT [DF_ArchiveItemMedia_DisplayOrder] DEFAULT 0,
 
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_ArchiveItemMedia_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_ArchiveItemMedia_UpdatedAt] DEFAULT SYSUTCDATETIME(),

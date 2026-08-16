@@ -7,12 +7,15 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
+
+import static fmi.ethnowear.application.constant.CacheNames.ONTOLOGY_REFERENCE_FULL;
 
 public class JenaOntologyStore {
 
@@ -38,6 +41,7 @@ public class JenaOntologyStore {
         }
     }
 
+    @CacheEvict(cacheNames = ONTOLOGY_REFERENCE_FULL, allEntries = true)
     public <T> T write(Function<OntModel, T> operation) {
         lock.writeLock().lock();
         try {
@@ -57,6 +61,7 @@ public class JenaOntologyStore {
         }
     }
 
+    @CacheEvict(cacheNames = ONTOLOGY_REFERENCE_FULL, allEntries = true)
     public void reload() {
         lock.writeLock().lock();
         try {

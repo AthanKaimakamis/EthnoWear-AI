@@ -55,7 +55,7 @@ class MediaDeliveryServiceTest {
         assertEquals("archive-item.jpg", delivery.fileName());
         assertEquals("image/jpeg", delivery.mimeType());
         assertEquals(Files.size(image), delivery.contentLength());
-        assertEquals(image.toAbsolutePath(), delivery.resource().getFile().toPath());
+        assertEquals(image.toRealPath(), delivery.resource().getFile().toPath());
     }
 
     @Test
@@ -96,7 +96,7 @@ class MediaDeliveryServiceTest {
         MediaStorageProperties properties = new MediaStorageProperties();
         properties.setStorageRoot(storageRoot);
 
-        return new MediaDeliveryService(repository, properties);
+        return new MediaDeliveryService(repository, new MediaPathResolver(properties));
     }
 
     private MediaAsset asset(Long id) {

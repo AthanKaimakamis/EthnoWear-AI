@@ -1,11 +1,14 @@
 package fmi.ethnowear.persistence.jpa.entity;
 
 import fmi.ethnowear.domain.model.archive.ArchiveType;
+import fmi.ethnowear.domain.model.archive.PublicationStatus;
 import fmi.ethnowear.domain.model.archive.TrustedLevel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -54,6 +57,19 @@ public class ArchiveItem extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "TrustedLevel", nullable = false)
     private TrustedLevel trustedLevel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "PublicationStatus", nullable = false)
+    private PublicationStatus publicationStatus = PublicationStatus.DRAFT;
+
+    @Column(name = "SubmittedAt")
+    private LocalDateTime submittedAt;
+
+    @Column(name = "PublishedAt")
+    private LocalDateTime publishedAt;
+
+    @Column(name = "ArchivedAt")
+    private LocalDateTime archivedAt;
 
     @Column(name = "OntologyRegionIri")
     private String ontologyRegionIri;

@@ -22,6 +22,7 @@ services:
       ETHNOWEAR_DB_USERNAME: "sa"
       ETHNOWEAR_DB_PASSWORD: "${MSSQL_SA_PASSWORD}"
       ETHNOWEAR_ONTOLOGY_PATH: /app/Ontology/EthnoWear.owx
+      ETHNOWEAR_MEDIA_STORAGE_ROOT: /app/media
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -29,6 +30,7 @@ services:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:
       - backend-ontology:/app/Ontology
+      - ${ETHNOWEAR_MEDIA_ROOT:-./media}:/app/media
     restart: unless-stopped
 
   sqlserver:

@@ -107,4 +107,12 @@ public interface ArchiveItemFeatureRepository extends JpaRepository<ArchiveItemF
      * @return {@code true} when at least one feature observation uses the reference
      */
     boolean existsBySourceReference_Id(Long sourceReferenceId);
+
+    /**
+     * Checks whether an archive item contains an unvalidated feature.
+     *
+     * @param archiveItemId database identifier of the archive item
+     * @return {@code true} when at least one feature remains unvalidated
+     */
+    boolean existsByArchiveItem_IdAndValidatedFalse(Long archiveItemId);
 }

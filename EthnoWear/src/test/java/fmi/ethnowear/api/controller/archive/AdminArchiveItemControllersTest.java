@@ -9,6 +9,7 @@ import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureWriteDto;
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemWriteDto;
 import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
 import fmi.ethnowear.domain.model.archive.ArchiveType;
+import fmi.ethnowear.domain.model.archive.PublicationStatus;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.archive.TrustedLevel;
 import fmi.ethnowear.application.service.archive.item.ArchiveItemFeatureService;
@@ -159,10 +160,14 @@ class AdminArchiveItemControllersTest {
                 input.originText(),
                 input.currentLocation(),
                 input.trustedLevel(),
+                PublicationStatus.DRAFT,
                 input.ontologyRegionIri(),
                 input.ontologyRegionLocalName(),
                 input.ontologyRegionalEmbroideryIri(),
                 input.ontologyRegionalEmbroideryLocalName(),
+                null,
+                null,
+                null,
                 null,
                 null
         );
@@ -206,7 +211,7 @@ class AdminArchiveItemControllersTest {
         private ArchiveItemDetails createResult;
 
         private StubArchiveItemService() {
-            super(null, null, null, null, null);
+            super(null, null, null, null, null, null);
         }
 
         @Override
@@ -227,7 +232,7 @@ class AdminArchiveItemControllersTest {
         private Long deletedId;
 
         private StubArchiveItemFeatureService() {
-            super(null, null, null, null, null);
+            super(null, null, null, null, null, null);
         }
 
         @Override

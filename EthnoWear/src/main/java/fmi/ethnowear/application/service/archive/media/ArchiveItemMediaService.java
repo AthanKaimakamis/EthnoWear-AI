@@ -5,6 +5,7 @@ import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaWriteDto;
 import fmi.ethnowear.application.exception.ResourceInUseException;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
+import fmi.ethnowear.application.service.archive.workflow.ArchiveItemWorkflowGuard;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItemMedia;
 import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
@@ -28,6 +29,7 @@ public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWrit
     private final MediaAssetRepository mediaAssetRepository;
     private final ArchiveItemMediaMapper archiveItemMediaMapper;
     private final ArchiveItemMediaUsageChecker usageChecker;
+    private final ArchiveItemWorkflowGuard workflowGuard;
 
     @Override
     public Page<ArchiveItemMediaDetails> findAll(Pageable pageable) {
@@ -57,6 +59,7 @@ public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWrit
         validate(input);
 
         ArchiveItemMedia itemMedia = requireItemMedia(id);
+        workflowGuard.requireDraft(itemMedia.getArchiveItem());
         apply(itemMedia, input);
 
         return archiveItemMediaMapper.toDetails(archiveItemMediaRepository.save(itemMedia));
@@ -66,6 +69,7 @@ public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWrit
     @Transactional
     public void delete(Long id) {
         ArchiveItemMedia itemMedia = requireItemMedia(id);
+        workflowGuard.requireDraft(itemMedia.getArchiveItem());
 
         if (usageChecker.isInUse(id))
             throw new ResourceInUseException("Archive item media", id);
@@ -73,9 +77,11 @@ public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWrit
         archiveItemMediaRepository.delete(itemMedia);
     }
 
-    private void apply(ArchiveItemMedia itemMedia, @NonNull ArchiveItemMediaWriteDto input) {
+    private void apply(@NonNull ArchiveItemMedia itemMedia, @NonNull ArchiveItemMediaWriteDto input) {
         ArchiveItem archiveItem = archiveItemRepository.findById(input.archiveItemId())
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", input.archiveItemId()));
+
+        workflowGuard.requireDraft(archiveItem);
 
         MediaAsset mediaAsset = mediaAssetRepository.findById(input.mediaAssetId())
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset", input.mediaAssetId()));

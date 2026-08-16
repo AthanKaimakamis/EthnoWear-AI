@@ -15,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.io.IOException;
+import java.nio.file.Files;
 
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
@@ -27,6 +29,7 @@ public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaA
     private final SourceReferenceRepository sourceReferenceRepository;
     private final MediaAssetMapper mediaAssetMapper;
     private final MediaAssetUsageChecker usageChecker;
+    private final MediaPathResolver paths;
 
     @Override
     public Page<MediaAssetDetails> findAll(Pageable pageable) {
@@ -70,6 +73,18 @@ public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaA
             throw new ResourceInUseException("Media asset", id);
 
         mediaAssetRepository.delete(asset);
+        mediaAssetRepository.flush();
+        deleteManagedFile(asset.getFilePath());
+        deleteManagedFile(asset.getThumbnailPath());
+    }
+
+    private void deleteManagedFile(String relativePath) {
+        if (isBlank(relativePath)) return;
+        try {
+            Files.deleteIfExists(paths.resolve(relativePath));
+        } catch (IOException ex) {
+            throw new IllegalStateException("Could not delete managed media file", ex);
+        }
     }
 
     private void apply(MediaAsset asset, @NonNull MediaAssetWriteDto input) {
@@ -93,8 +108,13 @@ public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaA
         if (input.mediaType() == null)
             throw new IllegalArgumentException("Media type is required");
 
-        if (isBlank(input.filePath()) && isBlank(input.storageUrl()))
-            throw new IllegalArgumentException("File path or storage URL is required");
+        if (isBlank(input.filePath()))
+            throw new IllegalArgumentException("A relative managed file path is required");
+
+        if (!isBlank(input.storageUrl()))
+            throw new IllegalArgumentException("External storage URLs are not supported");
+
+        paths.resolve(input.filePath());
 
         if (input.width() != null && input.width() <= 0)
             throw new IllegalArgumentException("Media width must be positive");

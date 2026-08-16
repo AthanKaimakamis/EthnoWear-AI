@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
     Alert,
     Box,
@@ -8,6 +8,7 @@ import {
     Divider,
     Grid,
     Link as MuiLink,
+    LinearProgress,
     Pagination,
     Stack,
     Typography,
@@ -15,7 +16,8 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { getEntityDetails } from '../../api/CatalogueApi'
+import { useQuery } from '@tanstack/react-query'
+import { entityDetailsQueryOptions } from '../../api/PublicQueryOptions'
 import {
     conceptCollectionPath,
     featureTypeFromRouteSegment,
@@ -26,7 +28,6 @@ import RelatedEntitySection from '../../components/archive/RelatedEntitySection'
 import SourceCitation from '../../components/archive/SourceCitation'
 import PageLoading from '../../components/loading/PageLoading'
 import type {
-    EntityDetailDetails,
     EntityLinkDetails,
     OntologyFeatureType,
 } from '../../types/catalogue'
@@ -37,42 +38,27 @@ function EntityDetailPage() {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const entityType = featureTypeFromRouteSegment(entityTypeSegment)
-    const [details, setDetails] = useState<EntityDetailDetails | null>(null)
     const [evidencePage, setEvidencePage] = useState(1)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (!entityType || !localName) return
-
-        const controller = new AbortController()
-        const requestedEntityType = entityType
-        const requestedLocalName = localName
-
-        async function loadDetails() {
-            try {
-                setLoading(true)
-                setError(null)
-                const response = await getEntityDetails(
-                    requestedEntityType,
-                    requestedLocalName,
-                    language,
-                    { page: evidencePage - 1, size: 12, sort: 'id,desc' },
-                    controller.signal,
-                )
-                setDetails(response)
-            } catch (err) {
-                if (!controller.signal.aborted) {
-                    setError(err instanceof Error ? err.message : t('entityDetails.loadError'))
-                }
-            } finally {
-                if (!controller.signal.aborted) setLoading(false)
-            }
-        }
-
-        void loadDetails()
-        return () => controller.abort()
-    }, [entityType, evidencePage, language, localName, t])
+    const detailsOptions = entityDetailsQueryOptions(
+        entityType,
+        localName,
+        language,
+        { page: evidencePage - 1, size: 12, sort: 'id,desc' },
+    )
+    const detailsQuery = useQuery({
+        ...detailsOptions,
+        placeholderData: (previousData, previousQuery) => {
+            const previousKey = previousQuery?.queryKey
+            const sameEntity = previousKey?.[3] === entityType
+                && previousKey?.[4] === localName
+                && previousKey?.[5] === language
+            return sameEntity ? previousData : undefined
+        },
+    })
+    const details = detailsQuery.data
+    const error = detailsQuery.error instanceof Error
+        ? detailsQuery.error.message
+        : detailsQuery.error ? t('entityDetails.loadError') : null
 
     const mediaItems = useMemo<MediaGalleryItem[]>(() => {
         if (!details) return []
@@ -98,7 +84,7 @@ function EntityDetailPage() {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><Alert severity="error">{t('entityDetails.invalidRoute')}</Alert></Box>
     }
 
-    if (loading && !details) {
+    if (detailsQuery.isPending) {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><PageLoading message={t('entityDetails.loading')} /></Box>
     }
 
@@ -115,6 +101,7 @@ function EntityDetailPage() {
     return (
         <Box sx={{ maxWidth: 1240, mx: 'auto', px: { xs: 2, md: 5 }, py: { xs: 3, md: 5 } }}>
             <Stack spacing={4}>
+                {detailsQuery.isFetching && <LinearProgress aria-label={t('entityDetails.loading')} />}
                 <Breadcrumbs aria-label={t('entityDetails.breadcrumbs')}>
                     <MuiLink component={Link} to={conceptCollectionPath(entityType)} color="inherit">
                         {t(`entityTypes.${entityType}`)}

@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Alert, Box, Button, Stack } from '@mui/material'
-import AppDialog from '../AppDialog.tsx'
+import AdminModal from './AdminModal.tsx'
 import FormTextField from '../forms/FormTextField.tsx'
 import FormSelectField from '../forms/FormSelectField.tsx'
-import FormMultiSelectField from '../forms/formMultiSelectFields.tsx'
+import FormMultiSelectField from '../forms/FormMultiSelectField.tsx'
 import FormSection from '../forms/FormSection.tsx'
 import FormStringListField from '../forms/FormStringListField.tsx'
 import OntologyRelationshipField from './OntologyRelationshipField.tsx'
@@ -48,6 +48,7 @@ function initialForm(entity: OntologyEntity | null): OntologyEntityInput {
 function OntologyEntityDialog(props: Props) {
     const { t } = useTranslation()
     const [form, setForm] = useState<OntologyEntityInput>(() => initialForm(props.entity))
+    const formId = 'ontology-entity-form'
 
     function set<K extends keyof OntologyEntityInput>(key: K, value: OntologyEntityInput[K]) {
         setForm(current => ({ ...current, [key]: value }))
@@ -70,9 +71,22 @@ function OntologyEntityDialog(props: Props) {
     const useRelationshipLists = props.type === 'regions'
 
     return (
-        <AppDialog open={props.open} onClose={props.onClose} maxWidth="md"
-            title={t(props.entity ? 'admin.form.editTitle' : 'admin.form.addTitle')}>
-            <Box component="form" onSubmit={submit}>
+        <AdminModal
+            open={props.open}
+            onClose={props.onClose}
+            closeDisabled={props.saving}
+            maxWidth="md"
+            title={t(props.entity ? 'admin.form.editTitle' : 'admin.form.addTitle')}
+            actions={
+                <>
+                    <Button onClick={props.onClose} disabled={props.saving}>{t('admin.cancel')}</Button>
+                    <Button type="submit" form={formId} variant="contained" disabled={props.saving}>
+                        {props.saving ? t('forms.saving') : t('forms.save')}
+                    </Button>
+                </>
+            }
+        >
+            <Box component="form" id={formId} onSubmit={submit}>
                 <Stack spacing={3}>
                     {props.error && <Alert severity="error">{props.error}</Alert>}
                     <FormSection title={t('admin.form.identity')}>
@@ -136,15 +150,9 @@ function OntologyEntityDialog(props: Props) {
                             </Stack>
                         </FormSection>
                     )}
-                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                        <Button onClick={props.onClose} disabled={props.saving}>{t('admin.cancel')}</Button>
-                        <Button type="submit" variant="contained" disabled={props.saving}>
-                            {props.saving ? t('forms.saving') : t('forms.save')}
-                        </Button>
-                    </Stack>
                 </Stack>
             </Box>
-        </AppDialog>
+        </AdminModal>
     )
 }
 

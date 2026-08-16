@@ -4,9 +4,12 @@ import fmi.ethnowear.application.dto.archive.item.ArchiveItemDetails;
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureWriteDto;
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemWriteDto;
 import fmi.ethnowear.domain.model.archive.ArchiveType;
+import fmi.ethnowear.domain.model.archive.PublicationStatus;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.archive.TrustedLevel;
 import fmi.ethnowear.application.exception.ResourceInUseException;
+import fmi.ethnowear.application.exception.ArchiveItemNotEditableException;
+import fmi.ethnowear.application.service.archive.workflow.ArchiveItemWorkflowGuard;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
 import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
@@ -66,6 +69,7 @@ class ArchiveItemServicesTest {
 
         assertEquals(3L, details.sourceReferenceId());
         assertEquals("Test archive item", details.titleEn());
+        assertEquals(PublicationStatus.DRAFT, details.publicationStatus());
     }
 
     @Test
@@ -93,13 +97,79 @@ class ArchiveItemServicesTest {
     }
 
     @Test
+    void rejectsUpdatingPublishedArchiveItem() {
+        ArchiveItem item = new ArchiveItem();
+        item.setId(4L);
+        item.setPublicationStatus(PublicationStatus.PUBLISHED);
+        ArchiveItemRepository itemRepository = proxy(
+                ArchiveItemRepository.class,
+                (ignored, method, arguments) -> {
+                    if(method.getName().equals("findById"))
+                        return Optional.of(item);
+
+                    throw new AssertionError(
+                            "Unexpected repository call: " + method.getName()
+                    );
+                }
+        );
+        ArchiveItemService service = itemService(
+                itemRepository,
+                rejecting(SourceReferenceRepository.class),
+                new ArchiveItemUsageChecker(null, null)
+        );
+
+        assertThrows(
+                ArchiveItemNotEditableException.class,
+                () -> service.update(
+                        4L,
+                        itemInput(ArchiveType.EMBROIDERY_SAMPLE)
+                )
+        );
+    }
+
+    @Test
+    void rejectsAddingFeatureToPublishedArchiveItem() {
+        ArchiveItem item = new ArchiveItem();
+        item.setId(4L);
+        item.setPublicationStatus(PublicationStatus.PUBLISHED);
+        ArchiveItemRepository itemRepository = proxy(
+                ArchiveItemRepository.class,
+                (ignored, method, arguments) -> Optional.of(item)
+        );
+        ArchiveItemFeatureService service = new ArchiveItemFeatureService(
+                rejecting(ArchiveItemFeatureRepository.class),
+                itemRepository,
+                rejecting(SourceReferenceRepository.class),
+                new ArchiveItemFeatureMapper(),
+                new ArchiveItemFeatureUsageChecker(null),
+                new ArchiveItemWorkflowGuard()
+        );
+        ArchiveItemFeatureWriteDto input = new ArchiveItemFeatureWriteDto(
+                4L,
+                FeatureType.TECHNIQUE,
+                "http://example.org/ontology#ChainStitch",
+                "ChainStitch",
+                BigDecimal.ONE,
+                true,
+                null,
+                null
+        );
+
+        assertThrows(
+                ArchiveItemNotEditableException.class,
+                () -> service.create(input)
+        );
+    }
+
+    @Test
     void rejectsFeatureConfidenceOutsideNormalizedRange() {
         ArchiveItemFeatureService service = new ArchiveItemFeatureService(
                 rejecting(ArchiveItemFeatureRepository.class),
                 rejecting(ArchiveItemRepository.class),
                 rejecting(SourceReferenceRepository.class),
                 new ArchiveItemFeatureMapper(),
-                new ArchiveItemFeatureUsageChecker(null)
+                new ArchiveItemFeatureUsageChecker(null),
+                new ArchiveItemWorkflowGuard()
         );
         ArchiveItemFeatureWriteDto input = new ArchiveItemFeatureWriteDto(
                 4L,
@@ -120,6 +190,35 @@ class ArchiveItemServicesTest {
         assertEquals("Confidence must be between 0 and 1", exception.getMessage());
     }
 
+    @Test
+    void rejectsFeatureWithoutCompleteOntologyIdentity() {
+        ArchiveItemFeatureService service = new ArchiveItemFeatureService(
+                rejecting(ArchiveItemFeatureRepository.class),
+                rejecting(ArchiveItemRepository.class),
+                rejecting(SourceReferenceRepository.class),
+                new ArchiveItemFeatureMapper(),
+                new ArchiveItemFeatureUsageChecker(null),
+                new ArchiveItemWorkflowGuard()
+        );
+        ArchiveItemFeatureWriteDto input = new ArchiveItemFeatureWriteDto(
+                4L,
+                FeatureType.TECHNIQUE,
+                "http://example.org/ontology#ChainStitch",
+                null,
+                BigDecimal.ONE,
+                false,
+                null,
+                null
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.create(input)
+        );
+
+        assertEquals("Ontology local name is required", exception.getMessage());
+    }
+
     @ParameterizedTest
     @EnumSource(value = FeatureType.class, names = { "REGION", "REGIONAL_EMBROIDERY" })
     void rejectsPrimaryClassificationAsArchiveItemFeature(FeatureType featureType) {
@@ -128,7 +227,8 @@ class ArchiveItemServicesTest {
                 rejecting(ArchiveItemRepository.class),
                 rejecting(SourceReferenceRepository.class),
                 new ArchiveItemFeatureMapper(),
-                new ArchiveItemFeatureUsageChecker(null)
+                new ArchiveItemFeatureUsageChecker(null),
+                new ArchiveItemWorkflowGuard()
         );
         ArchiveItemFeatureWriteDto input = new ArchiveItemFeatureWriteDto(
                 4L,
@@ -160,7 +260,8 @@ class ArchiveItemServicesTest {
                 referenceRepository,
                 new ArchiveItemMapper(),
                 usageChecker,
-                new ArchiveItemOntologyValidator(rejecting(EmbroideryOntologyClient.class))
+                new ArchiveItemOntologyValidator(rejecting(EmbroideryOntologyClient.class)),
+                new ArchiveItemWorkflowGuard()
         );
     }
 

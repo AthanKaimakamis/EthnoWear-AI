@@ -1,8 +1,6 @@
 package fmi.ethnowear.application.service.archive.media;
 
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
-import fmi.ethnowear.config.MediaStorageProperties;
-import fmi.ethnowear.util.ProjectPathResolver;
 import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
 import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -32,7 +29,7 @@ public class MediaDeliveryService {
     );
 
     private final MediaAssetRepository assetRepository;
-    private final MediaStorageProperties properties;
+    private final MediaPathResolver paths;
 
     public MediaDelivery findById(Long id) {
         MediaAsset asset = assetRepository
@@ -68,40 +65,22 @@ public class MediaDeliveryService {
 
     @Contract("_, _ -> new")
     private @NonNull MediaDelivery local(@NonNull MediaAsset asset, Long id) {
-        Path root = ProjectPathResolver
-                .resolve(properties.getStorageRoot())
-                .toAbsolutePath()
-                .normalize();
-
-        Path relativePath;
-
         try {
-            relativePath = Path.of(asset.getFilePath().trim());
-        } catch (InvalidPathException ex) {
-            throw new IllegalStateException("Invalid media file path for asset: " + id, ex);
-        }
+            Path file = paths.resolve(asset.getFilePath());
+            if(!Files.isRegularFile(file) || !Files.isReadable(file))
+                throw new ResourceNotFoundException("Media file", id);
 
-        if (relativePath.isAbsolute())
-            throw new IllegalStateException("Media file path is outside the storage root: " + id);
+            Path realRoot = paths.root().toRealPath();
+            Path realFile = file.toRealPath();
+            if (!realFile.startsWith(realRoot))
+                throw new IllegalStateException("Media file path is outside the storage root: " + id);
 
-        Path file = root.resolve(relativePath).normalize();
-
-        if (!file.startsWith(root))
-            throw new IllegalStateException("Media file path is outside the storage root: " + id);
-
-        if(!Files.isRegularFile(file) || !Files.isReadable(file))
-            throw new ResourceNotFoundException("Media file", id);
-
-        try {
             return new MediaDelivery.Local(
-                    new FileSystemResource(file),
-                    asset.getMimeType(),
-                    asset.getFileName(),
-                    Files.size(file)
-            );
+                    new FileSystemResource(realFile), asset.getMimeType(), asset.getFileName(), Files.size(realFile));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("Invalid media file path for asset: " + id, ex);
         } catch (IOException ex) {
             throw new IllegalStateException("Could not read media file: " + id, ex);
         }
-
     }
 }

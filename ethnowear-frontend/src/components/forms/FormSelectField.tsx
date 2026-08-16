@@ -1,11 +1,14 @@
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material'
 import type { SelectChangeEvent } from '@mui/material/Select'
+import type { SxProps, Theme } from '@mui/material/styles'
 import type { BaseFormField, SelectOption } from './formTypes.ts'
 
 type FormSelectFieldProps = BaseFormField & {
     options: SelectOption[]
     defaultValue?: string
     value?: string
+    size?: 'small' | 'medium'
+    sx?: SxProps<Theme>
     onChange?: (event: SelectChangeEvent<string>) => void
 }
 
@@ -19,6 +22,8 @@ function FormSelectField({
     options,
     defaultValue = '',
     value,
+    size,
+    sx,
     onChange,
 }: FormSelectFieldProps) {
     return (
@@ -27,6 +32,8 @@ function FormSelectField({
             required={required}
             disabled={disabled}
             error={error}
+            size={size}
+            sx={sx}
         >
             <InputLabel id={`${name}-label`}>
                 {label}

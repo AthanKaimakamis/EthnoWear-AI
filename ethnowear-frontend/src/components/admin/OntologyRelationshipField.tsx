@@ -22,7 +22,7 @@ import {
 import LinkIcon from '@mui/icons-material/Link'
 import SearchIcon from '@mui/icons-material/Search'
 import { useTranslation } from 'react-i18next'
-import AppDialog from '../AppDialog.tsx'
+import AdminModal from './AdminModal.tsx'
 import type { OptionCategory, SelectOption } from '../forms/formTypes.ts'
 
 type Props = {
@@ -148,11 +148,17 @@ function OntologyRelationshipField(props: Props) {
                 </Stack>
             </Box>
 
-            <AppDialog
+            <AdminModal
                 open={open}
                 onClose={cancel}
                 maxWidth="lg"
                 title={t('admin.relationshipSelector.title', { entity: props.label })}
+                actions={
+                    <>
+                        <Button type="button" onClick={cancel}>{t('admin.cancel')}</Button>
+                        <Button type="button" variant="contained" onClick={save}>{t('forms.save')}</Button>
+                    </>
+                }
             >
                 <Stack spacing={2}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -269,12 +275,8 @@ function OntologyRelationshipField(props: Props) {
                         </Table>
                     </TableContainer>
 
-                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                        <Button type="button" onClick={cancel}>{t('admin.cancel')}</Button>
-                        <Button type="button" variant="contained" onClick={save}>{t('forms.save')}</Button>
-                    </Stack>
                 </Stack>
-            </AppDialog>
+            </AdminModal>
         </>
     )
 }

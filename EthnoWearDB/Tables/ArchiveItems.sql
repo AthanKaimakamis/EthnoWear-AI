@@ -14,6 +14,12 @@ CREATE TABLE [ethnowear].[ArchiveItems]
     [ArchiveType] NVARCHAR(50) NOT NULL,
     [TrustedLevel] NVARCHAR(50) NOT NULL,
 
+    [PublicationStatus] NVARCHAR(50) NOT NULL CONSTRAINT [DF_ArchiveItems_PublicationStatus] DEFAULT N'DRAFT',
+
+    [SubmittedAt] DATETIME2(7) NULL,
+    [PublishedAt] DATETIME2(7) NULL,
+    [ArchivedAt] DATETIME2(7) NULL,
+
     [PeriodText] NVARCHAR(150) NULL,
     [OriginText] NVARCHAR(300) NULL,
     [CurrentLocation] NVARCHAR(300) NULL,
@@ -46,6 +52,14 @@ CREATE TABLE [ethnowear].[ArchiveItems]
             N'VERIFIED',
             N'LIKELY',
             N'UNVERIFIED'
+        )),
+
+    CONSTRAINT [CK_ArchiveItems_PublicationStatus]
+        CHECK ([PublicationStatus] IN (
+            N'DRAFT',
+            N'IN_REVIEW',
+            N'PUBLISHED',
+            N'ARCHIVED'
         ))
 );
 
@@ -73,3 +87,10 @@ GO
 
 CREATE INDEX [IX_ArchiveItems_TrustedLevel]
 ON [ethnowear].[ArchiveItems] ([TrustedLevel]);
+
+GO
+
+CREATE INDEX [IX_ArchiveItems_PublicationStatus]
+ON [ethnowear].[ArchiveItems] ([PublicationStatus]);
+
+GO

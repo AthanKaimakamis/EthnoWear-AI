@@ -17,6 +17,8 @@ public record MediaAssetDetails(
         Integer height,
         Long sizeBytes,
         String checksum,
+        String thumbnailPath,
+        String description,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) implements IdentifiableDto {

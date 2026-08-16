@@ -13,6 +13,8 @@ CREATE TABLE [ethnowear].[MediaAssets]
     [Height] INT NULL,
     [SizeBytes] BIGINT NULL,
     [Checksum] NVARCHAR(128) NULL,
+    [ThumbnailPath] NVARCHAR(1000) NULL,
+    [Description] NVARCHAR(2000) NULL,
 
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_MediaAssets_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_MediaAssets_UpdatedAt] DEFAULT SYSUTCDATETIME(),
@@ -41,6 +43,13 @@ CREATE TABLE [ethnowear].[MediaAssets]
 
     CONSTRAINT [CK_MediaAssets_SizeBytes]
         CHECK ([SizeBytes] IS NULL OR [SizeBytes] >= 0)
+    ,
+    CONSTRAINT [CK_MediaAssets_FilePathRelative]
+        CHECK ([FilePath] IS NULL OR (
+            [FilePath] NOT LIKE N'/%' AND
+            [FilePath] NOT LIKE N'%:\\%' AND
+            [FilePath] NOT LIKE N'%..%'
+        ))
 );
 
 GO

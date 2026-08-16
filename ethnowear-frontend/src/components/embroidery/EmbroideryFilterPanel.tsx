@@ -14,7 +14,7 @@ import type {
     EmbroideryFilters,
     FilterCombinationMode,
 } from '../../types/embroideryFilters.ts'
-import FilterAccordion from "../filtres/FilterAccordion.tsx";
+import FilterSection from '../filters/FilterSection.tsx'
 import { useTranslation } from 'react-i18next'
 
 type FilterKey = keyof EmbroideryFilters
@@ -101,53 +101,59 @@ function EmbroideryFilterPanel({
                     </ToggleButtonGroup>
                 </Box>
 
-                {(options.regionGroups.length > 0 || options.regions.length > 0) && <FilterAccordion
+                {(options.regionGroups.length > 0 || options.regions.length > 0) && <FilterSection
                     title={t('filters.regions')}
-                    filters={filters}
-                    disabledFilters={disabledFilters}
-                    onToggle={toggleValue}
                     groups={[
                         {
+                            key: 'regionGroupLocalNames',
                             title: t('filters.regionGroups'),
-                            filterKey: 'regionGroupLocalNames',
                             items: options.regionGroups,
+                            selectedValues: filters.regionGroupLocalNames,
+                            disabledValues: disabledFilters?.regionGroupLocalNames,
+                            onToggle: value => toggleValue('regionGroupLocalNames', value),
                         },
                         {
+                            key: 'regionLocalNames',
                             title: t('filters.regions'),
-                            filterKey: 'regionLocalNames',
                             items: options.regions,
+                            selectedValues: filters.regionLocalNames,
+                            disabledValues: disabledFilters?.regionLocalNames,
+                            onToggle: value => toggleValue('regionLocalNames', value),
                         },
                     ]}
                 />}
 
-                {options.techniques.length > 0 && <FilterAccordion
+                {options.techniques.length > 0 && <FilterSection
                     title={t('filters.techniques')}
-                    filters={filters}
-                    disabledFilters={disabledFilters}
-                    onToggle={toggleValue}
                     groups={[
                         {
-                            filterKey: 'techniqueLocalNames',
+                            key: 'techniqueLocalNames',
                             items: options.techniques,
+                            selectedValues: filters.techniqueLocalNames,
+                            disabledValues: disabledFilters?.techniqueLocalNames,
+                            onToggle: value => toggleValue('techniqueLocalNames', value),
                         },
                     ]}
                 />}
 
-                {(options.ornamentTypes.length > 0 || options.ornaments.length > 0) && <FilterAccordion
+                {(options.ornamentTypes.length > 0 || options.ornaments.length > 0) && <FilterSection
                     title={t('filters.ornaments')}
-                    filters={filters}
-                    disabledFilters={disabledFilters}
-                    onToggle={toggleValue}
                     groups={[
                         {
+                            key: 'ornamentTypeLocalNames',
                             title: t('filters.ornamentTypes'),
-                            filterKey: 'ornamentTypeLocalNames',
                             items: options.ornamentTypes,
+                            selectedValues: filters.ornamentTypeLocalNames,
+                            disabledValues: disabledFilters?.ornamentTypeLocalNames,
+                            onToggle: value => toggleValue('ornamentTypeLocalNames', value),
                         },
                         {
+                            key: 'ornamentLocalNames',
                             title: t('filters.ornaments'),
-                            filterKey: 'ornamentLocalNames',
                             items: options.ornaments,
+                            selectedValues: filters.ornamentLocalNames,
+                            disabledValues: disabledFilters?.ornamentLocalNames,
+                            onToggle: value => toggleValue('ornamentLocalNames', value),
                         },
                     ]}
                 />}

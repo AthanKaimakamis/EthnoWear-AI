@@ -39,6 +39,8 @@ public class MediaAssetMapper {
                 asset.getHeight(),
                 asset.getSizeBytes(),
                 asset.getChecksum(),
+                asset.getThumbnailPath(),
+                asset.getDescription(),
                 asset.getCreatedAt(),
                 asset.getUpdatedAt()
         );

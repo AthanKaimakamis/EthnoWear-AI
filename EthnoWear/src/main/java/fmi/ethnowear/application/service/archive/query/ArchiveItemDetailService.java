@@ -43,7 +43,7 @@ public class ArchiveItemDetailService {
 
     public ArchiveItemDetailDetails findById(Long id) {
         ArchiveItem archiveItem = archiveItemRepository
-                .findOneById(id)
+                .findPublishedById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", id));
 
         Map<Long, List<MediaFeatureAnnotationDetails>> annotationsByMedia = annotationRepository

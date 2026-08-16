@@ -8,6 +8,7 @@ export type ArchiveType =
     | 'TEXT_REFERENCE'
 
 export type TrustedLevel = 'VERIFIED' | 'LIKELY' | 'UNVERIFIED'
+export type PublicationStatus = 'DRAFT' | 'IN_REVIEW' | 'PUBLISHED' | 'ARCHIVED'
 export type MediaType = 'IMAGE' | 'PDF' | 'THUMBNAIL' | 'SCAN' | 'OTHER'
 export type MediaRole = 'PRIMARY' | 'DETAIL' | 'SOURCE_SCAN' | 'THUMBNAIL' | 'OTHER'
 export type MediaFeatureAnnotationType =
@@ -55,6 +56,10 @@ export type ArchiveItemWriteDto = {
 
 export type ArchiveItemDetails = ArchiveItemWriteDto & {
     id: number
+    publicationStatus: PublicationStatus
+    submittedAt: string | null
+    publishedAt: string | null
+    archivedAt: string | null
     createdAt: string
     updatedAt: string
 }
@@ -133,6 +138,29 @@ export type MediaAssetWriteDto = {
 }
 
 export type MediaAssetDetails = MediaAssetWriteDto & {
+    id: number
+    thumbnailPath: string | null
+    description: string | null
+    createdAt: string
+    updatedAt: string
+}
+
+export type MediaUploadRequest = {
+    sourceReferenceId: number | null
+    mediaType: MediaType
+    category: 'archive' | 'documents' | 'entities'
+    description: string | null
+}
+
+export type MediaEntityLinkWriteDto = {
+    mediaAssetId: number
+    entityType: OntologyFeatureType
+    ontologyIri: string
+    ontologyLocalName: string
+    description: string | null
+}
+
+export type MediaEntityLinkDetails = MediaEntityLinkWriteDto & {
     id: number
     createdAt: string
     updatedAt: string
@@ -303,4 +331,54 @@ export type ArchiveEntryDetails = {
     archiveItem: ArchiveItemDetails
     features: ArchiveItemFeatureDetails[]
     media: ArchiveItemMediaDetails[]
+}
+
+export type ArchiveEntryFeatureWriteDto = Omit<ArchiveItemFeatureWriteDto, 'archiveItemId'>
+export type ArchiveEntryMediaWriteDto = Omit<ArchiveItemMediaWriteDto, 'archiveItemId'>
+
+export type ArchiveEntryWriteDto = {
+    archiveItem: ArchiveItemWriteDto
+    features: ArchiveEntryFeatureWriteDto[]
+    media: ArchiveEntryMediaWriteDto[]
+}
+
+export type PublicationRequirementKey =
+    | 'LOCALIZED_TITLE'
+    | 'SOURCE_REFERENCE'
+    | 'ONTOLOGY_CLASSIFICATION'
+    | 'FEATURES_VALIDATED'
+    | 'MEDIA_ATTACHED'
+    | 'PRIMARY_MEDIA'
+    | string
+
+export type PublicationValidationSeverity = 'ERROR' | 'WARNING' | 'INFO'
+
+export type PublicationReadinessRequirement = {
+    key: PublicationRequirementKey
+    satisfied: boolean
+    severity: PublicationValidationSeverity
+    message: string | null
+    field: string | null
+}
+
+export type PublicationReadinessDetails = {
+    archiveItemId: number
+    publicationStatus: PublicationStatus
+    ready: boolean
+    requirements: PublicationReadinessRequirement[]
+}
+
+export type PublicationReadinessApiCheck = {
+    requirement: PublicationRequirementKey
+    satisfied: boolean
+    blocking: boolean
+    message?: string | null
+    field?: string | null
+}
+
+export type PublicationReadinessApiResponse = {
+    archiveItemId: number
+    publicationStatus: PublicationStatus
+    ready: boolean
+    checks: PublicationReadinessApiCheck[]
 }

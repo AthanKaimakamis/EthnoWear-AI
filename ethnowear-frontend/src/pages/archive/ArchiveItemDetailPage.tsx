@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
     Alert,
     Box,
@@ -12,12 +12,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { getArchiveItemDetails } from '../../api/PublicArchiveApi'
+import { useQuery } from '@tanstack/react-query'
+import { archiveItemDetailsQueryOptions } from '../../api/PublicQueryOptions'
 import { conceptPath } from '../../app/archiveRoutes'
 import MediaGallery, { type MediaGalleryItem } from '../../components/archive/MediaGallery'
 import SourceCitation from '../../components/archive/SourceCitation'
 import PageLoading from '../../components/loading/PageLoading'
-import type { ArchiveItemDetailDetails } from '../../types/archive'
 import type { Language } from '../../types/reference'
 
 function ArchiveItemDetailPage() {
@@ -25,32 +25,11 @@ function ArchiveItemDetailPage() {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const archiveItemId = Number(id)
-    const [details, setDetails] = useState<ArchiveItemDetailDetails | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (!Number.isInteger(archiveItemId) || archiveItemId <= 0) return
-
-        const controller = new AbortController()
-
-        async function loadDetails() {
-            try {
-                setLoading(true)
-                setError(null)
-                setDetails(await getArchiveItemDetails(archiveItemId, controller.signal))
-            } catch (err) {
-                if (!controller.signal.aborted) {
-                    setError(err instanceof Error ? err.message : t('archiveDetails.loadError'))
-                }
-            } finally {
-                if (!controller.signal.aborted) setLoading(false)
-            }
-        }
-
-        void loadDetails()
-        return () => controller.abort()
-    }, [archiveItemId, t])
+    const detailsQuery = useQuery(archiveItemDetailsQueryOptions(archiveItemId))
+    const details = detailsQuery.data
+    const error = detailsQuery.error instanceof Error
+        ? detailsQuery.error.message
+        : detailsQuery.error ? t('archiveDetails.loadError') : null
 
     const mediaItems = useMemo<MediaGalleryItem[]>(() => {
         if (!details) return []
@@ -69,7 +48,7 @@ function ArchiveItemDetailPage() {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><Alert severity="error">{t('archiveDetails.invalidId')}</Alert></Box>
     }
 
-    if (loading) {
+    if (detailsQuery.isPending) {
         return <Box sx={{ px: { xs: 2, md: 5 }, py: 4 }}><PageLoading message={t('archiveDetails.loading')} /></Box>
     }
 

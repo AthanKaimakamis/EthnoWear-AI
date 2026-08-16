@@ -20,27 +20,36 @@ public interface ArchiveItemRepository extends JpaRepository<ArchiveItem, Long> 
      * Finds archive records providing validated evidence for an ontology entity.
      * Region and regional-embroidery queries also include direct archive links.
      *
-     * @param featureType ontology feature category being matched
-     * @param ontologyIri authoritative ontology IRI of the entity
-     * @param includeRegionDirectLinks whether direct region links are included
+     * @param featureType                  ontology feature category being matched
+     * @param ontologyIri                  authoritative ontology IRI of the entity
+     * @param includeRegionDirectLinks     whether direct region links are included
      * @param includeEmbroideryDirectLinks whether direct regional-embroidery links are included
-     * @param pageable page and sorting request
+     * @param pageable                     page and sorting request
      * @return matching archive records without duplicates
      */
     @Query("""
             SELECT item
             FROM ArchiveItem item
-            WHERE EXISTS (
-                SELECT feature.id
-                FROM ArchiveItemFeature feature
-                WHERE feature.archiveItem = item
-                    AND feature.featureType = :featureType
-                    AND feature.ontologyIri = :ontologyIri
-                    AND feature.validated = true
-            )
-            OR (:includeRegionDirectLinks = true AND item.ontologyRegionIri = :ontologyIri)
-            OR (:includeEmbroideryDirectLinks = true
-                AND item.ontologyRegionalEmbroideryIri = :ontologyIri)
+            WHERE item.publicationStatus =
+                fmi.ethnowear.domain.model.archive.PublicationStatus.PUBLISHED
+                AND (
+                    EXISTS (
+                        SELECT feature.id
+                        FROM ArchiveItemFeature feature
+                        WHERE feature.archiveItem = item
+                            AND feature.featureType = :featureType
+                            AND feature.ontologyIri = :ontologyIri
+                            AND feature.validated = true
+                    )
+                    OR (
+                        :includeRegionDirectLinks = true
+                        AND item.ontologyRegionIri = :ontologyIri
+                    )
+                    OR (
+                        :includeEmbroideryDirectLinks = true
+                        AND item.ontologyRegionalEmbroideryIri = :ontologyIri
+                    )
+                )
             """)
     Page<ArchiveItem> findOntologyEvidence(
             @Param("featureType") FeatureType featureType,
@@ -127,4 +136,17 @@ public interface ArchiveItemRepository extends JpaRepository<ArchiveItem, Long> 
      * @return {@code true} when at least one archive item uses the reference
      */
     boolean existsBySourceReference_Id(Long sourceReferenceId);
+
+    @EntityGraph(attributePaths = {
+            "sourceReference",
+            "sourceReference.source"
+    })
+    @Query("""
+        SELECT item
+        FROM ArchiveItem item
+        WHERE item.id = :id
+            AND item.publicationStatus =
+                fmi.ethnowear.domain.model.archive.PublicationStatus.PUBLISHED
+        """)
+    Optional<ArchiveItem> findPublishedById(@Param("id") Long id);
 }

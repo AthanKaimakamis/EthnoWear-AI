@@ -5,6 +5,8 @@ import fmi.ethnowear.application.dto.archive.item.ArchiveItemWriteDto;
 import fmi.ethnowear.application.exception.ResourceInUseException;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
+import fmi.ethnowear.application.service.archive.workflow.ArchiveItemWorkflowGuard;
+import fmi.ethnowear.domain.model.archive.PublicationStatus;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
 import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
@@ -28,6 +30,7 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
     private final ArchiveItemMapper archiveItemMapper;
     private final ArchiveItemUsageChecker usageChecker;
     private final ArchiveItemOntologyValidator ontologyValidator;
+    private final ArchiveItemWorkflowGuard workflowGuard;
 
     @Override
     public Page<ArchiveItemDetails> findAll(Pageable pageable) {
@@ -46,6 +49,7 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
         validate(input);
 
         ArchiveItem item = new ArchiveItem();
+        item.setPublicationStatus(PublicationStatus.DRAFT);
         apply(item, input);
 
         return archiveItemMapper.toDetails(archiveItemRepository.save(item));
@@ -57,6 +61,7 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
         validate(input);
 
         ArchiveItem item = requireItem(id);
+        workflowGuard.requireDraft(item);
         apply(item, input);
 
         return archiveItemMapper.toDetails(archiveItemRepository.save(item));
@@ -66,6 +71,7 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
     @Transactional
     public void delete(Long id) {
         ArchiveItem item = requireItem(id);
+        workflowGuard.requireDraft(item);
 
         if(usageChecker.isInUse(id))
             throw new ResourceInUseException("Archive item", id);

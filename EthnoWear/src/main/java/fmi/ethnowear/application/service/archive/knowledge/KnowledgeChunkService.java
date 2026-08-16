@@ -3,6 +3,7 @@ package fmi.ethnowear.application.service.archive.knowledge;
 import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
 import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
 import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
+import fmi.ethnowear.domain.model.ontology.OntologyIdentity;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
@@ -100,13 +101,15 @@ public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto
     }
 
     private void validateOntologyIdentity(@NonNull KnowledgeChunkWriteDto input) {
-        boolean hasIri = isNotBlank(input.ontologyIri());
-        boolean hasLocalName = isNotBlank(input.ontologyLocalName());
+        OntologyIdentity identity = new OntologyIdentity(
+                input.ontologyIri(),
+                input.ontologyLocalName()
+        );
 
-        if(hasIri != hasLocalName)
+        if(identity.isIncomplete())
             throw new IllegalArgumentException("Ontology IRI and local name must be provided together");
 
-        if(requiresOntologyIdentity(input.chunkType()) && !hasIri)
+        if(requiresOntologyIdentity(input.chunkType()) && !identity.isComplete())
             throw new IllegalArgumentException("Ontology identity is required for this knowledge chunk type");
 
         if(input.ontologyIri() != null && input.ontologyIri().length() > 1000)

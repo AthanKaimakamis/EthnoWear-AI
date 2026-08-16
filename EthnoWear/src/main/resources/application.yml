@@ -2,6 +2,13 @@ spring:
   application:
     name: ethnowear
 
+  cache:
+    type: caffeine
+    cache-names:
+      - ontology-reference-full
+    caffeine:
+      spec: maximumSize=4,expireAfterWrite=30m
+
   docker:
     compose:
       enabled: false
@@ -30,6 +37,11 @@ spring:
     init:
       mode: never
 
+  servlet:
+    multipart:
+      max-file-size: ${ETHNOWEAR_MEDIA_MAX_FILE_SIZE:25MB}
+      max-request-size: ${ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE:26MB}
+
 ethnowear:
   ontology:
     path: ${ETHNOWEAR_ONTOLOGY_PATH:Ontology/EthnoWear.owx}
@@ -37,6 +49,17 @@ ethnowear:
 
   media:
     storage-root: ${ETHNOWEAR_MEDIA_STORAGE_ROOT:media}
+    max-file-size: ${ETHNOWEAR_MEDIA_MAX_FILE_SIZE:25MB}
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      - application/pdf
+
+  admin:
+    username: ${ETHNOWEAR_ADMIN_USERNAME:admin}
+    password: ${ETHNOWEAR_ADMIN_PASSWORD:change-me}
 
   cors:
     allowed-origins:

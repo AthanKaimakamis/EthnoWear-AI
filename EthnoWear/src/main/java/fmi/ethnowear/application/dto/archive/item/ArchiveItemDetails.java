@@ -2,6 +2,7 @@ package fmi.ethnowear.application.dto.archive.item;
 
 import fmi.ethnowear.application.dto.IdentifiableDto;
 import fmi.ethnowear.domain.model.archive.ArchiveType;
+import fmi.ethnowear.domain.model.archive.PublicationStatus;
 import fmi.ethnowear.domain.model.archive.TrustedLevel;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,10 +22,14 @@ public record ArchiveItemDetails(
         String originText,
         String currentLocation,
         @NotNull TrustedLevel trustedLevel,
+        @NotNull PublicationStatus publicationStatus,
         String ontologyRegionIri,
         String ontologyRegionLocalName,
         String ontologyRegionalEmbroideryIri,
         String ontologyRegionalEmbroideryLocalName,
+        LocalDateTime submittedAt,
+        LocalDateTime publishedAt,
+        LocalDateTime archivedAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) implements IdentifiableDto {

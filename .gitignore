@@ -1,6 +1,7 @@
 ### Project resources excluded from Git ###
 /Resources/
 /tmp/
+/media/
 
 ### macOS ###
 .DS_Store

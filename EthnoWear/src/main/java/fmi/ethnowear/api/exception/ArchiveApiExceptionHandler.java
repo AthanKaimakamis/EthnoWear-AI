@@ -1,7 +1,6 @@
 package fmi.ethnowear.api.exception;
 
-import fmi.ethnowear.application.exception.ResourceInUseException;
-import fmi.ethnowear.application.exception.ResourceNotFoundException;
+import fmi.ethnowear.application.exception.*;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +26,43 @@ public class ArchiveApiExceptionHandler extends BaseExceptionHandler {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidPublicationTransitionException.class)
+    public ResponseEntity<Map<String, Object>> invalidPublicationTransition(@NonNull InvalidPublicationTransitionException ex) {
+        return error(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                Map.of(
+                        "archiveItemId", ex.getArchiveItemId(),
+                        "currentStatus", ex.getCurrentStatus(),
+                        "targetStatus", ex.getTargetStatus()
+                )
+        );
+    }
+
+    @ExceptionHandler(ArchiveNotReadyForPublicationException.class)
+    public ResponseEntity<Map<String, Object>> archiveNotReady(@NonNull ArchiveNotReadyForPublicationException ex) {
+        return error(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                Map.of(
+                        "archiveItemId", ex.getArchiveItemId(),
+                        "failedRequirements", ex.getFailedRequirements()
+                )
+        );
+    }
+
+    @ExceptionHandler(ArchiveItemNotEditableException.class)
+    public ResponseEntity<Map<String, Object>> archiveItemNotEditable(@NonNull ArchiveItemNotEditableException ex) {
+        return error(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                Map.of(
+                        "archiveItemId", ex.getArchiveItemId(),
+                        "publicationStatus", ex.getPublicationStatus()
+                )
+        );
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> invalidInput(@NonNull IllegalArgumentException ex) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage());
@@ -48,4 +84,5 @@ public class ArchiveApiExceptionHandler extends BaseExceptionHandler {
 
         return error(HttpStatus.BAD_REQUEST, "Validation failed", Map.of("fields", fields));
     }
+
 }

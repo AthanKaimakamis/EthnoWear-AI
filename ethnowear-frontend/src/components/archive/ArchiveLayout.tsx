@@ -5,32 +5,65 @@ import HubOutlinedIcon from '@mui/icons-material/HubOutlined'
 import TextureOutlinedIcon from '@mui/icons-material/TextureOutlined'
 import { NavLink, Outlet } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
+import { catalogueQueryOptions, regionalEmbroideryArchiveQueryOptions } from '../../api/PublicQueryOptions'
+import type { Language } from '../../types/reference'
+import type { OntologyFeatureType } from '../../types/catalogue'
 
 const archiveNavItems = [
     {
         path: '/archive/embroideries',
+        kind: 'embroideries',
         translationKey: 'archiveNav.embroideries',
         icon: TextureOutlinedIcon,
     },
     {
         path: '/archive/motifs',
+        kind: 'MOTIF',
         translationKey: 'archiveNav.motifs',
         icon: HubOutlinedIcon,
     },
     {
         path: '/archive/techniques',
+        kind: 'TECHNIQUE',
         translationKey: 'archiveNav.techniques',
         icon: DesignServicesOutlinedIcon,
     },
     {
         path: '/archive/ornaments',
+        kind: 'ORNAMENT',
         translationKey: 'archiveNav.ornaments',
         icon: AutoAwesomeMosaicOutlinedIcon,
     },
 ] as const
 
 function ArchiveLayout() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
+    const queryClient = useQueryClient()
+    const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
+
+    function prefetch(kind: 'embroideries' | OntologyFeatureType) {
+        if (kind === 'embroideries') {
+            void queryClient.prefetchQuery(regionalEmbroideryArchiveQueryOptions(language, 4))
+            void queryClient.prefetchQuery(catalogueQueryOptions({
+                entityType: 'REGIONAL_EMBROIDERY',
+                language,
+                relatedEntityLocalNames: { REGION: [], ORNAMENT: [], TECHNIQUE: [] },
+                relatedCategoryLocalNames: { REGION: [], ORNAMENT: [] },
+                combinationMode: 'AND',
+            }, { page: 0, size: 500, sort: 'label,asc' }))
+            return
+        }
+
+        void queryClient.prefetchQuery(catalogueQueryOptions({
+            entityType: kind,
+            language,
+            searchText: '',
+            categoryLocalNames: [],
+            relatedEntityLocalNames: { REGION: [] },
+            combinationMode: 'AND',
+        }, { page: 0, size: 200, sort: 'label,asc' }))
+    }
 
     return (
         <Box>
@@ -58,6 +91,8 @@ function ArchiveLayout() {
                                 key={item.path}
                                 component={NavLink}
                                 to={item.path}
+                                onMouseEnter={() => prefetch(item.kind)}
+                                onFocus={() => prefetch(item.kind)}
                                 color="inherit"
                                 startIcon={<Icon fontSize="small" />}
                                 sx={{

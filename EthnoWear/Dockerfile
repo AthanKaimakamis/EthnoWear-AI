@@ -20,7 +20,7 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 RUN groupadd --system ethnowear \
     && useradd --system --gid ethnowear --home-dir /app ethnowear \
-    && mkdir -p /app/Ontology \
+    && mkdir -p /app/Ontology /app/media \
     && chown -R ethnowear:ethnowear /app
 
 COPY --from=build --chown=ethnowear:ethnowear /build/target/ethnowear-*.jar /app/ethnowear.jar

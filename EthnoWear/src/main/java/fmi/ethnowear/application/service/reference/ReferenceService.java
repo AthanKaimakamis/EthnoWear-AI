@@ -8,6 +8,7 @@ import fmi.ethnowear.domain.model.ontology.LocalizedOntologyResource;
 import fmi.ethnowear.domain.model.ontology.OntologyLanguage;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import java.util.function.Function;
 
+import static fmi.ethnowear.application.constant.CacheNames.ONTOLOGY_REFERENCE_FULL;
 
 @Service
 public class ReferenceService {
@@ -26,6 +28,11 @@ public class ReferenceService {
         this.ontology = ontology;
     }
 
+    @Cacheable(
+            cacheNames = ONTOLOGY_REFERENCE_FULL,
+            key = "T(fmi.ethnowear.domain.model.ontology.OntologyLanguage).fromTag(#root.args[0]).tag()",
+            sync = true
+    )
     public ReferenceResponse getFullReference(String languageTag) {
         OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
 
