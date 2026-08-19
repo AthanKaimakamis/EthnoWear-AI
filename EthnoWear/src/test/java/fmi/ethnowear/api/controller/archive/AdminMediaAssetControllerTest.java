@@ -2,11 +2,11 @@ package fmi.ethnowear.api.controller.archive;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.api.controller.archive.admin.AdminMediaAssetController;
-import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
-import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
 import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
-import fmi.ethnowear.domain.model.archive.MediaType;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
 import fmi.ethnowear.application.service.archive.media.MediaAssetService;
+import fmi.ethnowear.domain.model.archive.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -14,8 +14,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,24 +37,38 @@ class AdminMediaAssetControllerTest {
     }
 
     @Test
-    void createsMediaAssetWithLocationHeader() throws Exception {
-        mediaAssetService.createResult = details(14L);
+    void updatesOnlyCuratorMetadata() throws Exception {
+        mediaAssetService.updateResult = details(14L, 9L, "Curator description");
 
-        mockMvc.perform(post("/api/admin/media-assets")
+        mockMvc.perform(patch("/api/admin/media-assets/14")
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(input())))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "http://localhost/api/admin/media-assets/14"))
-                .andExpect(jsonPath("$.id").value(14));
+                        .content(objectMapper.writeValueAsString(
+                                new MediaAssetMetadataWriteDto(9L, "Curator description")
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(14))
+                .andExpect(jsonPath("$.sourceReferenceId").value(9))
+                .andExpect(jsonPath("$.description").value("Curator description"));
+
+        assertEquals(14L, mediaAssetService.updatedId);
+        assertEquals(9L, mediaAssetService.updatedInput.sourceReferenceId());
     }
 
     @Test
-    void rejectsMediaAssetWithoutMediaType() throws Exception {
+    void doesNotExposeGenericCreateOrUpdateEndpoints() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new MediaAssetMetadataWriteDto(null, "Description")
+        );
+
         mockMvc.perform(post("/api/admin/media-assets")
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fields.mediaType").exists());
+                        .content(body))
+                .andExpect(status().isMethodNotAllowed());
+
+        mockMvc.perform(put("/api/admin/media-assets/14")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isMethodNotAllowed());
     }
 
     @Test
@@ -64,38 +79,21 @@ class AdminMediaAssetControllerTest {
         assertEquals(27L, mediaAssetService.deletedId);
     }
 
-    private MediaAssetWriteDto input() {
-        return new MediaAssetWriteDto(
-                null,
+    private MediaAssetDetails details(Long id, Long sourceReferenceId, String description) {
+        return new MediaAssetDetails(
+                id,
+                sourceReferenceId,
                 "embroidery.jpg",
-                "/archive/embroidery.jpg",
+                "archive/embroidery.jpg",
                 null,
                 "image/jpeg",
                 MediaType.IMAGE,
                 1200,
                 800,
                 250000L,
-                null
-        );
-    }
-
-    private MediaAssetDetails details(Long id) {
-        MediaAssetWriteDto input = input();
-
-        return new MediaAssetDetails(
-                id,
-                input.sourceReferenceId(),
-                input.fileName(),
-                input.filePath(),
-                input.storageUrl(),
-                input.mimeType(),
-                input.mediaType(),
-                input.width(),
-                input.height(),
-                input.sizeBytes(),
-                input.checksum(),
-                null,
-                null,
+                "checksum",
+                "thumbnails/embroidery.jpg",
+                description,
                 null,
                 null
         );
@@ -103,7 +101,9 @@ class AdminMediaAssetControllerTest {
 
     private static final class StubMediaAssetService extends MediaAssetService {
 
-        private MediaAssetDetails createResult;
+        private MediaAssetDetails updateResult;
+        private MediaAssetMetadataWriteDto updatedInput;
+        private Long updatedId;
         private Long deletedId;
 
         private StubMediaAssetService() {
@@ -111,8 +111,10 @@ class AdminMediaAssetControllerTest {
         }
 
         @Override
-        public MediaAssetDetails create(MediaAssetWriteDto input) {
-            return createResult;
+        public MediaAssetDetails updateMetadata(Long id, MediaAssetMetadataWriteDto input) {
+            updatedId = id;
+            updatedInput = input;
+            return updateResult;
         }
 
         @Override

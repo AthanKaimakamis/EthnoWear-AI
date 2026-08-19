@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -85,6 +87,8 @@ public class MediaFeatureAnnotationService implements CrudService<MediaFeatureAn
     }
 
     private @NonNull MediaFeatureAnnotation requireAnnotation(Long id) {
+        requireId(id, "Media feature annotation");
+
         return annotationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Media feature annotation", id));
     }
@@ -93,11 +97,8 @@ public class MediaFeatureAnnotationService implements CrudService<MediaFeatureAn
         if (input == null)
             throw new IllegalArgumentException("Media feature annotation input is required");
 
-        if (input.archiveItemMediaId() == null)
-            throw new IllegalArgumentException("Archive item media is required");
-
-        if (input.archiveItemFeatureId() == null)
-            throw new IllegalArgumentException("Archive item feature is required");
+        requireId(input.archiveItemMediaId(), "Archive item media");
+        requireId(input.archiveItemFeatureId(), "Archive item feature");
 
         if (input.annotationType() == null)
             throw new IllegalArgumentException("Annotation type is required");

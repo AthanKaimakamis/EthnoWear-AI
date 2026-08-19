@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Component
@@ -30,6 +31,8 @@ public class ArchivePublicationValidator {
     private final ArchiveItemMediaRepository mediaRepository;
 
     public ArchivePublicationReadinessDetails validate(Long archiveItemId) {
+        requireId(archiveItemId, "Archive item");
+
         ArchiveItem item = archiveItemRepository
                 .findById(archiveItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", archiveItemId));

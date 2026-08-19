@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Set;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
@@ -98,23 +99,31 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
 
         workflowGuard.requireDraft(item);
 
-        SourceReference reference = input.sourceReferenceId() == null
-                ? null
-                : sourceReferenceRepository
-                .findById(input.sourceReferenceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Source reference", input.sourceReferenceId()));
+        SourceReference reference = null;
+        if (input.sourceReferenceId() != null) {
+            reference = sourceReferenceRepository
+                    .findById(input.sourceReferenceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Source reference", input.sourceReferenceId()));
+        }
 
         featureMapper.apply(feature, input, item, reference);
     }
 
     private @NonNull ArchiveItemFeature requireFeature(Long id) {
+        requireId(id, "Archive item feature");
+
         return featureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item feature", id));
     }
 
     private void validate(ArchiveItemFeatureWriteDto input) {
-        if (input == null || input.archiveItemId() == null)
-            throw new IllegalArgumentException("Archive item is required");
+        if (input == null)
+            throw new IllegalArgumentException("Archive item feature input is required");
+
+        requireId(input.archiveItemId(), "Archive item");
+
+        if (input.sourceReferenceId() != null)
+            requireId(input.sourceReferenceId(), "Source reference");
 
         if (input.featureType() == null)
             throw new IllegalArgumentException("Feature type is required");

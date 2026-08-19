@@ -2,6 +2,9 @@ package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.application.dto.catalogue.ConceptCatalogQueryDto;
 import fmi.ethnowear.application.dto.catalogue.ConceptCatalogResultDetails;
+import fmi.ethnowear.application.service.catalogue.mapper.ConceptCatalogMatcher;
+import fmi.ethnowear.application.service.catalogue.mapper.EntityCardMapper;
+import fmi.ethnowear.application.service.catalogue.mapper.OntologyReferenceMapper;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.catalogue.FilterCombinationMode;
 import fmi.ethnowear.infrastructure.ontology.jena.embroidery.EmbroideryOntology;

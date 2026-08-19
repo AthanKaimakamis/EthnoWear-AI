@@ -1,8 +1,10 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaDetails;
 import fmi.ethnowear.application.dto.archive.media.ArchiveItemMediaWriteDto;
-import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
 import fmi.ethnowear.application.dto.archive.media.MediaEntityLinkDetails;
 import fmi.ethnowear.application.dto.archive.media.MediaEntityLinkWriteDto;
 import fmi.ethnowear.domain.model.archive.MediaRole;
@@ -34,39 +36,61 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class MediaServicesTest {
 
     @Test
-    void rejectsMediaAssetWithoutLocation() {
+    void updatesCuratorMetadataWithoutChangingSystemManagedFields() {
+        MediaAsset asset = new MediaAsset();
+        EntityTestUtils.setId(asset, 4L);
+        asset.setFileName("original.jpg");
+        asset.setFilePath("archive/original.jpg");
+        asset.setMimeType("image/jpeg");
+        asset.setMediaType(MediaType.IMAGE);
+        asset.setWidth(1200);
+        asset.setHeight(800);
+        asset.setSizeBytes(250000L);
+        asset.setChecksum("original-checksum");
+        asset.setThumbnailPath("thumbnails/original.jpg");
+
+        var sourceReference = new fmi.ethnowear.persistence.jpa.entity.SourceReference();
+        EntityTestUtils.setId(sourceReference, 9L);
+        MediaAssetRepository assetRepository = proxy(
+                MediaAssetRepository.class,
+                (ignored, method, arguments) -> switch(method.getName()) {
+                    case "findById" -> Optional.of(asset);
+                    case "save" -> arguments[0];
+                    default -> throw new AssertionError("Unexpected repository call: " + method.getName());
+                }
+        );
+        SourceReferenceRepository sourceReferenceRepository = proxy(
+                SourceReferenceRepository.class,
+                (ignored, method, arguments) -> Optional.of(sourceReference)
+        );
         MediaAssetService service = new MediaAssetService(
-                rejecting(MediaAssetRepository.class),
-                rejecting(SourceReferenceRepository.class),
+                assetRepository,
+                sourceReferenceRepository,
                 new MediaAssetMapper(),
                 new MediaAssetUsageChecker(null),
                 null
         );
-        MediaAssetWriteDto input = new MediaAssetWriteDto(
-                null,
-                "test.jpg",
-                null,
-                null,
-                "image/jpeg",
-                MediaType.IMAGE,
-                100,
-                100,
-                1000L,
-                null
+
+        var result = service.updateMetadata(
+                4L,
+                new MediaAssetMetadataWriteDto(9L, "Curator description")
         );
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.create(input)
-        );
-
-        assertEquals("A relative managed file path is required", exception.getMessage());
+        assertEquals(9L, result.sourceReferenceId());
+        assertEquals("Curator description", result.description());
+        assertEquals("archive/original.jpg", result.filePath());
+        assertEquals("image/jpeg", result.mimeType());
+        assertEquals(1200, result.width());
+        assertEquals(800, result.height());
+        assertEquals(250000L, result.sizeBytes());
+        assertEquals("original-checksum", result.checksum());
+        assertEquals("thumbnails/original.jpg", result.thumbnailPath());
     }
 
     @Test
     void blocksDeletionOfAttachedMediaAsset() {
         MediaAsset asset = new MediaAsset();
-        asset.setId(5L);
+        EntityTestUtils.setId(asset, 5L);
         MediaAssetRepository assetRepository = proxy(MediaAssetRepository.class, (ignored, method, arguments) -> {
             if(method.getName().equals("findById"))
                 return Optional.of(asset);
@@ -91,9 +115,9 @@ class MediaServicesTest {
     @Test
     void createsArchiveItemMediaForExistingResources() {
         ArchiveItem item = new ArchiveItem();
-        item.setId(6L);
+        EntityTestUtils.setId(item, 6L);
         MediaAsset asset = new MediaAsset();
-        asset.setId(7L);
+        EntityTestUtils.setId(asset, 7L);
         ArchiveItemRepository itemRepository = proxy(
                 ArchiveItemRepository.class,
                 (ignored, method, arguments) -> Optional.of(item)
@@ -127,7 +151,7 @@ class MediaServicesTest {
     @Test
     void rejectsAddingMediaToPublishedArchiveItem() {
         ArchiveItem item = new ArchiveItem();
-        item.setId(6L);
+        EntityTestUtils.setId(item, 6L);
         item.setPublicationStatus(PublicationStatus.PUBLISHED);
         ArchiveItemRepository itemRepository = proxy(
                 ArchiveItemRepository.class,
@@ -158,7 +182,7 @@ class MediaServicesTest {
     void blocksDeletionOfAnnotatedArchiveItemMedia() {
         ArchiveItem item = new ArchiveItem();
         ArchiveItemMedia itemMedia = new ArchiveItemMedia();
-        itemMedia.setId(8L);
+        EntityTestUtils.setId(itemMedia, 8L);
         itemMedia.setArchiveItem(item);
         ArchiveItemMediaRepository itemMediaRepository = proxy(
                 ArchiveItemMediaRepository.class,
@@ -183,7 +207,7 @@ class MediaServicesTest {
     @Test
     void createsMediaLinksForEveryNavigableOntologyEntityType() {
         MediaAsset asset = new MediaAsset();
-        asset.setId(12L);
+        EntityTestUtils.setId(asset, 12L);
         MediaAssetRepository assetRepository = proxy(
                 MediaAssetRepository.class,
                 (ignored, method, arguments) -> Optional.of(asset)

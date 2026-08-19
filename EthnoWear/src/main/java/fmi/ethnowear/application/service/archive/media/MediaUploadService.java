@@ -10,6 +10,9 @@ import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
 import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,10 +28,9 @@ import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +45,7 @@ public class MediaUploadService {
     @Transactional
     public MediaAssetDetails upload(MultipartFile file, MediaUploadRequest request) {
         validate(file, request);
-        String mime = file.getContentType().toLowerCase(Locale.ROOT);
+        String mime = Objects.requireNonNull(file.getContentType()).toLowerCase(Locale.ROOT);
         String extension = extensionFor(mime);
         String category = request.category() == null || request.category().isBlank()
                 ? categoryFor(request.mediaType()) : request.category().trim().toLowerCase(Locale.ROOT);
@@ -51,10 +53,16 @@ public class MediaUploadService {
             throw new IllegalArgumentException("Unsupported media category");
 
         String relative = category + "/" + UUID.randomUUID() + extension;
-        Path target = paths.resolve(relative);
+
+        Path target;
+        try {
+            target = paths.resolveForWrite(relative);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Could not prepare media upload destination", ex);
+        }
+
         String thumbnailRelative = null;
         try {
-            Files.createDirectories(target.getParent());
             try (InputStream input = file.getInputStream()) {
                 Files.copy(input, target);
             }
@@ -78,16 +86,23 @@ public class MediaUploadService {
             return mapper.toDetails(repository.save(asset));
         } catch (RuntimeException | IOException ex) {
             deleteQuietly(target);
-            if (thumbnailRelative != null) deleteQuietly(paths.resolve(thumbnailRelative));
-            if (ex instanceof RuntimeException runtime) throw runtime;
+
+            if (thumbnailRelative != null)
+                deleteQuietly(paths.resolve(thumbnailRelative));
+
+            if (ex instanceof RuntimeException runtime)
+                throw runtime;
+
             throw new IllegalStateException("Could not store media file", ex);
         }
     }
 
     private void validate(MultipartFile file, MediaUploadRequest request) {
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("A non-empty file is required");
-        if (request == null || request.mediaType() == null) throw new IllegalArgumentException("Media type is required");
-        if (file.getSize() > properties.getMaxFileSize().toBytes()) throw new IllegalArgumentException("Media file exceeds the maximum size");
+        if (request == null || request.mediaType() == null)
+            throw new IllegalArgumentException("Media type is required");
+        if (file.getSize() > properties.getMaxFileSize().toBytes())
+            throw new IllegalArgumentException("Media file exceeds the maximum size");
         String mime = file.getContentType();
         if (mime == null || !properties.getAllowedContentTypes().contains(mime.toLowerCase(Locale.ROOT)))
             throw new IllegalArgumentException("Unsupported media content type");
@@ -95,6 +110,9 @@ public class MediaUploadService {
 
     private SourceReference reference(Long id) {
         if (id == null) return null;
+
+        requireId(id, "Source reference");
+
         return sourceReferenceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Source reference", id));
     }
@@ -102,26 +120,32 @@ public class MediaUploadService {
     private void validateSignature(Path file, String mime) throws IOException {
         byte[] header = new byte[12];
         int count;
-        try (InputStream in = Files.newInputStream(file)) { count = in.read(header); }
+        try (InputStream in = Files.newInputStream(file)) {
+            count = in.read(header);
+        }
         boolean valid = switch (mime) {
-            case "image/jpeg" -> count >= 3 && header[0] == (byte) 0xff && header[1] == (byte) 0xd8 && header[2] == (byte) 0xff;
-            case "image/png" -> count >= 8 && header[0] == (byte) 0x89 && header[1] == 'P' && header[2] == 'N' && header[3] == 'G';
+            case "image/jpeg" ->
+                    count >= 3 && header[0] == (byte) 0xff && header[1] == (byte) 0xd8 && header[2] == (byte) 0xff;
+            case "image/png" ->
+                    count >= 8 && header[0] == (byte) 0x89 && header[1] == 'P' && header[2] == 'N' && header[3] == 'G';
             case "image/gif" -> count >= 6 && header[0] == 'G' && header[1] == 'I' && header[2] == 'F';
-            case "image/webp" -> count >= 12 && header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P';
-            case "application/pdf" -> count >= 5 && header[0] == '%' && header[1] == 'P' && header[2] == 'D' && header[3] == 'F' && header[4] == '-';
+            case "image/webp" ->
+                    count >= 12 && header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P';
+            case "application/pdf" ->
+                    count >= 5 && header[0] == '%' && header[1] == 'P' && header[2] == 'D' && header[3] == 'F' && header[4] == '-';
             default -> false;
         };
         if (!valid) throw new IllegalArgumentException("File content does not match its declared content type");
     }
 
-    private ImageInfo imageInfo(Path path, String mime) throws IOException {
+    private @Nullable ImageInfo imageInfo(Path path, @NonNull String mime) throws IOException {
         if (!mime.startsWith("image/") || mime.equals("image/webp")) return null;
         BufferedImage image = ImageIO.read(path.toFile());
         if (image == null) throw new IllegalArgumentException("Invalid image file");
         return new ImageInfo(image.getWidth(), image.getHeight());
     }
 
-    private String createThumbnail(Path source) throws IOException {
+    private @Nullable String createThumbnail(@NonNull Path source) throws IOException {
         BufferedImage original = ImageIO.read(source.toFile());
         if (original == null) return null;
         int width = Math.min(480, original.getWidth());
@@ -132,9 +156,17 @@ public class MediaUploadService {
         graphics.drawImage(original, 0, 0, width, height, null);
         graphics.dispose();
         String relative = "thumbnails/" + UUID.randomUUID() + ".jpg";
-        Path target = paths.resolve(relative);
+
+        Path target;
+        try {
+            target = paths.resolveForWrite(relative);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Could not prepare media upload destination", ex);
+        }
+
         Files.createDirectories(target.getParent());
-        if (!ImageIO.write(thumb, "jpg", target.toFile())) throw new IOException("No JPEG thumbnail writer is available");
+        if (!ImageIO.write(thumb, "jpg", target.toFile()))
+            throw new IOException("No JPEG thumbnail writer is available");
         return relative;
     }
 
@@ -145,16 +177,40 @@ public class MediaUploadService {
                 input.transferTo(java.io.OutputStream.nullOutputStream());
             }
             return HexFormat.of().formatHex(digest.digest());
-        } catch (NoSuchAlgorithmException ex) { throw new IllegalStateException("SHA-256 is unavailable", ex); }
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 is unavailable", ex);
+        }
     }
 
-    private String safeOriginalName(String name) {
+    private @NonNull String safeOriginalName(String name) {
         if (name == null || name.isBlank()) return "upload";
         return Path.of(name.replace('\\', '/')).getFileName().toString();
     }
 
-    private String categoryFor(MediaType type) { return type == MediaType.PDF ? "documents" : "archive"; }
-    private String extensionFor(String mime) { return switch (mime) { case "image/jpeg" -> ".jpg"; case "image/png" -> ".png"; case "image/gif" -> ".gif"; case "image/webp" -> ".webp"; case "application/pdf" -> ".pdf"; default -> ""; }; }
-    private void deleteQuietly(Path path) { try { Files.deleteIfExists(path); } catch (IOException ignored) { } }
-    private record ImageInfo(int width, int height) { }
+    @Contract(pure = true)
+    private @NonNull String categoryFor(MediaType type) {
+        return type == MediaType.PDF ? "documents" : "archive";
+    }
+
+    @Contract(pure = true)
+    private @NonNull String extensionFor(@NonNull String mime) {
+        return switch (mime) {
+            case "image/jpeg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/gif" -> ".gif";
+            case "image/webp" -> ".webp";
+            case "application/pdf" -> ".pdf";
+            default -> "";
+        };
+    }
+
+    private void deleteQuietly(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private record ImageInfo(int width, int height) {
+    }
 }

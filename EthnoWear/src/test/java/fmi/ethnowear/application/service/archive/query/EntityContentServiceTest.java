@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.query;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.query.EntityContentDetails;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
@@ -110,13 +112,13 @@ class EntityContentServiceTest {
 
     private SourceReference reference(Long id, String title) {
         Source source = new Source();
-        source.setId(id + 100);
+        EntityTestUtils.setId(source, id + 100);
         source.setTitle(title);
         source.setSourceType(SourceType.BOOK);
         source.setTrusted(true);
 
         SourceReference reference = new SourceReference();
-        reference.setId(id);
+        EntityTestUtils.setId(reference, id);
         reference.setSource(source);
         reference.setPageFrom(10);
         reference.setPageTo(12);
@@ -125,7 +127,7 @@ class EntityContentServiceTest {
 
     private KnowledgeChunk chunk(SourceReference reference) {
         KnowledgeChunk chunk = new KnowledgeChunk();
-        chunk.setId(25L);
+        EntityTestUtils.setId(chunk, 25L);
         chunk.setChunkType(KnowledgeChunkType.TECHNIQUE);
         chunk.setOntologyIri(TECHNIQUE_IRI);
         chunk.setOntologyLocalName("ChainStitch");
@@ -137,10 +139,10 @@ class EntityContentServiceTest {
 
     private ArchiveItemFeature feature(SourceReference reference) {
         ArchiveItem item = new ArchiveItem();
-        item.setId(30L);
+        EntityTestUtils.setId(item, 30L);
 
         ArchiveItemFeature feature = new ArchiveItemFeature();
-        feature.setId(reference.getId() + 30);
+        EntityTestUtils.setId(feature, reference.getId() + 30);
         feature.setArchiveItem(item);
         feature.setFeatureType(FeatureType.TECHNIQUE);
         feature.setOntologyIri(TECHNIQUE_IRI);
@@ -152,20 +154,20 @@ class EntityContentServiceTest {
 
     private MediaFeatureAnnotation annotation(ArchiveItemFeature feature) {
         MediaAsset asset = new MediaAsset();
-        asset.setId(50L);
+        EntityTestUtils.setId(asset, 50L);
         asset.setFileName("chain-stitch.jpg");
         asset.setStorageUrl("/media/chain-stitch.jpg");
         asset.setMimeType("image/jpeg");
         asset.setMediaType(MediaType.IMAGE);
 
         ArchiveItemMedia itemMedia = new ArchiveItemMedia();
-        itemMedia.setId(60L);
+        EntityTestUtils.setId(itemMedia, 60L);
         itemMedia.setArchiveItem(feature.getArchiveItem());
         itemMedia.setMediaAsset(asset);
         itemMedia.setRole(MediaRole.DETAIL);
 
         MediaFeatureAnnotation annotation = new MediaFeatureAnnotation();
-        annotation.setId(70L);
+        EntityTestUtils.setId(annotation, 70L);
         annotation.setArchiveItemFeature(feature);
         annotation.setArchiveItemMedia(itemMedia);
         annotation.setAnnotationType(MediaFeatureAnnotationType.VISIBLE_IN_IMAGE);

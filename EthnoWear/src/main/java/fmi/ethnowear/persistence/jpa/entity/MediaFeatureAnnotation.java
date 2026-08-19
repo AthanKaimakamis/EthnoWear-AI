@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Entity
 @Table(name = "MediaFeatureAnnotations", schema = "ethnowear")
-public class MediaFeatureAnnotation extends BaseEntity {
+public class MediaFeatureAnnotation extends UpdatableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ArchiveItemMediaId", nullable = false)

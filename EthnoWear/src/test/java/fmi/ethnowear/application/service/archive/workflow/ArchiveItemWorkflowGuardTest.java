@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.workflow;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.exception.ArchiveItemNotEditableException;
 import fmi.ethnowear.domain.model.archive.PublicationStatus;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
@@ -42,7 +44,7 @@ class ArchiveItemWorkflowGuardTest {
 
     private ArchiveItem item(PublicationStatus status) {
         ArchiveItem item = new ArchiveItem();
-        item.setId(1L);
+        EntityTestUtils.setId(item, 1L);
         item.setPublicationStatus(status);
         return item;
     }

@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "ArchiveItemMedia", schema = "ethnowear")
-public class ArchiveItemMedia extends BaseEntity {
+public class ArchiveItemMedia extends UpdatableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ArchiveItemId", nullable = false)

@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.config.MediaStorageProperties;
 import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
@@ -101,7 +103,7 @@ class MediaDeliveryServiceTest {
 
     private MediaAsset asset(Long id) {
         MediaAsset asset = new MediaAsset();
-        asset.setId(id);
+        EntityTestUtils.setId(asset, id);
         return asset;
     }
 }

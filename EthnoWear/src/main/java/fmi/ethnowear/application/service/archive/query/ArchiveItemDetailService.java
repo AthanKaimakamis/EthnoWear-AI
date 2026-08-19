@@ -10,7 +10,7 @@ import fmi.ethnowear.application.service.archive.media.ArchiveItemMediaMapper;
 import fmi.ethnowear.application.service.archive.media.MediaAssetMapper;
 import fmi.ethnowear.application.service.archive.media.MediaFeatureAnnotationMapper;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
-import fmi.ethnowear.persistence.jpa.entity.BaseEntity;
+import fmi.ethnowear.persistence.jpa.entity.UpdatableEntity;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
@@ -23,6 +23,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +44,8 @@ public class ArchiveItemDetailService {
     private final EntitySourceCitationMapper sourceCitationMapper;
 
     public ArchiveItemDetailDetails findById(Long id) {
+        requireId(id, "Archive item");
+
         ArchiveItem archiveItem = archiveItemRepository
                 .findPublishedById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", id));
@@ -58,7 +62,7 @@ public class ArchiveItemDetailService {
         List<ArchiveItemMediaContentDetails> media = mediaRepository
                 .findByArchiveItemId(id)
                 .stream()
-                .sorted(Comparator.comparing(BaseEntity::getId))
+                .sorted(Comparator.comparing(UpdatableEntity::getId))
                 .map(itemMedia -> new ArchiveItemMediaContentDetails(
                         mediaMapper.toDetails(itemMedia),
                         mediaAssetMapper.toDetails(itemMedia.getMediaAsset()),
@@ -71,7 +75,7 @@ public class ArchiveItemDetailService {
                 sourceCitationMapper.toDetails(archiveItem.getSourceReference()),
                 featureRepository.findByArchiveItem_Id(id)
                         .stream()
-                        .sorted(Comparator.comparing(BaseEntity::getId))
+                        .sorted(Comparator.comparing(UpdatableEntity::getId))
                         .map(featureMapper::toDetails)
                         .toList(),
                 media

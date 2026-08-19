@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
@@ -66,6 +67,8 @@ public class SourceService implements CrudService<SourceWriteDto, SourceDetails>
     }
 
     private @NonNull Source requireSource(Long id) {
+        requireId(id, "Source");
+
         return sourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Source", id));
     }

@@ -19,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -90,6 +92,8 @@ public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWrit
     }
 
     private @NonNull ArchiveItemMedia requireItemMedia(Long id) {
+        requireId(id, "Archive item media");
+
         return archiveItemMediaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item media", id));
     }
@@ -98,11 +102,8 @@ public class ArchiveItemMediaService implements CrudService<ArchiveItemMediaWrit
         if (input == null)
             throw new IllegalArgumentException("Archive item media input is required");
 
-        if (input.archiveItemId() == null)
-            throw new IllegalArgumentException("Archive item is required");
-
-        if (input.mediaAssetId() == null)
-            throw new IllegalArgumentException("Media asset is required");
+        requireId(input.archiveItemId(), "Archive item");
+        requireId(input.mediaAssetId(), "Media asset");
 
         if (input.role() == null)
             throw new IllegalArgumentException("Media role is required");

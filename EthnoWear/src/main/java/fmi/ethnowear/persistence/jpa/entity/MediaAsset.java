@@ -11,37 +11,37 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "MediaAssets", schema = "ethnowear")
-public class MediaAsset extends BaseEntity {
+public class MediaAsset extends UpdatableEntity {
 
-    @Column(name = "FileName")
+    @Column(name = "FileName", updatable = false)
     private String fileName;
 
-    @Column(name = "FilePath")
+    @Column(name = "FilePath", updatable = false)
     private String filePath;
 
-    @Column(name = "StorageUrl")
+    @Column(name = "StorageUrl", updatable = false)
     private String storageUrl;
 
-    @Column(name = "MimeType")
+    @Column(name = "MimeType", updatable = false)
     private String mimeType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "MediaType", nullable = false)
+    @Column(name = "MediaType", nullable = false, updatable = false)
     private MediaType mediaType;
 
-    @Column(name = "Width")
+    @Column(name = "Width", updatable = false)
     private Integer width;
 
-    @Column(name = "Height")
+    @Column(name = "Height", updatable = false)
     private Integer height;
 
-    @Column(name = "SizeBytes")
+    @Column(name = "SizeBytes", updatable = false)
     private Long sizeBytes;
 
-    @Column(name = "Checksum")
+    @Column(name = "Checksum", updatable = false)
     private String checksum;
 
-    @Column(name = "ThumbnailPath")
+    @Column(name = "ThumbnailPath", updatable = false)
     private String thumbnailPath;
 
     @Column(name = "Description", length = 2000)

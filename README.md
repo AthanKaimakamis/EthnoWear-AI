@@ -30,6 +30,10 @@ The backend uses the SQL Server service through Spring Data JPA. The ontology
 is stored in the `backend-ontology` Docker volume, while SQL Server data is
 stored in the external `ethnowear_sqlserver_data` volume.
 
+Qdrant is available over HTTP at `http://localhost:6333`, including its web
+dashboard at `http://localhost:6333/dashboard`, and over gRPC on port `6334`.
+Vector data is retained in the `qdrant-data` Docker volume.
+
 The server listens on `localhost:1433` by default. Connect with user `sa`, the
 password from `.env`, and enable certificate trust for local development. The
 Compose service uses the existing `ethnowear_sqlserver_data` Docker volume, so

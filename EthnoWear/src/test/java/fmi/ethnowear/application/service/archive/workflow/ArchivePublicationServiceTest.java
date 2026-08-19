@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.workflow;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.exception.ArchiveNotReadyForPublicationException;
 import fmi.ethnowear.application.exception.InvalidPublicationTransitionException;
 import fmi.ethnowear.application.service.archive.item.ArchiveItemMapper;
@@ -164,10 +166,10 @@ class ArchivePublicationServiceTest {
 
     private ArchiveItem incompleteItem(PublicationStatus status) {
         SourceReference reference = new SourceReference();
-        reference.setId(2L);
+        EntityTestUtils.setId(reference, 2L);
 
         ArchiveItem item = new ArchiveItem();
-        item.setId(1L);
+        EntityTestUtils.setId(item, 1L);
         item.setSourceReference(reference);
         item.setPublicationStatus(status);
         return item;

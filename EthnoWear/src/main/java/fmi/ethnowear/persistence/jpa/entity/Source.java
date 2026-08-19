@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "Sources", schema = "ethnowear")
-public class Source extends BaseEntity {
+public class Source extends UpdatableEntity {
 
     @Column(name = "Title", nullable = false)
     private String title;

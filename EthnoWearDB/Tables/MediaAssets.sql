@@ -44,12 +44,47 @@ CREATE TABLE [ethnowear].[MediaAssets]
     CONSTRAINT [CK_MediaAssets_SizeBytes]
         CHECK ([SizeBytes] IS NULL OR [SizeBytes] >= 0)
     ,
-    CONSTRAINT [CK_MediaAssets_FilePathRelative]
-        CHECK ([FilePath] IS NULL OR (
-            [FilePath] NOT LIKE N'/%' AND
-            [FilePath] NOT LIKE N'%:\\%' AND
-            [FilePath] NOT LIKE N'%..%'
-        ))
+    CONSTRAINT [CK_MediaAssets_FilePathStorageKey]
+        CHECK (
+            [FilePath] IS NULL OR (
+                LEN([FilePath]) > 0
+                AND DATALENGTH([FilePath]) = DATALENGTH(LTRIM(RTRIM([FilePath])))
+                AND LEFT([FilePath], 1) <> N'/'
+                AND RIGHT([FilePath], 1) <> N'/'
+                AND [FilePath] NOT LIKE N'%\%'
+                AND [FilePath] NOT LIKE N'%:%'
+                AND [FilePath] NOT LIKE N'%//%'
+                AND [FilePath] <> N'.'
+                AND [FilePath] <> N'..'
+                AND [FilePath] NOT LIKE N'./%'
+                AND [FilePath] NOT LIKE N'../%'
+                AND [FilePath] NOT LIKE N'%/./%'
+                AND [FilePath] NOT LIKE N'%/../%'
+                AND [FilePath] NOT LIKE N'%/.'
+                AND [FilePath] NOT LIKE N'%/..'
+            )
+        ),
+
+    CONSTRAINT [CK_MediaAssets_ThumbnailPathStorageKey]
+        CHECK (
+            [ThumbnailPath] IS NULL OR (
+                LEN([ThumbnailPath]) > 0
+                AND DATALENGTH([ThumbnailPath]) = DATALENGTH(LTRIM(RTRIM([ThumbnailPath])))
+                AND LEFT([ThumbnailPath], 1) <> N'/'
+                AND RIGHT([ThumbnailPath], 1) <> N'/'
+                AND [ThumbnailPath] NOT LIKE N'%\%'
+                AND [ThumbnailPath] NOT LIKE N'%:%'
+                AND [ThumbnailPath] NOT LIKE N'%//%'
+                AND [ThumbnailPath] <> N'.'
+                AND [ThumbnailPath] <> N'..'
+                AND [ThumbnailPath] NOT LIKE N'./%'
+                AND [ThumbnailPath] NOT LIKE N'../%'
+                AND [ThumbnailPath] NOT LIKE N'%/./%'
+                AND [ThumbnailPath] NOT LIKE N'%/../%'
+                AND [ThumbnailPath] NOT LIKE N'%/.'
+                AND [ThumbnailPath] NOT LIKE N'%/..'
+            )
+        )
 );
 
 GO

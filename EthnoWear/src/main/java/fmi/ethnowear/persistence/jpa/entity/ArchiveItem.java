@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "ArchiveItems", schema = "ethnowear")
-public class ArchiveItem extends BaseEntity {
+public class ArchiveItem extends UpdatableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SourceReferenceId")

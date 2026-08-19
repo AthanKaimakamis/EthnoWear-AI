@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationDetails;
 import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationWriteDto;
 import fmi.ethnowear.domain.model.archive.MediaFeatureAnnotationType;
@@ -138,20 +140,20 @@ class MediaFeatureAnnotationServiceTest {
 
     private ArchiveItemMedia itemMedia(Long archiveItemId, Long itemMediaId) {
         ArchiveItem archiveItem = new ArchiveItem();
-        archiveItem.setId(archiveItemId);
+        EntityTestUtils.setId(archiveItem, archiveItemId);
 
         ArchiveItemMedia itemMedia = new ArchiveItemMedia();
-        itemMedia.setId(itemMediaId);
+        EntityTestUtils.setId(itemMedia, itemMediaId);
         itemMedia.setArchiveItem(archiveItem);
         return itemMedia;
     }
 
     private ArchiveItemFeature itemFeature(Long archiveItemId, Long itemFeatureId) {
         ArchiveItem archiveItem = new ArchiveItem();
-        archiveItem.setId(archiveItemId);
+        EntityTestUtils.setId(archiveItem, archiveItemId);
 
         ArchiveItemFeature itemFeature = new ArchiveItemFeature();
-        itemFeature.setId(itemFeatureId);
+        EntityTestUtils.setId(itemFeature, itemFeatureId);
         itemFeature.setArchiveItem(archiveItem);
         return itemFeature;
     }

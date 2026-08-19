@@ -1,6 +1,8 @@
 package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.application.dto.catalogue.*;
+import fmi.ethnowear.application.service.catalogue.mapper.ConceptCatalogMatcher;
+import fmi.ethnowear.application.service.catalogue.mapper.EntityCardMapper;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;

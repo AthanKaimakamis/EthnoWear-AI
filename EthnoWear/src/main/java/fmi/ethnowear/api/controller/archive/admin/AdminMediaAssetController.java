@@ -1,33 +1,55 @@
 package fmi.ethnowear.api.controller.archive.admin;
 
-import fmi.ethnowear.api.controller.BaseCrudController;
 import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
-import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
 import fmi.ethnowear.application.service.archive.media.MediaAssetService;
 import fmi.ethnowear.application.service.archive.media.MediaUploadService;
 import fmi.ethnowear.application.dto.archive.media.MediaUploadRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/admin/media-assets")
-public class AdminMediaAssetController
-        extends BaseCrudController<MediaAssetWriteDto, MediaAssetDetails> {
+public class AdminMediaAssetController {
 
+    private final MediaAssetService service;
     private final MediaUploadService uploadService;
 
-    public AdminMediaAssetController(MediaAssetService service, MediaUploadService uploadService) {
-        super(service);
-        this.uploadService = uploadService;
+    @GetMapping
+    public Page<MediaAssetDetails> findAll(Pageable pageable) {
+        return service.findAll(pageable);
+    }
+
+    @GetMapping("/{id}")
+    public MediaAssetDetails findById(@PathVariable Long id) {
+        return service.findById(id);
+    }
+
+    @PatchMapping("/{id}")
+    public MediaAssetDetails updateMetadata(@PathVariable Long id,
+                                            @Valid @RequestBody MediaAssetMetadataWriteDto request) {
+        return service.updateMetadata(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MediaAssetDetails> upload(
-            @RequestPart("file") MultipartFile file,
-            @Valid @RequestPart("metadata") MediaUploadRequest metadata) {
-        return ResponseEntity.status(201).body(uploadService.upload(file, metadata));
+    public ResponseEntity<MediaAssetDetails> upload(@RequestPart("file") MultipartFile file,
+                                                    @Valid @RequestPart("metadata") MediaUploadRequest metadata) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(uploadService.upload(file, metadata));
     }
 }

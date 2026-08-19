@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
@@ -32,6 +33,8 @@ public class MediaDeliveryService {
     private final MediaPathResolver paths;
 
     public MediaDelivery findById(Long id) {
+        requireId(id, "Media asset");
+
         MediaAsset asset = assetRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset", id));
@@ -66,7 +69,7 @@ public class MediaDeliveryService {
     @Contract("_, _ -> new")
     private @NonNull MediaDelivery local(@NonNull MediaAsset asset, Long id) {
         try {
-            Path file = paths.resolve(asset.getFilePath());
+            Path file = paths.resolveExisting(asset.getFilePath());
             if(!Files.isRegularFile(file) || !Files.isReadable(file))
                 throw new ResourceNotFoundException("Media file", id);
 

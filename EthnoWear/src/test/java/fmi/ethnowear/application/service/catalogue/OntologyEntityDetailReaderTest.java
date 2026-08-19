@@ -1,6 +1,7 @@
 package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.application.service.catalogue.mapper.OntologyReferenceMapper;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.constant.ontology.OntologyTerms;
 import fmi.ethnowear.infrastructure.ontology.jena.embroidery.EmbroideryOntology;

@@ -1,9 +1,10 @@
-package fmi.ethnowear.application.service.catalogue;
+package fmi.ethnowear.application.service.catalogue.mapper;
 
 import fmi.ethnowear.application.dto.catalogue.CategoryLinkDetails;
 import fmi.ethnowear.application.dto.catalogue.ConceptCatalogQueryDto;
 import fmi.ethnowear.application.dto.catalogue.EntityLinkDetails;
 import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
+import fmi.ethnowear.application.service.catalogue.OntologyCategoryReader;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.catalogue.FilterCombinationMode;
 import fmi.ethnowear.domain.model.ontology.OntologyResource;

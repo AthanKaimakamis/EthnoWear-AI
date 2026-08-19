@@ -6,7 +6,7 @@ import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
 import fmi.ethnowear.domain.model.archive.ArchiveType;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.archive.TrustedLevel;
-import fmi.ethnowear.application.service.catalogue.EntityCardMapper;
+import fmi.ethnowear.application.service.catalogue.mapper.EntityCardMapper;
 import fmi.ethnowear.application.service.catalogue.OntologyEntityDetailReader;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;

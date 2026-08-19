@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.query;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.query.ArchiveItemDetailDetails;
 import fmi.ethnowear.domain.model.archive.MediaFeatureAnnotationType;
 import fmi.ethnowear.domain.model.archive.SourceType;
@@ -116,33 +118,33 @@ class ArchiveItemDetailServiceTest {
 
     private ArchiveItem archiveItem(Long id) {
         Source source = new Source();
-        source.setId(80L);
+        EntityTestUtils.setId(source, 80L);
         source.setTitle("Archive source");
         source.setSourceType(SourceType.BOOK);
 
         SourceReference reference = new SourceReference();
-        reference.setId(70L);
+        EntityTestUtils.setId(reference, 70L);
         reference.setSource(source);
 
         ArchiveItem item = new ArchiveItem();
-        item.setId(id);
+        EntityTestUtils.setId(item, id);
         item.setSourceReference(reference);
         return item;
     }
 
     private ArchiveItemFeature feature(Long id, ArchiveItem item) {
         ArchiveItemFeature feature = new ArchiveItemFeature();
-        feature.setId(id);
+        EntityTestUtils.setId(feature, id);
         feature.setArchiveItem(item);
         return feature;
     }
 
     private ArchiveItemMedia media(Long id, ArchiveItem item) {
         MediaAsset asset = new MediaAsset();
-        asset.setId(id + 100);
+        EntityTestUtils.setId(asset, id + 100);
 
         ArchiveItemMedia media = new ArchiveItemMedia();
-        media.setId(id);
+        EntityTestUtils.setId(media, id);
         media.setArchiveItem(item);
         media.setMediaAsset(asset);
         return media;
@@ -154,7 +156,7 @@ class ArchiveItemDetailServiceTest {
             ArchiveItemFeature feature
     ) {
         MediaFeatureAnnotation annotation = new MediaFeatureAnnotation();
-        annotation.setId(id);
+        EntityTestUtils.setId(annotation, id);
         annotation.setArchiveItemMedia(media);
         annotation.setArchiveItemFeature(feature);
         annotation.setAnnotationType(MediaFeatureAnnotationType.VISIBLE_IN_IMAGE);

@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.media.MediaUploadRequest;
 import fmi.ethnowear.config.MediaStorageProperties;
 import fmi.ethnowear.domain.model.archive.MediaType;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MediaUploadServiceTest {
     private static final byte[] PNG = Base64.getDecoder().decode(
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=");
+    private static final byte[] PDF = "%PDF-1.7\n%%EOF\n".getBytes();
 
     @TempDir Path root;
 
@@ -60,6 +63,21 @@ class MediaUploadServiceTest {
         }
     }
 
+    @Test
+    void acceptsPdfUploadAndStoresItUnderDocuments() {
+        var result = service().upload(
+                file("source.pdf", PDF, "application/pdf"),
+                new MediaUploadRequest(null, MediaType.PDF, null, "Source document")
+        );
+
+        assertEquals("application/pdf", result.mimeType());
+        assertEquals(MediaType.PDF, result.mediaType());
+        assertTrue(result.filePath().startsWith("documents/"));
+        assertTrue(result.filePath().endsWith(".pdf"));
+        assertNull(result.thumbnailPath());
+        assertTrue(Files.isRegularFile(root.resolve(result.filePath())));
+    }
+
     private MediaUploadService service() { return service(properties()); }
 
     private MediaUploadService service(MediaStorageProperties properties) {
@@ -67,7 +85,7 @@ class MediaUploadServiceTest {
         MediaAssetRepository assets = proxy(MediaAssetRepository.class, (ignored, method, args) -> {
             if (method.getName().equals("save")) {
                 MediaAsset asset = (MediaAsset) args[0];
-                asset.setId(ids.incrementAndGet());
+                EntityTestUtils.setId(asset, ids.incrementAndGet());
                 return asset;
             }
             throw new AssertionError("Unexpected repository call: " + method.getName());

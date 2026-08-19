@@ -6,6 +6,11 @@ import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
 import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
 import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
 import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
+import fmi.ethnowear.domain.model.document.indexing.IndexingState;
+import fmi.ethnowear.domain.model.document.review.ProvenanceTrustState;
+import fmi.ethnowear.domain.model.document.review.ReviewState;
+import fmi.ethnowear.domain.model.document.indexing.SourceTextType;
+import fmi.ethnowear.domain.model.document.review.TranscriptionApprovalState;
 import fmi.ethnowear.application.service.archive.knowledge.KnowledgeChunkService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,8 +82,6 @@ class AdminKnowledgeChunkControllerTest {
                 null,
                 "en",
                 "Traditional embroidery knowledge.",
-                null,
-                null,
                 null
         );
     }
@@ -88,14 +91,29 @@ class AdminKnowledgeChunkControllerTest {
 
         return new KnowledgeChunkDetails(
                 id,
+                input.sourceReferenceId(),
+                null,
+                null,
                 input.chunkType(),
                 input.ontologyIri(),
                 input.ontologyLocalName(),
                 input.language(),
                 input.content(),
-                input.sourceReferenceId(),
-                input.embeddingModel(),
-                input.embeddingId(),
+                SourceTextType.MANUAL_EXCERPT,
+                null,
+                "content-hash",
+                ReviewState.REVIEW_REQUIRED,
+                TranscriptionApprovalState.NOT_REQUIRED,
+                ProvenanceTrustState.UNKNOWN,
+                IndexingState.NOT_ELIGIBLE,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null
         );
@@ -107,7 +125,7 @@ class AdminKnowledgeChunkControllerTest {
         private Long deletedId;
 
         private StubKnowledgeChunkService() {
-            super(null, null, null);
+            super(null, null, null, null);
         }
 
         @Override

@@ -8,5 +8,7 @@ public enum KnowledgeChunkType {
     MOTIF,
     COLOR,
     REGIONAL_EMBROIDERY,
-    SOURCE_EXCERPT
+    SOURCE_EXCERPT,
+    BOOK_EXCERPT,
+    STANDALONE_EVIDENCE
 }

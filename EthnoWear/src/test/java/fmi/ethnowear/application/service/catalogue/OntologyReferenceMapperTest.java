@@ -2,6 +2,7 @@ package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.application.dto.catalogue.CategoryLinkDetails;
 import fmi.ethnowear.application.dto.catalogue.EntityLinkDetails;
+import fmi.ethnowear.application.service.catalogue.mapper.OntologyReferenceMapper;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import fmi.ethnowear.domain.model.ontology.LocalizedOntologyResource;
 import fmi.ethnowear.domain.model.ontology.OntologyLanguage;

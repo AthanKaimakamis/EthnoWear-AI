@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.item;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemDetails;
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemFeatureWriteDto;
 import fmi.ethnowear.application.dto.archive.item.ArchiveItemWriteDto;
@@ -50,7 +52,7 @@ class ArchiveItemServicesTest {
     @Test
     void createsArchiveItemForExistingReference() {
         SourceReference reference = new SourceReference();
-        reference.setId(3L);
+        EntityTestUtils.setId(reference, 3L);
         SourceReferenceRepository referenceRepository = proxy(
                 SourceReferenceRepository.class,
                 (ignored, method, arguments) -> Optional.of(reference)
@@ -75,7 +77,7 @@ class ArchiveItemServicesTest {
     @Test
     void blocksDeletionOfArchiveItemWithFeatures() {
         ArchiveItem item = new ArchiveItem();
-        item.setId(4L);
+        EntityTestUtils.setId(item, 4L);
         ArchiveItemRepository itemRepository = proxy(ArchiveItemRepository.class, (ignored, method, arguments) -> {
             if(method.getName().equals("findById"))
                 return Optional.of(item);
@@ -99,7 +101,7 @@ class ArchiveItemServicesTest {
     @Test
     void rejectsUpdatingPublishedArchiveItem() {
         ArchiveItem item = new ArchiveItem();
-        item.setId(4L);
+        EntityTestUtils.setId(item, 4L);
         item.setPublicationStatus(PublicationStatus.PUBLISHED);
         ArchiveItemRepository itemRepository = proxy(
                 ArchiveItemRepository.class,
@@ -130,7 +132,7 @@ class ArchiveItemServicesTest {
     @Test
     void rejectsAddingFeatureToPublishedArchiveItem() {
         ArchiveItem item = new ArchiveItem();
-        item.setId(4L);
+        EntityTestUtils.setId(item, 4L);
         item.setPublicationStatus(PublicationStatus.PUBLISHED);
         ArchiveItemRepository itemRepository = proxy(
                 ArchiveItemRepository.class,

@@ -6,10 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "MediaEntityLinks", schema = "ethnowear")
-@Getter @Setter @NoArgsConstructor
-public class MediaEntityLink extends BaseEntity {
+public class MediaEntityLink extends UpdatableEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "MediaAssetId", nullable = false)
     private MediaAsset mediaAsset;

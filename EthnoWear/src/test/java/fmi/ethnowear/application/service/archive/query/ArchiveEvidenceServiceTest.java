@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.query;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.query.ArchiveEvidenceDetails;
 import fmi.ethnowear.domain.model.archive.ArchiveType;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
@@ -187,7 +189,7 @@ class ArchiveEvidenceServiceTest {
 
     private ArchiveItem item() {
         ArchiveItem item = new ArchiveItem();
-        item.setId(1L);
+        EntityTestUtils.setId(item, 1L);
         item.setArchiveType(ArchiveType.EMBROIDERY_SAMPLE);
         item.setTitleBg("Софийска шевица");
         item.setTitleEn("Sofia embroidery");
@@ -198,7 +200,7 @@ class ArchiveEvidenceServiceTest {
 
     private ArchiveItemFeature feature(ArchiveItem item) {
         ArchiveItemFeature feature = new ArchiveItemFeature();
-        feature.setId(20L);
+        EntityTestUtils.setId(feature, 20L);
         feature.setArchiveItem(item);
         feature.setFeatureType(FeatureType.REGION);
         feature.setOntologyIri(REGION_IRI);
@@ -210,13 +212,13 @@ class ArchiveEvidenceServiceTest {
 
     private ArchiveItemMedia media(ArchiveItem item, Long id, MediaRole role, String fileName) {
         MediaAsset asset = new MediaAsset();
-        asset.setId(id + 100);
+        EntityTestUtils.setId(asset, id + 100);
         asset.setFileName(fileName);
         asset.setStorageUrl("/media/" + fileName);
         asset.setMediaType(MediaType.IMAGE);
 
         ArchiveItemMedia media = new ArchiveItemMedia();
-        media.setId(id);
+        EntityTestUtils.setId(media, id);
         media.setArchiveItem(item);
         media.setMediaAsset(asset);
         media.setRole(role);

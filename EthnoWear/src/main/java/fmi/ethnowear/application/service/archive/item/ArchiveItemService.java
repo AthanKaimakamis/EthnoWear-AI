@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
@@ -88,13 +89,17 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
     }
 
     private @NonNull ArchiveItem requireItem(Long id) {
+        requireId(id, "Archive item");
+
         return  archiveItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", id));
     }
 
     private void validate(ArchiveItemWriteDto input) {
-        if (input == null || input.sourceReferenceId() == null)
-            throw new IllegalArgumentException("Source reference is required");
+        if (input == null)
+            throw new IllegalArgumentException("Archive item input is required");
+
+        requireId(input.sourceReferenceId(), "Source reference");
 
         if(isBlank(input.titleBg()) && isBlank(input.titleEn()))
             throw new IllegalArgumentException("At least one title is required");

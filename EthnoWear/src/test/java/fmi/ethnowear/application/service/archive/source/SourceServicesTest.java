@@ -1,5 +1,7 @@
 package fmi.ethnowear.application.service.archive.source;
 
+import fmi.ethnowear.testutil.EntityTestUtils;
+
 import fmi.ethnowear.application.dto.archive.source.SourceReferenceDetails;
 import fmi.ethnowear.application.dto.archive.source.SourceReferenceWriteDto;
 import fmi.ethnowear.application.dto.archive.source.SourceWriteDto;
@@ -39,7 +41,7 @@ class SourceServicesTest {
     @Test
     void blocksDeletionOfReferencedSource() {
         Source source = new Source();
-        source.setId(1L);
+        EntityTestUtils.setId(source, 1L);
         SourceRepository sourceRepository = proxy(SourceRepository.class, (ignored, method, arguments) -> {
             if(method.getName().equals("findById"))
                 return Optional.of(source);
@@ -79,7 +81,7 @@ class SourceServicesTest {
     @Test
     void createsSourceReferenceForExistingSource() {
         Source source = new Source();
-        source.setId(2L);
+        EntityTestUtils.setId(source, 2L);
         SourceRepository sourceRepository = proxy(
                 SourceRepository.class,
                 (ignored, method, arguments) -> Optional.of(source)

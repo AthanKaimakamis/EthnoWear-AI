@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -117,6 +119,8 @@ public class ArchivePublicationService {
     }
 
     private @NonNull ArchiveItem requireItem(Long archiveItemId) {
+        requireId(archiveItemId, "Archive item");
+
         return archiveItemRepository
                 .findById(archiveItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", archiveItemId));

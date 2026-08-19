@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Table(name = "SourceReference", schema = "ethnowear")
-public class SourceReference extends BaseEntity {
+public class SourceReference extends UpdatableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "SourceId", nullable = false)

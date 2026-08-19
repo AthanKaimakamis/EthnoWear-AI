@@ -1,6 +1,7 @@
 package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.application.dto.catalogue.*;
+import fmi.ethnowear.application.service.catalogue.mapper.ConceptCatalogMatcher;
 import fmi.ethnowear.domain.model.catalogue.CatalogFacetType;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
 import lombok.RequiredArgsConstructor;

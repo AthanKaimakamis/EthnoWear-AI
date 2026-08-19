@@ -22,12 +22,6 @@ public record KnowledgeChunkWriteDto(
         @NotBlank
         String content,
 
-        Long sourceReferenceId,
-
-        @Size(max = 100)
-        String embeddingModel,
-
-        @Size(max = 255)
-        String embeddingId
+        Long sourceReferenceId
 ) {
 }

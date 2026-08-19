@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,6 +49,11 @@ public class MediaEntityLinkService implements CrudService<MediaEntityLinkWriteD
     }
 
     private MediaEntityLink apply(MediaEntityLink link, MediaEntityLinkWriteDto input) {
+        if (input == null)
+            throw new IllegalArgumentException("Media entity link input is required");
+
+        requireId(input.mediaAssetId(), "Media asset");
+
         OntologyIdentity identity = new OntologyIdentity(
                 input.ontologyIri(),
                 input.ontologyLocalName()
@@ -76,6 +83,8 @@ public class MediaEntityLinkService implements CrudService<MediaEntityLinkWriteD
     }
 
     private MediaEntityLink require(Long id) {
+        requireId(id, "Media entity link");
+
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Media entity link", id));
     }

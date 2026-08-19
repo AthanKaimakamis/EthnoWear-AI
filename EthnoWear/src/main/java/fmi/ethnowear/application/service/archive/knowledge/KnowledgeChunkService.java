@@ -3,6 +3,7 @@ package fmi.ethnowear.application.service.archive.knowledge;
 import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
 import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
 import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
+import fmi.ethnowear.domain.model.document.indexing.IndexingState;
 import fmi.ethnowear.domain.model.ontology.OntologyIdentity;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.CrudService;
@@ -17,8 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+
 import static fmi.ethnowear.util.TextUtils.isBlank;
-import static fmi.ethnowear.util.TextUtils.isNotBlank;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto
     private final KnowledgeChunkRepository chunkRepository;
     private final SourceReferenceRepository referenceRepository;
     private final KnowledgeChunkMapper chunkMapper;
+    private final KnowledgeContentHasher contentHasher;
 
     @Override
     public Page<KnowledgeChunkDetails> findAll(Pageable pageable) {
@@ -61,42 +64,68 @@ public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto
         chunkRepository.delete(requireChunk(id));
     }
 
-    private void apply(KnowledgeChunk chunk, KnowledgeChunkWriteDto input) {
+    private void apply(@NonNull KnowledgeChunk chunk, KnowledgeChunkWriteDto input) {
         validate(input);
 
-        SourceReference reference = input.sourceReferenceId() == null
-                ? null
-                : referenceRepository.findById(input.sourceReferenceId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Source reference", input.sourceReferenceId()));
+        SourceReference sourceReference = resolveSourceReference(input.sourceReferenceId());
 
-        chunkMapper.apply(chunk, input, reference);
+        String previousHash = chunk.getContentHash();
+        String currentHash = contentHasher.hash(input.content());
+
+        chunkMapper.apply(chunk, input, sourceReference);
+        chunk.setContentHash(currentHash);
+
+        if (previousHash != null && !previousHash.equals(currentHash))
+            markIndexingOutdated(chunk);
+    }
+
+    private SourceReference resolveSourceReference(Long sourceReferenceId) {
+        if (sourceReferenceId == null)
+            return null;
+
+        requireId(sourceReferenceId, "Source reference");
+
+        return referenceRepository.findById(sourceReferenceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Source reference", sourceReferenceId));
+    }
+
+    private void markIndexingOutdated(@NonNull KnowledgeChunk chunk) {
+        if (chunk.getIndexingState() == IndexingState.NOT_ELIGIBLE)
+            return;
+
+        chunk.setIndexingState(IndexingState.OUTDATED);
+        chunk.setIndexingError(null);
     }
 
     private @NonNull KnowledgeChunk requireChunk(Long id) {
+        requireId(id, "Knowledge chunk");
+
         return chunkRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Knowledge chunk", id));
     }
 
     private void validate(KnowledgeChunkWriteDto input) {
-        if(input == null)
+        if (input == null)
             throw new IllegalArgumentException("Knowledge chunk input is required");
 
-        if(input.chunkType() == null)
+        if (input.chunkType() == null)
             throw new IllegalArgumentException("Knowledge chunk type is required");
 
-        if(isBlank(input.language()))
+        if (isGeneratedChunkType(input.chunkType()))
+            throw new IllegalArgumentException("Generated knowledge chunk types cannot be created through ordinary administration");
+
+        if (isBlank(input.language()))
             throw new IllegalArgumentException("Knowledge chunk language is required");
 
-        if(input.language().length() > 10)
+        if (input.language().length() > 10)
             throw new IllegalArgumentException("Knowledge chunk language cannot exceed 10 characters");
 
-        if(isBlank(input.content()))
+        if (isBlank(input.content()))
             throw new IllegalArgumentException("Knowledge chunk content is required");
 
         validateOntologyIdentity(input);
-        validateEmbeddingIdentity(input);
 
-        if(input.chunkType() == KnowledgeChunkType.SOURCE_EXCERPT && input.sourceReferenceId() == null)
+        if (input.chunkType() == KnowledgeChunkType.SOURCE_EXCERPT && input.sourceReferenceId() == null)
             throw new IllegalArgumentException("Source excerpt requires a source reference");
     }
 
@@ -106,36 +135,25 @@ public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto
                 input.ontologyLocalName()
         );
 
-        if(identity.isIncomplete())
+        if (identity.isIncomplete())
             throw new IllegalArgumentException("Ontology IRI and local name must be provided together");
 
-        if(requiresOntologyIdentity(input.chunkType()) && !identity.isComplete())
+        if (requiresOntologyIdentity(input.chunkType()) && !identity.isComplete())
             throw new IllegalArgumentException("Ontology identity is required for this knowledge chunk type");
 
-        if(input.ontologyIri() != null && input.ontologyIri().length() > 1000)
+        if (input.ontologyIri() != null && input.ontologyIri().length() > 1000)
             throw new IllegalArgumentException("Ontology IRI cannot exceed 1000 characters");
 
-        if(input.ontologyLocalName() != null && input.ontologyLocalName().length() > 200)
+        if (input.ontologyLocalName() != null && input.ontologyLocalName().length() > 200)
             throw new IllegalArgumentException("Ontology local name cannot exceed 200 characters");
     }
 
-    private void validateEmbeddingIdentity(@NonNull KnowledgeChunkWriteDto input) {
-        boolean hasModel = isNotBlank(input.embeddingModel());
-        boolean hasId = isNotBlank(input.embeddingId());
-
-        if(hasModel != hasId)
-            throw new IllegalArgumentException("Embedding model and ID must be provided together");
-
-        if(input.embeddingModel() != null && input.embeddingModel().length() > 100)
-            throw new IllegalArgumentException("Embedding model cannot exceed 100 characters");
-
-        if(input.embeddingId() != null && input.embeddingId().length() > 255)
-            throw new IllegalArgumentException("Embedding ID cannot exceed 255 characters");
+    private boolean requiresOntologyIdentity(KnowledgeChunkType chunkType) {
+        return chunkType != KnowledgeChunkType.GENERAL && chunkType != KnowledgeChunkType.SOURCE_EXCERPT;
     }
 
-    private boolean requiresOntologyIdentity(KnowledgeChunkType chunkType) {
-        return chunkType != KnowledgeChunkType.GENERAL
-                && chunkType != KnowledgeChunkType.SOURCE_EXCERPT;
+    private boolean isGeneratedChunkType(KnowledgeChunkType chunkType) {
+        return chunkType == KnowledgeChunkType.BOOK_EXCERPT || chunkType == KnowledgeChunkType.STANDALONE_EVIDENCE;
     }
 
 }

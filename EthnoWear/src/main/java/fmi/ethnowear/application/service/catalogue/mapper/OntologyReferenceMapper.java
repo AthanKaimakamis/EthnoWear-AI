@@ -1,4 +1,4 @@
-package fmi.ethnowear.application.service.catalogue;
+package fmi.ethnowear.application.service.catalogue.mapper;
 
 import fmi.ethnowear.application.dto.catalogue.CategoryLinkDetails;
 import fmi.ethnowear.application.dto.catalogue.EntityLinkDetails;

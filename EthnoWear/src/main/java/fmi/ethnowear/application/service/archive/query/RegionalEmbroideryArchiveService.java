@@ -5,7 +5,7 @@ import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveOver
 import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveSectionDetails;
 import fmi.ethnowear.application.dto.catalogue.EntityOntologyDetails;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
-import fmi.ethnowear.application.service.catalogue.EntityCardMapper;
+import fmi.ethnowear.application.service.catalogue.mapper.EntityCardMapper;
 import fmi.ethnowear.application.service.catalogue.OntologyEntityDetailReader;
 import fmi.ethnowear.domain.model.ontology.OntologyLanguage;
 import lombok.RequiredArgsConstructor;

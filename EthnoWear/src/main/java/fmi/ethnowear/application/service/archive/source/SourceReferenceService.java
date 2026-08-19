@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -69,8 +71,10 @@ public class SourceReferenceService implements CrudService<SourceReferenceWriteD
     }
 
     private void validate(SourceReferenceWriteDto input) {
-        if(input == null || input.sourceId() == null)
+        if(input == null)
             throw new IllegalArgumentException("Source is required");
+
+        requireId(input.sourceId(), "Source");
 
         if(input.pageFrom() != null && input.pageFrom() < 1)
             throw new IllegalArgumentException("Page from must be positive");
@@ -84,6 +88,8 @@ public class SourceReferenceService implements CrudService<SourceReferenceWriteD
     }
 
     private @NonNull SourceReference requireReference(Long id) {
+        requireId(id, "Source reference");
+
         return referenceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Source reference", id));
     }

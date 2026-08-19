@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Entity
 @Table(name = "ArchiveItemFeatures", schema = "ethnowear")
-public class ArchiveItemFeature extends BaseEntity {
+public class ArchiveItemFeature extends UpdatableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ArchiveItemId", nullable = false)

@@ -1,10 +1,9 @@
 package fmi.ethnowear.application.service.archive.media;
 
 import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
-import fmi.ethnowear.application.dto.archive.media.MediaAssetWriteDto;
+import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
 import fmi.ethnowear.application.exception.ResourceInUseException;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
-import fmi.ethnowear.application.service.CrudService;
 import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
 import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import fmi.ethnowear.persistence.jpa.repository.MediaAssetRepository;
@@ -18,12 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaAssetDetails> {
+public class MediaAssetService {
 
     private final MediaAssetRepository mediaAssetRepository;
     private final SourceReferenceRepository sourceReferenceRepository;
@@ -31,40 +31,27 @@ public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaA
     private final MediaAssetUsageChecker usageChecker;
     private final MediaPathResolver paths;
 
-    @Override
     public Page<MediaAssetDetails> findAll(Pageable pageable) {
         return mediaAssetRepository.findAll(pageable)
                 .map(mediaAssetMapper::toDetails);
     }
 
-    @Override
     public MediaAssetDetails findById(Long id) {
         return mediaAssetMapper.toDetails(requireAsset(id));
     }
 
-    @Override
     @Transactional
-    public MediaAssetDetails create(MediaAssetWriteDto input) {
-        validate(input);
-
-        MediaAsset asset = new MediaAsset();
-        apply(asset, input);
-
-        return mediaAssetMapper.toDetails(mediaAssetRepository.save(asset));
-    }
-
-    @Override
-    @Transactional
-    public MediaAssetDetails update(Long id, MediaAssetWriteDto input) {
-        validate(input);
+    public MediaAssetDetails updateMetadata(Long id, MediaAssetMetadataWriteDto input) {
+        if(input == null)
+            throw new IllegalArgumentException("Media asset metadata is required");
 
         MediaAsset asset = requireAsset(id);
-        apply(asset, input);
+        SourceReference sourceReference = requireSourceReference(input.sourceReferenceId());
+        mediaAssetMapper.applyMetadata(asset, input, sourceReference);
 
         return mediaAssetMapper.toDetails(mediaAssetRepository.save(asset));
     }
 
-    @Override
     @Transactional
     public void delete(Long id) {
         MediaAsset asset = requireAsset(id);
@@ -74,56 +61,35 @@ public class MediaAssetService implements CrudService<MediaAssetWriteDto, MediaA
 
         mediaAssetRepository.delete(asset);
         mediaAssetRepository.flush();
+
         deleteManagedFile(asset.getFilePath());
         deleteManagedFile(asset.getThumbnailPath());
+    }
+
+    private SourceReference requireSourceReference(Long id) {
+        if(id == null)
+            return null;
+
+        requireId(id, "Source reference");
+
+        return sourceReferenceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Source reference", id));
+    }
+
+    private @NonNull MediaAsset requireAsset(Long id) {
+        requireId(id, "Media asset");
+
+        return mediaAssetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset", id));
     }
 
     private void deleteManagedFile(String relativePath) {
         if (isBlank(relativePath)) return;
         try {
-            Files.deleteIfExists(paths.resolve(relativePath));
+            Files.deleteIfExists(paths.resolveExisting(relativePath));
         } catch (IOException ex) {
             throw new IllegalStateException("Could not delete managed media file", ex);
         }
-    }
-
-    private void apply(MediaAsset asset, @NonNull MediaAssetWriteDto input) {
-        SourceReference reference = input.sourceReferenceId() == null
-                ? null
-                : sourceReferenceRepository.findById(input.sourceReferenceId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Source reference", input.sourceReferenceId()));
-
-        mediaAssetMapper.apply(asset, input, reference);
-    }
-
-    private @NonNull MediaAsset requireAsset(Long id) {
-        return mediaAssetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Media asset", id));
-    }
-
-    private void validate(MediaAssetWriteDto input) {
-        if (input == null)
-            throw new IllegalArgumentException("Media asset input is required");
-
-        if (input.mediaType() == null)
-            throw new IllegalArgumentException("Media type is required");
-
-        if (isBlank(input.filePath()))
-            throw new IllegalArgumentException("A relative managed file path is required");
-
-        if (!isBlank(input.storageUrl()))
-            throw new IllegalArgumentException("External storage URLs are not supported");
-
-        paths.resolve(input.filePath());
-
-        if (input.width() != null && input.width() <= 0)
-            throw new IllegalArgumentException("Media width must be positive");
-
-        if (input.height() != null && input.height() <= 0)
-            throw new IllegalArgumentException("Media height must be positive");
-
-        if (input.sizeBytes() != null && input.sizeBytes() < 0)
-            throw new IllegalArgumentException("Media size cannot be negative");
     }
 
 }
