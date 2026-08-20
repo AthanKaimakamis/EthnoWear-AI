@@ -62,8 +62,51 @@ public class SecurityConfig {
                                 "/api/auth/me",
                                 "/api/auth/password/change"
                         ).authenticated()
-                        .requestMatchers("/api/admin/**")
+                        .requestMatchers("/api/admin/users/**")
                         .hasRole("ADMINISTRATOR")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/admin/**"
+                        ).hasAnyRole(
+                                "ADMINISTRATOR",
+                                "REVIEWER",
+                                "EDITOR"
+                        )
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/admin/archive-items/*/publish",
+                                "/api/admin/archive-items/*/return-to-draft",
+                                "/api/admin/archive-items/*/archive",
+                                "/api/admin/document-pages/*/approve",
+                                "/api/admin/document-pages/*/reject",
+                                "/api/admin/document-pages/*/provenance-events/trust-change",
+                                "/api/admin/document-pages/*/provenance-events/canonical-link",
+                                "/api/admin/document-pages/*/provenance-events/canonical-merge",
+                                "/api/admin/document-pages/*/provenance-events/canonical-link-reversal"
+                        ).hasAnyRole(
+                                "ADMINISTRATOR",
+                                "REVIEWER"
+                        )
+                        .requestMatchers(
+                                "/api/admin/ontology/**",
+                                "/api/admin/sources/**",
+                                "/api/admin/source-references/**",
+                                "/api/admin/archive-items/**",
+                                "/api/admin/archive-item-features/**",
+                                "/api/admin/media-assets/**",
+                                "/api/admin/media-entity-links/**",
+                                "/api/admin/archive-item-media/**",
+                                "/api/admin/media-feature-annotations/**",
+                                "/api/admin/knowledge-chunks/**",
+                                "/api/admin/documents/**",
+                                "/api/admin/document-pages/**",
+                                "/api/admin/document-processing-jobs/**"
+                        ).hasAnyRole(
+                                "ADMINISTRATOR",
+                                "EDITOR"
+                        )
+                        .requestMatchers("/api/admin/**")
+                        .denyAll()
                         .anyRequest()
                         .permitAll())
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -39,6 +39,7 @@ import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -101,6 +102,60 @@ class DocumentEndpointSecurityTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isAccepted());
         assertEquals(11L, processingService.pageId);
+    }
+
+    @Test
+    void allowsEditorContentMutationsButRejectsReviewer() throws Exception {
+        mockMvc.perform(post("/api/admin/document-pages/11/ocr")
+                        .header("Authorization", "Bearer " + validToken("EDITOR")))
+                .andExpect(status().isAccepted());
+
+        mockMvc.perform(post("/api/admin/document-pages/11/ocr")
+                        .header("Authorization", "Bearer " + validToken("REVIEWER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void allowsReviewerDecisionsButRejectsEditor() throws Exception {
+        mockMvc.perform(post("/api/admin/document-pages/11/approve")
+                        .header("Authorization", "Bearer " + validToken("REVIEWER")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/admin/document-pages/11/approve")
+                        .header("Authorization", "Bearer " + validToken("EDITOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void allowsAdminReadsForEveryManagementRole() throws Exception {
+        for (String role : List.of("ADMINISTRATOR", "REVIEWER", "EDITOR")) {
+            mockMvc.perform(get("/api/admin/security-check")
+                            .header("Authorization", "Bearer " + validToken(role)))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    @Test
+    void reservesUserManagementForAdministrators() throws Exception {
+        mockMvc.perform(get("/api/admin/users/security-check")
+                        .header("Authorization", "Bearer " + validToken("ADMINISTRATOR")))
+                .andExpect(status().isOk());
+
+        for (String role : List.of("REVIEWER", "EDITOR")) {
+            mockMvc.perform(get("/api/admin/users/security-check")
+                            .header("Authorization", "Bearer " + validToken(role)))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void deniesUnclassifiedAdminMutations() throws Exception {
+        mockMvc.perform(post("/api/admin/unclassified")
+                        .header(
+                                "Authorization",
+                                "Bearer " + validToken("ADMINISTRATOR")
+                        ))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -177,6 +232,13 @@ class DocumentEndpointSecurityTest {
         return context.getBean(JwtEncoder.class)
                 .encode(JwtEncoderParameters.from(header, claims))
                 .getTokenValue();
+    }
+
+    private String validToken(String role) {
+        return token(
+                Instant.now().plusSeconds(60),
+                List.of(role)
+        );
     }
 
     @Configuration
@@ -302,6 +364,11 @@ class DocumentEndpointSecurityTest {
         PublicSecurityController publicSecurityController() {
             return new PublicSecurityController();
         }
+
+        @Bean
+        AdminSecurityController adminSecurityController() {
+            return new AdminSecurityController();
+        }
     }
 
     @RestController
@@ -309,6 +376,34 @@ class DocumentEndpointSecurityTest {
 
         @GetMapping("/api/public/security-check")
         String check() {
+            return "ok";
+        }
+    }
+
+    @RestController
+    static class AdminSecurityController {
+
+        @GetMapping("/api/admin/security-check")
+        String check() {
+            return "ok";
+        }
+
+        @GetMapping("/api/admin/users/security-check")
+        String users() {
+            return "ok";
+        }
+
+        @PostMapping(
+                "/api/admin/document-pages/{pageId}/approve"
+        )
+        String approve() {
+            return "ok";
+        }
+
+        @PostMapping(
+                "/api/admin/unclassified"
+        )
+        String unclassified() {
             return "ok";
         }
     }
