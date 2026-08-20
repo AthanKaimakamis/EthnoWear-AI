@@ -1,5 +1,8 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDelivery;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDeliveryService;
+import fmi.ethnowear.application.service.archive.media.storage.MediaPathResolver;
 import fmi.ethnowear.testutil.EntityTestUtils;
 
 import fmi.ethnowear.application.exception.ResourceNotFoundException;

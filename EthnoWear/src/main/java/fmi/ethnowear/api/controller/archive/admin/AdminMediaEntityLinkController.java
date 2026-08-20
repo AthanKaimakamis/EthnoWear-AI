@@ -2,7 +2,7 @@ package fmi.ethnowear.api.controller.archive.admin;
 
 import fmi.ethnowear.api.controller.BaseCrudController;
 import fmi.ethnowear.application.dto.archive.media.*;
-import fmi.ethnowear.application.service.archive.media.MediaEntityLinkService;
+import fmi.ethnowear.application.service.archive.media.attachment.MediaEntityLinkService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

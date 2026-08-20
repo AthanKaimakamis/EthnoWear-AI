@@ -1,5 +1,8 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.application.service.archive.media.attachment.MediaFeatureAnnotationMapper;
+
+import fmi.ethnowear.application.service.archive.media.attachment.MediaFeatureAnnotationService;
 import fmi.ethnowear.testutil.EntityTestUtils;
 
 import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationDetails;

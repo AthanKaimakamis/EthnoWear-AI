@@ -14,6 +14,12 @@
     <Folder Include="Security\Schemas" />
     <Folder Include="Tables" />
     <Folder Include="Views" />
+    <Folder Include="Post-Deployment" />
+    <Folder Include="Post-Deployment\Seeds" />
+    <Folder Include="Stored Procedures" />
+  </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Post-Deployment\Script.PostDeployment.sql" />
   </ItemGroup>
   <Target Name="BeforeBuild">
     <Delete Files="$(BaseIntermediateOutputPath)\project.assets.json" />

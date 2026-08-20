@@ -6,8 +6,8 @@ import fmi.ethnowear.domain.model.document.PageKind;
 import fmi.ethnowear.domain.model.document.PageRole;
 import fmi.ethnowear.domain.model.document.indexing.IndexingState;
 import fmi.ethnowear.domain.model.document.processing.ProcessingState;
-import fmi.ethnowear.domain.model.document.review.ProvenanceStatus;
-import fmi.ethnowear.domain.model.document.review.ProvenanceTrustState;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceStatus;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceTrustState;
 import fmi.ethnowear.domain.model.document.review.ReviewState;
 import fmi.ethnowear.domain.model.document.review.TranscriptionApprovalState;
 

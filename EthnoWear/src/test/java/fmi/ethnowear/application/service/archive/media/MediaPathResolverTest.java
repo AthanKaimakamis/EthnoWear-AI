@@ -1,5 +1,6 @@
 package fmi.ethnowear.application.service.archive.media;
 
+import fmi.ethnowear.application.service.archive.media.storage.MediaPathResolver;
 import fmi.ethnowear.config.MediaStorageProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

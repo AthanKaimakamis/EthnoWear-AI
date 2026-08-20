@@ -3,7 +3,7 @@ package fmi.ethnowear.persistence.jpa.entity;
 import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
 import fmi.ethnowear.domain.model.document.indexing.IndexingState;
 import fmi.ethnowear.domain.model.document.indexing.SourceTextType;
-import fmi.ethnowear.domain.model.document.review.ProvenanceTrustState;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceTrustState;
 import fmi.ethnowear.domain.model.document.review.ReviewState;
 import fmi.ethnowear.domain.model.document.review.TranscriptionApprovalState;
 import fmi.ethnowear.persistence.jpa.entity.document.Document;

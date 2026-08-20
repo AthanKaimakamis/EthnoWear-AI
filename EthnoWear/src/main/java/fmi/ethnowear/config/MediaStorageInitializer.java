@@ -1,6 +1,6 @@
 package fmi.ethnowear.config;
 
-import fmi.ethnowear.application.service.archive.media.MediaPathResolver;
+import fmi.ethnowear.application.service.archive.media.storage.MediaPathResolver;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

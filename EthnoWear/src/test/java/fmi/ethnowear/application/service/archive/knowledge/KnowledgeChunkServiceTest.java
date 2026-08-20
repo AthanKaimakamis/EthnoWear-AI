@@ -6,7 +6,7 @@ import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkDetails;
 import fmi.ethnowear.application.dto.archive.knowledge.KnowledgeChunkWriteDto;
 import fmi.ethnowear.domain.model.archive.KnowledgeChunkType;
 import fmi.ethnowear.domain.model.document.indexing.IndexingState;
-import fmi.ethnowear.domain.model.document.review.ProvenanceTrustState;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceTrustState;
 import fmi.ethnowear.domain.model.document.review.ReviewState;
 import fmi.ethnowear.domain.model.document.indexing.SourceTextType;
 import fmi.ethnowear.domain.model.document.review.TranscriptionApprovalState;
@@ -135,8 +135,7 @@ class KnowledgeChunkServiceTest {
         return new KnowledgeChunkService(
                 repository,
                 null,
-                new KnowledgeChunkMapper(),
-                new KnowledgeContentHasher()
+                new KnowledgeChunkMapper()
         );
     }
 

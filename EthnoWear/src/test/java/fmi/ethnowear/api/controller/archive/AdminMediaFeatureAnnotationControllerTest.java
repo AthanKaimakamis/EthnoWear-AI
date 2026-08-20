@@ -6,7 +6,7 @@ import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationDetails
 import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationWriteDto;
 import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
 import fmi.ethnowear.domain.model.archive.MediaFeatureAnnotationType;
-import fmi.ethnowear.application.service.archive.media.MediaFeatureAnnotationService;
+import fmi.ethnowear.application.service.archive.media.attachment.MediaFeatureAnnotationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

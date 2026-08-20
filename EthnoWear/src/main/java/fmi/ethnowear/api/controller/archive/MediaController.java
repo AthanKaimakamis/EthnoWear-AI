@@ -1,9 +1,8 @@
 package fmi.ethnowear.api.controller.archive;
 
-import fmi.ethnowear.application.service.archive.media.MediaDelivery;
-import fmi.ethnowear.application.service.archive.media.MediaDeliveryService;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDelivery;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDeliveryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 

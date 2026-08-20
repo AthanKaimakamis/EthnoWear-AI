@@ -1,14 +1,17 @@
 package fmi.ethnowear.persistence.jpa.repository.document;
 
+import fmi.ethnowear.domain.model.document.review.TranscriptionApprovalState;
 import fmi.ethnowear.persistence.jpa.entity.document.DocumentPage;
 import fmi.ethnowear.persistence.jpa.projection.document.DocumentIndexingStateCountProjection;
 import fmi.ethnowear.persistence.jpa.projection.document.DocumentProcessingStateCountProjection;
 import fmi.ethnowear.persistence.jpa.projection.document.DocumentReviewStateCountProjection;
 import fmi.ethnowear.persistence.jpa.projection.document.DocumentTranscriptionApprovalCountProjection;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,6 +33,8 @@ public interface DocumentPageRepository extends JpaRepository<DocumentPage, Long
     Optional<DocumentPage> findByDocument_IdAndPageSequence(
             Long documentId, Integer pageSequence
     );
+
+    long countByDocument_Id(Long documentId);
 
     @EntityGraph(attributePaths = {
             "document",
@@ -100,8 +105,23 @@ public interface DocumentPageRepository extends JpaRepository<DocumentPage, Long
             @Param("documentIds") Collection<Long> documentIds
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT page
+        FROM DocumentPage page
+        WHERE page.id = :pageId
+        """)
+    Optional<DocumentPage> findByIdForUpdate(
+            @Param("pageId") Long pageId
+    );
+
     boolean existsByIdAndDocument_Id(
             Long pageId,
             Long documentId
+    );
+
+    boolean existsByDocument_IdAndTranscriptionApprovalState(
+            Long documentId,
+            TranscriptionApprovalState approvalState
     );
 }

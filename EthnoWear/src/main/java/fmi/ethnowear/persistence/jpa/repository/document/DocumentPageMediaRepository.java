@@ -37,4 +37,9 @@ public interface DocumentPageMediaRepository extends JpaRepository<DocumentPageM
     List<DocumentPagePreviewMediaProjection> findPreviewCandidates(
             @Param("documentPageIds") Collection<Long> documentPageIds
     );
+
+    Optional<DocumentPageMedia> findByIdAndDocumentPage_Id(
+            Long mediaId,
+            Long documentPageId
+    );
 }

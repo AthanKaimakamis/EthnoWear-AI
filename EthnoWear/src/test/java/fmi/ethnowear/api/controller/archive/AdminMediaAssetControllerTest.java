@@ -5,7 +5,7 @@ import fmi.ethnowear.api.controller.archive.admin.AdminMediaAssetController;
 import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
 import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
 import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
-import fmi.ethnowear.application.service.archive.media.MediaAssetService;
+import fmi.ethnowear.application.service.archive.media.asset.MediaAssetService;
 import fmi.ethnowear.domain.model.archive.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

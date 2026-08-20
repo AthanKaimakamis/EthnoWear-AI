@@ -6,9 +6,9 @@ import fmi.ethnowear.application.dto.archive.query.ArchiveItemMediaContentDetail
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
 import fmi.ethnowear.application.service.archive.item.ArchiveItemFeatureMapper;
 import fmi.ethnowear.application.service.archive.item.ArchiveItemMapper;
-import fmi.ethnowear.application.service.archive.media.ArchiveItemMediaMapper;
-import fmi.ethnowear.application.service.archive.media.MediaAssetMapper;
-import fmi.ethnowear.application.service.archive.media.MediaFeatureAnnotationMapper;
+import fmi.ethnowear.application.service.archive.media.asset.MediaAssetMapper;
+import fmi.ethnowear.application.service.archive.media.attachment.ArchiveItemMediaMapper;
+import fmi.ethnowear.application.service.archive.media.attachment.MediaFeatureAnnotationMapper;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
 import fmi.ethnowear.persistence.jpa.entity.UpdatableEntity;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;

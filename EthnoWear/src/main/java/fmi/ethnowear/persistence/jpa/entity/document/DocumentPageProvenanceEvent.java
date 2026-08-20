@@ -1,8 +1,8 @@
 package fmi.ethnowear.persistence.jpa.entity.document;
 
-import fmi.ethnowear.domain.model.document.review.ProvenanceEventType;
-import fmi.ethnowear.domain.model.document.review.ProvenanceStatus;
-import fmi.ethnowear.domain.model.document.review.ProvenanceTrustState;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceEventType;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceStatus;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceTrustState;
 import fmi.ethnowear.persistence.jpa.entity.AppendOnlyEntity;
 import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import jakarta.persistence.*;

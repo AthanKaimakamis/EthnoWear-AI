@@ -4,8 +4,8 @@ import fmi.ethnowear.application.dto.IdentifiableDto;
 import fmi.ethnowear.domain.model.document.DocumentType;
 import fmi.ethnowear.domain.model.document.indexing.IndexingState;
 import fmi.ethnowear.domain.model.document.processing.ProcessingState;
-import fmi.ethnowear.domain.model.document.review.ProvenanceStatus;
-import fmi.ethnowear.domain.model.document.review.ProvenanceTrustState;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceStatus;
+import fmi.ethnowear.domain.model.document.provenance.ProvenanceTrustState;
 import fmi.ethnowear.domain.model.document.review.ReviewState;
 
 import java.time.LocalDateTime;

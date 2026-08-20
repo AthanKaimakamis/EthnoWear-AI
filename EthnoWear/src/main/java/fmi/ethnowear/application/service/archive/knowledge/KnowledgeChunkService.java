@@ -11,6 +11,7 @@ import fmi.ethnowear.persistence.jpa.entity.KnowledgeChunk;
 import fmi.ethnowear.persistence.jpa.entity.SourceReference;
 import fmi.ethnowear.persistence.jpa.repository.KnowledgeChunkRepository;
 import fmi.ethnowear.persistence.jpa.repository.SourceReferenceRepository;
+import fmi.ethnowear.util.ContentHashUtils;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,6 @@ public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto
     private final KnowledgeChunkRepository chunkRepository;
     private final SourceReferenceRepository referenceRepository;
     private final KnowledgeChunkMapper chunkMapper;
-    private final KnowledgeContentHasher contentHasher;
 
     @Override
     public Page<KnowledgeChunkDetails> findAll(Pageable pageable) {
@@ -70,7 +70,7 @@ public class KnowledgeChunkService implements CrudService<KnowledgeChunkWriteDto
         SourceReference sourceReference = resolveSourceReference(input.sourceReferenceId());
 
         String previousHash = chunk.getContentHash();
-        String currentHash = contentHasher.hash(input.content());
+        String currentHash = ContentHashUtils.sha256(input.content());
 
         chunkMapper.apply(chunk, input, sourceReference);
         chunk.setContentHash(currentHash);

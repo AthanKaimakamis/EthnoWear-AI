@@ -57,9 +57,11 @@ ethnowear:
       - image/webp
       - application/pdf
 
-  admin:
-    username: ${ETHNOWEAR_ADMIN_USERNAME:admin}
-    password: ${ETHNOWEAR_ADMIN_PASSWORD:change-me}
+  security:
+    jwt:
+      secret: ${ETHNOWEAR_JWT_SECRET}
+      issuer: ${ETHNOWEAR_JWT_ISSUER:ethnowear-api}
+      ttl: ${ETHNOWEAR_JWT_TTL:15m}
 
   cors:
     allowed-origins:

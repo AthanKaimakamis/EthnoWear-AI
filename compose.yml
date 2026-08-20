@@ -23,6 +23,9 @@ services:
       ETHNOWEAR_DB_PASSWORD: "${MSSQL_SA_PASSWORD}"
       ETHNOWEAR_ONTOLOGY_PATH: /app/Ontology/EthnoWear.owx
       ETHNOWEAR_MEDIA_STORAGE_ROOT: /app/media
+      ETHNOWEAR_JWT_SECRET: "${ETHNOWEAR_JWT_SECRET:?Set ETHNOWEAR_JWT_SECRET in .env}"
+      ETHNOWEAR_JWT_ISSUER: "${ETHNOWEAR_JWT_ISSUER:-ethnowear-api}"
+      ETHNOWEAR_JWT_TTL: "${ETHNOWEAR_JWT_TTL:-15m}"
     depends_on:
       sqlserver:
         condition: service_healthy

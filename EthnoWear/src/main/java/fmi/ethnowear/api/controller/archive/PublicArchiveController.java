@@ -2,8 +2,8 @@ package fmi.ethnowear.api.controller.archive;
 
 import fmi.ethnowear.application.dto.archive.query.ArchiveItemDetailDetails;
 import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveOverviewDetails;
-import fmi.ethnowear.application.service.archive.media.MediaDelivery;
-import fmi.ethnowear.application.service.archive.media.MediaDeliveryService;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDelivery;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDeliveryService;
 import fmi.ethnowear.application.service.archive.query.ArchiveItemDetailService;
 import fmi.ethnowear.application.service.archive.query.RegionalEmbroideryArchiveService;
 import lombok.RequiredArgsConstructor;

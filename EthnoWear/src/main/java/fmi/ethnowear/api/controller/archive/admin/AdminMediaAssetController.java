@@ -2,8 +2,8 @@ package fmi.ethnowear.api.controller.archive.admin;
 
 import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
 import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
-import fmi.ethnowear.application.service.archive.media.MediaAssetService;
-import fmi.ethnowear.application.service.archive.media.MediaUploadService;
+import fmi.ethnowear.application.service.archive.media.asset.MediaAssetService;
+import fmi.ethnowear.application.service.archive.media.storage.MediaUploadService;
 import fmi.ethnowear.application.dto.archive.media.MediaUploadRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
