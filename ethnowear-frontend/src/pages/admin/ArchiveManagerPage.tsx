@@ -25,11 +25,13 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import ArchiveStatusChip from '../../components/admin/ArchiveStatusChip'
 import ArchiveWorkflowActions from '../../components/admin/ArchiveWorkflowActions'
 import TrustedLevelChip from '../../components/admin/TrustedLevelChip'
-import { publicationErrorMessages } from '../../components/admin/archiveWorkflow'
+import { publicationErrorMessages, workflowPermissionsForRoles } from '../../components/admin/archiveWorkflow'
 import ArchiveEditorPage from './ArchiveEditorPage'
 import ArchiveItemPreviewDialog from '../../components/admin/ArchiveItemPreviewDialog'
 import FormSelectField from '../../components/forms/FormSelectField'
 import { invalidatePublicQueries } from '../../app/queryClient'
+import { useAdminAuth } from '../../app/adminAuth'
+import { apiErrorMessage } from '../../api/http'
 
 type Filters = {
     archiveType: string
@@ -48,6 +50,8 @@ function title(item: ArchiveItemDetails) { return item.titleBg ?? item.titleEn ?
 
 export default function ArchiveManagerPage() {
     const { t, i18n } = useTranslation()
+    const { admin } = useAdminAuth()
+    const workflowPermissions = workflowPermissionsForRoles(admin?.roles ?? [])
     const [searchParams, setSearchParams] = useSearchParams()
     const [items, setItems] = useState<ArchiveItemDetails[]>([])
     const [sources, setSources] = useState<SourceDetails[]>([])
@@ -83,7 +87,7 @@ export default function ArchiveManagerPage() {
         ]).then(([itemPage, sourcePage, referencePage, mediaPage, assetPage, reference]) => {
             setItems(itemPage.content); setSources(sourcePage.content); setReferences(referencePage.content)
             setMedia(mediaPage.content); setAssets(assetPage.content); setRegions(reference.regions); setEmbroideries(reference.regionalEmbroideryTypes)
-        }).catch(caught => { if (!(caught instanceof DOMException && caught.name === 'AbortError')) setError(caught instanceof Error ? caught.message : String(caught)) })
+        }).catch(caught => { if (!(caught instanceof DOMException && caught.name === 'AbortError')) setError(apiErrorMessage(caught)) })
             .finally(() => setLoading(false))
         return () => controller.abort()
     }, [i18n.resolvedLanguage, reloadKey])
@@ -196,13 +200,14 @@ export default function ArchiveManagerPage() {
                                     <Typography variant="caption" color="text.secondary">{source?.title ?? t('curator.archive.noSource')} · {new Date(item.updatedAt).toLocaleDateString(i18n.resolvedLanguage)}</Typography>
                                 </Box>
                                 <Stack direction="row" sx={{ alignItems: 'center', gap: .5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                    {item.publicationStatus === 'DRAFT' && <Tooltip title={t('admin.edit')}><Button size="small" startIcon={<EditOutlinedIcon />} onClick={event => { event.stopPropagation(); setEditorTarget({ itemId: item.id }) }}>{t('admin.edit')}</Button></Tooltip>}
+                                    {item.publicationStatus === 'DRAFT' && workflowPermissions.edit && <Tooltip title={t('admin.edit')}><Button size="small" startIcon={<EditOutlinedIcon />} onClick={event => { event.stopPropagation(); setEditorTarget({ itemId: item.id }) }}>{t('admin.edit')}</Button></Tooltip>}
                                     <Tooltip title={t('curator.archive.preview')}><Button size="small" startIcon={<OpenInNewOutlinedIcon />} onClick={event => { event.stopPropagation(); setPreviewItemId(item.id) }}>{t('curator.archive.preview')}</Button></Tooltip>
                                     <Box onClick={event => event.stopPropagation()}>
                                         <ArchiveWorkflowActions
                                             status={item.publicationStatus}
                                             pendingCommand={pendingAction?.id === item.id ? pendingAction.command : null}
                                             disabled={pendingAction !== null}
+                                            permissions={workflowPermissions}
                                             onCommand={command => void runWorkflow(item, command)}
                                         />
                                     </Box>
@@ -220,6 +225,7 @@ export default function ArchiveManagerPage() {
             {filtered.length > pageSize && <Pagination count={Math.ceil(filtered.length / pageSize)} page={page} onChange={(_, next) => setPage(next)} sx={{ alignSelf: 'center' }} />}
             {previewItemId !== null && <ArchiveItemPreviewDialog itemId={previewItemId} onClose={() => setPreviewItemId(null)} onEdit={() => { const itemId = previewItemId; setPreviewItemId(null); setEditorTarget({ itemId }) }} />}
             {editorTarget && <ArchiveEditorPage key={editorTarget.itemId ?? 'new'} itemId={editorTarget.itemId} embedded
+                permissions={workflowPermissions}
                 onClose={closeEditor}
                 onSaved={() => { closeEditor(); setReloadKey(value => value + 1) }}
                 onPreview={editorTarget.itemId ? () => setPreviewItemId(editorTarget.itemId) : undefined} />}

@@ -60,7 +60,7 @@ describe('ArchiveEditorPage', () => {
 
         await waitFor(() => expect(apiMocks.createFullArchiveEntry).toHaveBeenCalledOnce())
         expect(title).toHaveValue('Unsaved curator title')
-        expect(screen.getByText('Validation failed')).toBeVisible()
-        expect(screen.getByText('sourceReferenceId: must be selected')).toBeVisible()
+        expect(screen.getByText('Review the highlighted fields.')).toBeVisible()
+        expect(screen.getByText('Exact citation is required.')).toBeVisible()
     })
 })

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import ArchiveStatusChip from './ArchiveStatusChip'
 import ArchiveWorkflowActions from './ArchiveWorkflowActions'
 import PublicationReadinessPanel from './PublicationReadinessPanel'
-import { publicationErrorMessages } from './archiveWorkflow'
+import { publicationErrorMessages, workflowPermissionsForRoles } from './archiveWorkflow'
 import { ApiError } from '../../api/http'
 import i18n from '../../app/i18n'
 import { renderApp } from '../../test/render'
@@ -97,6 +97,14 @@ describe('archive publication components', () => {
         )
         expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Return to draft' })).toBeVisible()
+    })
+
+    it('limits editors to editing and submitting while reviewers retain review actions', () => {
+        expect(workflowPermissionsForRoles(['EDITOR'])).toEqual({
+            edit: true, submit: true, publish: false, returnToDraft: false, archive: false,
+        })
+        expect(workflowPermissionsForRoles(['REVIEWER']).publish).toBe(true)
+        expect(workflowPermissionsForRoles(['ADMINISTRATOR']).archive).toBe(true)
     })
 
     it('turns backend failed requirements into actionable localized messages', () => {

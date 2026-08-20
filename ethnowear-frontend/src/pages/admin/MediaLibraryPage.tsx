@@ -12,14 +12,17 @@ import SearchIcon from '@mui/icons-material/Search'
 import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined'
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import MediaUploadDialog from '../../components/admin/MediaUploadDialog'
 import AdminModal from '../../components/admin/AdminModal'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import PdfViewerDialog from '../../components/admin/PdfViewerDialog'
 import FormSelectField from '../../components/forms/FormSelectField'
 import { archiveItemMediaApi, mediaAssetsApi, mediaEntityLinksApi, sourceReferencesApi, sourcesApi } from '../../api/ArchiveAdminApi'
 import type { ArchiveItemMediaDetails, MediaAssetDetails, MediaEntityLinkDetails, SourceDetails, SourceReferenceDetails } from '../../types/archive'
 import { useTranslation } from 'react-i18next'
+import { apiErrorMessage, apiUrl } from '../../api/http'
 
 export default function MediaLibraryPage() {
     const { t } = useTranslation()
@@ -34,6 +37,7 @@ export default function MediaLibraryPage() {
     const [source, setSource] = useState('')
     const [view, setView] = useState<'grid' | 'list'>('grid')
     const [selected, setSelected] = useState<MediaAssetDetails | null>(null)
+    const [pdfPreview, setPdfPreview] = useState<MediaAssetDetails | null>(null)
     const [deleting, setDeleting] = useState<MediaAssetDetails | null>(null)
     const [uploadOpen, setUploadOpen] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -47,7 +51,7 @@ export default function MediaLibraryPage() {
                 mediaEntityLinksApi.findAll({ size: 1000 }), sourcesApi.findAll({ size: 1000 }), sourceReferencesApi.findAll({ size: 1000 }),
             ])
             setAssets(assetPage.content); setItemLinks(itemPage.content); setEntityLinks(entityPage.content); setSources(sourcePage.content); setReferences(referencePage.content)
-        } catch (caught) { setError(caught instanceof Error ? caught.message : String(caught)) } finally { setLoading(false) }
+        } catch (caught) { setError(apiErrorMessage(caught)) } finally { setLoading(false) }
     }
     useEffect(() => {
         Promise.all([
@@ -55,7 +59,7 @@ export default function MediaLibraryPage() {
             mediaEntityLinksApi.findAll({ size: 1000 }), sourcesApi.findAll({ size: 1000 }), sourceReferencesApi.findAll({ size: 1000 }),
         ]).then(([assetPage, itemPage, entityPage, sourcePage, referencePage]) => {
             setAssets(assetPage.content); setItemLinks(itemPage.content); setEntityLinks(entityPage.content); setSources(sourcePage.content); setReferences(referencePage.content)
-        }).catch(caught => setError(caught instanceof Error ? caught.message : String(caught)))
+        }).catch(caught => setError(apiErrorMessage(caught)))
             .finally(() => setLoading(false))
     }, [])
 
@@ -78,7 +82,7 @@ export default function MediaLibraryPage() {
 
     async function remove() {
         if (!deleting) return
-        try { await mediaAssetsApi.remove(deleting.id); setDeleting(null); await load() } catch (caught) { setError(caught instanceof Error ? caught.message : String(caught)); setDeleting(null) }
+        try { await mediaAssetsApi.remove(deleting.id); setDeleting(null); await load() } catch (caught) { setError(apiErrorMessage(caught)); setDeleting(null) }
     }
 
     return <Stack spacing={3}>
@@ -102,8 +106,9 @@ export default function MediaLibraryPage() {
         </Box>
         <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sourceReferenceLabel={referenceLabel} onClose={() => setUploadOpen(false)} onUploaded={asset => { setAssets(current => [asset, ...current]); setUploadOpen(false) }} />
         <AdminModal open={Boolean(selected)} onClose={() => setSelected(null)} maxWidth="md" title={selected?.fileName ?? t('curator.media.unnamed')}>
-            {selected && <Stack spacing={2}>{selected.mediaType === 'PDF' ? <Box component="iframe" title={selected.fileName ?? 'PDF'} src={`/api/media/${selected.id}/content`} sx={{ width: '100%', height: 520, border: 0 }} /> : <Box component="img" src={`/api/media/${selected.id}/content`} alt={selected.fileName ?? ''} sx={{ maxWidth: '100%', maxHeight: 560, objectFit: 'contain', alignSelf: 'center' }} />}<Typography>{selected.description}</Typography><Alert severity={usageCount(selected.id) ? 'info' : 'warning'}>{usageCount(selected.id) ? t('curator.mediaLibrary.usageCount', { count: usageCount(selected.id) }) : t('curator.mediaLibrary.unusedWarning')}</Alert>{itemLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{t('curator.mediaLibrary.archiveUsage', { id: link.archiveItemId })}</Typography>)}{entityLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{link.description ?? link.entityType}</Typography>)}<Alert icon={<WarningAmberOutlinedIcon />} severity="info">{t('curator.mediaLibrary.replaceUnavailable')}</Alert></Stack>}
+            {selected && <Stack spacing={2}>{selected.mediaType === 'PDF' ? <Box sx={{ minHeight: 220, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', display: 'grid', placeItems: 'center' }}><Stack spacing={1.5} sx={{ alignItems: 'center' }}><PictureAsPdfOutlinedIcon color="action" sx={{ fontSize: 58 }} /><Button variant="contained" startIcon={<VisibilityOutlinedIcon />} onClick={() => setPdfPreview(selected)}>{t('pdfViewer.preview')}</Button></Stack></Box> : <Box component="img" src={`/api/media/${selected.id}/content`} alt={selected.fileName ?? ''} sx={{ maxWidth: '100%', maxHeight: 560, objectFit: 'contain', alignSelf: 'center' }} />}<Typography>{selected.description}</Typography><Alert severity={usageCount(selected.id) ? 'info' : 'warning'}>{usageCount(selected.id) ? t('curator.mediaLibrary.usageCount', { count: usageCount(selected.id) }) : t('curator.mediaLibrary.unusedWarning')}</Alert>{itemLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{t('curator.mediaLibrary.archiveUsage', { id: link.archiveItemId })}</Typography>)}{entityLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{link.description ?? link.entityType}</Typography>)}<Alert icon={<WarningAmberOutlinedIcon />} severity="info">{t('curator.mediaLibrary.replaceUnavailable')}</Alert></Stack>}
         </AdminModal>
+        {pdfPreview && <PdfViewerDialog open source={apiUrl(`/api/media/${pdfPreview.id}/content`)} title={pdfPreview.fileName ?? t('curator.media.unnamed')} downloadName={pdfPreview.fileName ?? undefined} onClose={() => setPdfPreview(null)} />}
         <ConfirmDialog open={Boolean(deleting)} title={t('admin.confirmDelete')} onCancel={() => setDeleting(null)} onConfirm={remove}>
             {t('admin.confirmDeleteText', { name: deleting?.fileName })}
         </ConfirmDialog>

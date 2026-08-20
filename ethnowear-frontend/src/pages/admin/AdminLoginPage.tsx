@@ -5,18 +5,22 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate } from 'react-router'
+import { Navigate, useLocation, useNavigate } from 'react-router'
 import { ApiError } from '../../api/http'
 import { useAdminAuth } from '../../app/adminAuth'
 
 function AdminLoginPage() {
     const { t } = useTranslation()
-    const { login } = useAdminAuth()
+    const { authenticated, initializing, login } = useAdminAuth()
     const navigate = useNavigate()
     const location = useLocation()
     const [pending, setPending] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [errorKey, setErrorKey] = useState<string | null>(null)
+
+    if (!initializing && authenticated) {
+        return <Navigate to="/admin" replace />
+    }
 
     async function submit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -25,7 +29,11 @@ function AdminLoginPage() {
         setErrorKey(null)
 
         try {
-            await login(String(data.get('username') ?? ''), String(data.get('password') ?? ''))
+            const currentUser = await login(String(data.get('username') ?? ''), String(data.get('password') ?? ''))
+            if (currentUser.passwordChangeRequired) {
+                navigate('/account/password', { replace: true })
+                return
+            }
             const from = typeof location.state === 'object' && location.state && 'from' in location.state
                 ? String(location.state.from)
                 : '/admin'

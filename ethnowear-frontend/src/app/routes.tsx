@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router'
 import MainLayout from "../components/layout/MainLayout.tsx";
 import RequireAdmin from "../components/admin/RequireAdmin.tsx";
+import { administratorRoles, reviewRoles } from './permissions'
 import RouterErrorPage from "../pages/RouterErrorPage.tsx";
 import ArchiveLayout from '../components/archive/ArchiveLayout'
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
@@ -16,11 +17,13 @@ import {
     ArchivePage,
     ArchiveReferencePage,
     DocumentsPage,
+    DocumentDetailPage,
     EntityDetailPage,
-    MaterialUiTestPage,
     MediaLibraryPage,
     OntologyEntityPage,
     ProcessingStatusPage,
+    PasswordChangePage,
+    UserManagementPage,
 } from './routeComponents'
 
 export const router = createBrowserRouter([
@@ -60,6 +63,10 @@ export const router = createBrowserRouter([
                 element: <AdminLoginPage />,
             },
             {
+                path: 'account/password',
+                element: <RequireAdmin allowPasswordChange><PasswordChangePage /></RequireAdmin>,
+            },
+            {
                 path: 'admin',
                 element: <RequireAdmin><AdminLayout /></RequireAdmin>,
                 children: [
@@ -68,15 +75,16 @@ export const router = createBrowserRouter([
                     { path: 'archive/new', element: <Navigate to="/admin/archive?create=1" replace /> },
                     { path: 'archive/:id/edit', element: <ArchiveEditRedirect /> },
                     { path: 'documents', element: <DocumentsPage /> },
+                    { path: 'documents/:documentId', element: <DocumentDetailPage /> },
                     { path: 'media', element: <MediaLibraryPage /> },
-                    { path: 'processing', element: <ProcessingStatusPage /> },
+                    { path: 'processing', element: <RequireAdmin roles={reviewRoles}><ProcessingStatusPage /></RequireAdmin> },
+                    { path: 'users', element: <RequireAdmin roles={administratorRoles}><UserManagementPage /></RequireAdmin> },
                     { path: 'ontology', element: <Navigate to="/admin/ornaments" replace /> },
-                    { path: 'advanced/:resource', element: <ArchiveAdminPage /> },
+                    { path: 'advanced/:resource', element: <RequireAdmin roles={reviewRoles}><ArchiveAdminPage /></RequireAdmin> },
                     { path: 'archive/:resource', element: <ArchiveAdminPage /> },
                     { path: ':entityType', element: <OntologyEntityPage /> },
                 ],
             },
-            { path: 'test', element: <MaterialUiTestPage/> },
         ]
     }
 ])

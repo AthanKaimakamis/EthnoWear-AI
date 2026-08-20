@@ -1,9 +1,13 @@
 import { createContext, useContext } from 'react'
+import type { CurrentUser } from '../api/AdminAuthApi'
 
 export type AdminAuth = {
     authenticated: boolean
-    login: (username: string, password: string) => Promise<void>
+    initializing: boolean
+    admin: CurrentUser | null
+    login: (username: string, password: string) => Promise<CurrentUser>
     logout: () => void
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>
 }
 
 export const AdminAuthContext = createContext<AdminAuth | null>(null)

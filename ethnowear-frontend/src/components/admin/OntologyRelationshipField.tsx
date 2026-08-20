@@ -7,6 +7,7 @@ import {
     InputAdornment,
     InputLabel,
     MenuItem,
+    Radio,
     Select,
     Stack,
     Table,
@@ -28,14 +29,16 @@ import type { OptionCategory, SelectOption } from '../forms/formTypes.ts'
 type Props = {
     label: string
     options: SelectOption[]
-    categories: OptionCategory[]
+    categories?: OptionCategory[]
     value: string[]
+    mode?: 'single' | 'multiple'
     disabled?: boolean
     onChange: (value: string[]) => void
 }
 
 type SortKey = 'name' | 'localName' | 'category'
 type SortOrder = 'asc' | 'desc'
+const emptyCategories: OptionCategory[] = []
 
 function displayLabel(option: SelectOption) {
     const technicalSuffix = ` (${option.value})`
@@ -46,6 +49,8 @@ function displayLabel(option: SelectOption) {
 
 function OntologyRelationshipField(props: Props) {
     const { t, i18n } = useTranslation()
+    const categories = props.categories ?? emptyCategories
+    const multiple = props.mode !== 'single'
     const categoryLabelId = useId()
     const [open, setOpen] = useState(false)
     const [draft, setDraft] = useState<Set<string>>(new Set())
@@ -56,15 +61,15 @@ function OntologyRelationshipField(props: Props) {
 
     const categoryByOption = useMemo(() => {
         const result = new Map<string, string[]>()
-        props.categories.forEach(item => item.optionValues.forEach(value => {
+        categories.forEach(item => item.optionValues.forEach(value => {
             result.set(value, [...(result.get(value) ?? []), item.label])
         }))
         return result
-    }, [props.categories])
+    }, [categories])
 
     const filteredOptions = useMemo(() => {
         const normalized = query.trim().toLocaleLowerCase()
-        const categoryValues = props.categories.find(item => item.value === category)?.optionValues
+        const categoryValues = categories.find(item => item.value === category)?.optionValues
         const valuesInCategory = categoryValues ? new Set(categoryValues) : null
 
         return props.options.filter(option => {
@@ -80,7 +85,7 @@ function OntologyRelationshipField(props: Props) {
                     : (categoryByOption.get(right.value) ?? []).join(' ')
             return leftValue.localeCompare(rightValue, i18n.resolvedLanguage) * (sortOrder === 'asc' ? 1 : -1)
         })
-    }, [category, categoryByOption, i18n.resolvedLanguage, props.categories, props.options, query, sortKey, sortOrder])
+    }, [categories, category, categoryByOption, i18n.resolvedLanguage, props.options, query, sortKey, sortOrder])
 
     const selectedVisibleCount = filteredOptions.filter(option => draft.has(option.value)).length
     const allVisibleSelected = filteredOptions.length > 0 && selectedVisibleCount === filteredOptions.length
@@ -107,6 +112,7 @@ function OntologyRelationshipField(props: Props) {
 
     function toggle(value: string) {
         setDraft(current => {
+            if (!multiple) return current.has(value) ? new Set() : new Set([value])
             const next = new Set(current)
             if (next.has(value)) next.delete(value)
             else next.add(value)
@@ -139,11 +145,13 @@ function OntologyRelationshipField(props: Props) {
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{props.label}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                            {t('admin.relationshipSelector.selectedCount', { count: props.value.length })}
+                            {!multiple
+                                ? props.options.find(option => option.value === props.value[0])?.label ?? t('admin.relationshipSelector.noneSelected')
+                                : t('admin.relationshipSelector.selectedCount', { count: props.value.length })}
                         </Typography>
                     </Box>
                     <Button type="button" variant="outlined" startIcon={<LinkIcon />} disabled={props.disabled} onClick={showDialog}>
-                        {t('admin.relationshipSelector.manageEntity', { entity: props.label })}
+                        {t(multiple ? 'admin.relationshipSelector.manageEntity' : 'admin.relationshipSelector.chooseEntity', { entity: props.label })}
                     </Button>
                 </Stack>
             </Box>
@@ -152,7 +160,7 @@ function OntologyRelationshipField(props: Props) {
                 open={open}
                 onClose={cancel}
                 maxWidth="lg"
-                title={t('admin.relationshipSelector.title', { entity: props.label })}
+                title={t(multiple ? 'admin.relationshipSelector.title' : 'admin.relationshipSelector.chooseTitle', { entity: props.label })}
                 actions={
                     <>
                         <Button type="button" onClick={cancel}>{t('admin.cancel')}</Button>
@@ -174,7 +182,7 @@ function OntologyRelationshipField(props: Props) {
                                 },
                             }}
                         />
-                        <FormControl size="small" sx={{ minWidth: { sm: 260 } }}>
+                        {categories.length > 0 && <FormControl size="small" sx={{ minWidth: { sm: 260 } }}>
                             <InputLabel id={categoryLabelId}>{t('admin.categoryFilter')}</InputLabel>
                             <Select
                                 labelId={categoryLabelId}
@@ -183,22 +191,22 @@ function OntologyRelationshipField(props: Props) {
                                 onChange={event => setCategory(event.target.value)}
                             >
                                 <MenuItem value="">{t('admin.allCategories')}</MenuItem>
-                                {props.categories.map(item => (
+                                {categories.map(item => (
                                     <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
                                 ))}
                             </Select>
-                        </FormControl>
+                        </FormControl>}
                     </Stack>
 
                     <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
                         <Typography variant="body2" color="text.secondary">
                             {t('admin.relationshipSelector.selectionSummary', { selected: draft.size, visible: filteredOptions.length })}
                         </Typography>
-                        <Button type="button" size="small" onClick={toggleFiltered} disabled={filteredOptions.length === 0}>
+                        {multiple && <Button type="button" size="small" onClick={toggleFiltered} disabled={filteredOptions.length === 0}>
                             {allVisibleSelected
                                 ? t('admin.relationshipSelector.clearFiltered')
                                 : t('admin.relationshipSelector.selectFiltered')}
-                        </Button>
+                        </Button>}
                     </Stack>
 
                     <TableContainer sx={{ maxHeight: 440, border: 1, borderColor: 'divider' }}>
@@ -206,13 +214,13 @@ function OntologyRelationshipField(props: Props) {
                             <TableHead>
                                 <TableRow>
                                     <TableCell padding="checkbox">
-                                        <Checkbox
-                                            checked={allVisibleSelected}
-                                            indeterminate={someVisibleSelected}
-                                            disabled={filteredOptions.length === 0}
-                                            onChange={toggleFiltered}
-                                            slotProps={{ input: { 'aria-label': t('admin.relationshipSelector.selectFiltered') } }}
-                                        />
+                                        {multiple && <Checkbox
+                                                checked={allVisibleSelected}
+                                                indeterminate={someVisibleSelected}
+                                                disabled={filteredOptions.length === 0}
+                                                onChange={toggleFiltered}
+                                                slotProps={{ input: { 'aria-label': t('admin.relationshipSelector.selectFiltered') } }}
+                                            />}
                                     </TableCell>
                                     <TableCell sortDirection={sortKey === 'name' ? sortOrder : false}>
                                         <TableSortLabel
@@ -232,7 +240,7 @@ function OntologyRelationshipField(props: Props) {
                                             Local name
                                         </TableSortLabel>
                                     </TableCell>
-                                    <TableCell sortDirection={sortKey === 'category' ? sortOrder : false}>
+                                    {categories.length > 0 && <TableCell sortDirection={sortKey === 'category' ? sortOrder : false}>
                                         <TableSortLabel
                                             active={sortKey === 'category'}
                                             direction={sortKey === 'category' ? sortOrder : 'asc'}
@@ -240,13 +248,13 @@ function OntologyRelationshipField(props: Props) {
                                         >
                                             {t('admin.categoryFilter')}
                                         </TableSortLabel>
-                                    </TableCell>
+                                    </TableCell>}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {filteredOptions.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                                        <TableCell colSpan={categories.length > 0 ? 4 : 3} align="center" sx={{ py: 6, color: 'text.secondary' }}>
                                             {t('admin.noResults')}
                                         </TableCell>
                                     </TableRow>
@@ -259,16 +267,21 @@ function OntologyRelationshipField(props: Props) {
                                         sx={{ cursor: 'pointer' }}
                                     >
                                         <TableCell padding="checkbox">
-                                            <Checkbox
-                                                checked={draft.has(option.value)}
-                                                onClick={event => event.stopPropagation()}
-                                                onChange={() => toggle(option.value)}
-                                                slotProps={{ input: { 'aria-label': option.label } }}
-                                            />
+                                            {multiple ? <Checkbox
+                                                    checked={draft.has(option.value)}
+                                                    onClick={event => event.stopPropagation()}
+                                                    onChange={() => toggle(option.value)}
+                                                    slotProps={{ input: { 'aria-label': option.label } }}
+                                                /> : <Radio
+                                                    checked={draft.has(option.value)}
+                                                    onClick={event => event.stopPropagation()}
+                                                    onChange={() => toggle(option.value)}
+                                                    slotProps={{ input: { 'aria-label': option.label } }}
+                                                />}
                                         </TableCell>
                                         <TableCell><Typography variant="body2" sx={{ fontWeight: 700 }}>{displayLabel(option)}</Typography></TableCell>
                                         <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{option.value}</Typography></TableCell>
-                                        <TableCell>{(categoryByOption.get(option.value) ?? []).join(', ') || t('archiveReference.uncategorized')}</TableCell>
+                                        {categories.length > 0 && <TableCell>{(categoryByOption.get(option.value) ?? []).join(', ') || t('archiveReference.uncategorized')}</TableCell>}
                                     </TableRow>
                                 ))}
                             </TableBody>

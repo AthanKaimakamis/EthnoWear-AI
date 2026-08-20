@@ -1,20 +1,27 @@
-import { getAdminAuthorization } from '../app/adminAuthStore'
+import { clearAdminSession, getAdminAuthorization } from '../app/adminAuthStore'
+import { localizedErrorMessages, localizedNonApiError, type ApiErrorDetails } from './errorLocalization'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 type QueryParams = Record<string, string | number | boolean | undefined | null>
 
 type RequestOptions = {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
     query?: QueryParams
     body?: unknown
     signal?: AbortSignal
+    authorization?: 'auto' | 'protected' | 'none'
 }
 
-type ApiErrorBody = {
-    message?: unknown
-    fields?: unknown
-    errors?: unknown
+export function adminAuthorizationHeaders(headers?: HeadersInit) {
+    const result = new Headers(headers)
+    const authorization = getAdminAuthorization()
+    if (authorization) result.set('Authorization', authorization)
+    return result
+}
+
+export function handleAdminResponseStatus(status: number) {
+    if (status === 401) clearAdminSession()
 }
 
 export class ApiError extends Error {
@@ -30,36 +37,22 @@ export class ApiError extends Error {
 }
 
 export function apiErrorMessage(error: unknown, fallback = 'Unexpected error') {
-    if (error instanceof ApiError && error.details && typeof error.details === 'object' && 'message' in error.details) {
-        return String(error.details.message)
-    }
-    return error instanceof Error ? error.message : fallback
+    if (error instanceof ApiError) return localizedErrorMessages(error.status, error.details, error.message, fallback)[0]
+    return localizedNonApiError(error, fallback)
 }
 
 export function apiErrorMessages(error: unknown, fallback = 'Unexpected error') {
     if (!(error instanceof ApiError)) return [apiErrorMessage(error, fallback)]
 
-    const details = error.details as ApiErrorBody | null
-    const messages: string[] = []
-    if (details?.message) messages.push(String(details.message))
+    return localizedErrorMessages(error.status, error.details, error.message, fallback)
+}
 
-    if (details?.fields && typeof details.fields === 'object') {
-        Object.entries(details.fields as Record<string, unknown>).forEach(([field, message]) => {
-            messages.push(`${field}: ${String(message)}`)
-        })
+function responseErrorMessage(data: unknown, status: number) {
+    if (data && typeof data === 'object' && 'message' in data) {
+        const message = (data as ApiErrorDetails).message
+        if (typeof message === 'string' && message.trim()) return message.trim()
     }
-
-    if (Array.isArray(details?.errors)) {
-        details.errors.forEach(item => {
-            if (typeof item === 'string') messages.push(item)
-            else if (item && typeof item === 'object' && 'message' in item) {
-                messages.push(String(item.message))
-            }
-        })
-    }
-
-    if (messages.length > 0) return [...new Set(messages)]
-    return [apiErrorMessage(error, fallback)]
+    return `Request failed with status ${status}`
 }
 
 export function apiUrl(path: string, query?: QueryParams) {
@@ -92,14 +85,14 @@ export function apiUrl(path: string, query?: QueryParams) {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const adminAuthorization = path.startsWith('/api/admin/') ? getAdminAuthorization() : null
+    const requiresAdmin = options.authorization === 'protected'
+        || (options.authorization !== 'none' && path.startsWith('/api/admin/'))
+    const headers = requiresAdmin ? adminAuthorizationHeaders() : new Headers()
+    headers.set('Accept', 'application/json')
+    if (options.body) headers.set('Content-Type', 'application/json')
     const response = await fetch(apiUrl(path, options.query), {
         method: options.method ?? 'GET',
-        headers: {
-            Accept: 'application/json',
-            ...(adminAuthorization ? { Authorization: adminAuthorization } : {}),
-            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-        },
+        headers,
         body: options.body ? JSON.stringify(options.body) : undefined,
         signal: options.signal,
     })
@@ -110,8 +103,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     const data = hasJson ? await response.json() : await response.text()
 
     if (!response.ok) {
+        if (requiresAdmin) handleAdminResponseStatus(response.status)
         throw new ApiError(
-            `Request failed with status ${response.status}`,
+            responseErrorMessage(data, response.status),
             response.status,
             data
         )

@@ -2,6 +2,7 @@ import type { PublicationReadinessRequirement, PublicationStatus } from '../../t
 import type { PublicationCommand } from '../../api/ArchiveAdminApi'
 import { ApiError, apiErrorMessages } from '../../api/http'
 import type { TFunction } from 'i18next'
+import { hasRole, type RoleName } from '../../app/permissions'
 
 export type ArchiveWorkflowPermissions = {
     edit: boolean
@@ -17,6 +18,14 @@ export const adminWorkflowPermissions: ArchiveWorkflowPermissions = {
     publish: true,
     returnToDraft: true,
     archive: true,
+}
+
+export function workflowPermissionsForRoles(roles: readonly RoleName[]): ArchiveWorkflowPermissions {
+    if (hasRole(roles, 'ADMINISTRATOR') || hasRole(roles, 'REVIEWER')) return adminWorkflowPermissions
+    if (hasRole(roles, 'EDITOR')) {
+        return { edit: true, submit: true, publish: false, returnToDraft: false, archive: false }
+    }
+    return { edit: false, submit: false, publish: false, returnToDraft: false, archive: false }
 }
 
 export function commandForStatus(status: PublicationStatus): PublicationCommand | null {

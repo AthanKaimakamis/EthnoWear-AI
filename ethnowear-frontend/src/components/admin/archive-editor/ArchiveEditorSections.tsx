@@ -17,7 +17,9 @@ import StarOutlinedIcon from '@mui/icons-material/StarOutlined'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import AdminModal from '../AdminModal'
+import OntologyRelationshipField from '../OntologyRelationshipField'
 import FormSelectField from '../../forms/FormSelectField'
+import type { OptionCategory, SelectOption } from '../../forms/formTypes'
 import type {
     ArchiveItemWriteDto,
     MediaAssetDetails,
@@ -92,26 +94,43 @@ export function ClassificationSection({
         resources: ReferenceResource[],
         value: string | null,
         onChange: (resource: ReferenceResource | null) => void,
+        categories: OptionCategory[] = [],
     ) => (
-        <Autocomplete
-            options={resources}
-            getOptionLabel={option => option.label}
-            value={resources.find(resource => resource.localName === value) ?? null}
-            onChange={(_, next) => onChange(next)}
-            renderInput={params => <TextField {...params} label={label} />}
+        <OntologyRelationshipField
+            label={label}
+            mode="single"
+            options={resources.map(referenceOption)}
+            categories={categories}
+            value={value ? [value] : []}
+            onChange={next => onChange(resources.find(resource => resource.localName === next[0]) ?? null)}
         />
     )
 
-    const multi = (type: keyof FeatureSelections, resources: ReferenceResource[]) => (
-        <Autocomplete
-            multiple
-            options={resources}
-            getOptionLabel={option => option.label}
-            value={features[type]}
-            onChange={(_, next) => setFeatures({ ...features, [type]: next })}
-            renderInput={params => <TextField {...params} label={t(`curator.fields.${type.toLocaleLowerCase()}`)} />}
+    const multi = (
+        type: keyof FeatureSelections,
+        resources: ReferenceResource[],
+        categories: OptionCategory[] = [],
+    ) => (
+        <OntologyRelationshipField
+            label={t(`curator.fields.${type.toLocaleLowerCase()}`)}
+            options={resources.map(referenceOption)}
+            categories={categories}
+            value={features[type].map(resource => resource.localName)}
+            onChange={next => {
+                const selected = new Set(next)
+                setFeatures({ ...features, [type]: resources.filter(resource => selected.has(resource.localName)) })
+            }}
         />
     )
+
+    const regionCategories = refs.regionGroups.map(resource => referenceCategory(resource, refs.regionsByRegionGroup))
+    const embroideryByRegion = Object.entries(refs.regionByRegionalEmbroidery).reduce<Record<string, string[]>>(
+        (result, [embroidery, region]) => ({ ...result, [region]: [...(result[region] ?? []), embroidery] }),
+        {},
+    )
+    const embroideryCategories = refs.regions.map(resource => referenceCategory(resource, embroideryByRegion))
+    const techniqueCategories = refs.techniqueTypes.map(resource => referenceCategory(resource, refs.techniquesByType))
+    const ornamentCategories = refs.ornamentTypes.map(resource => referenceCategory(resource, refs.ornamentsByType))
 
     return (
         <Stack spacing={2}>
@@ -120,18 +139,26 @@ export function ClassificationSection({
                 {single(t('curator.fields.region'), refs.regions, item.ontologyRegionLocalName, resource => {
                     setField('ontologyRegionLocalName', resource?.localName ?? null)
                     setField('ontologyRegionIri', resource?.iri ?? null)
-                })}
+                }, regionCategories)}
                 {single(t('curator.fields.embroidery'), refs.regionalEmbroideryTypes, item.ontologyRegionalEmbroideryLocalName, resource => {
                     setField('ontologyRegionalEmbroideryLocalName', resource?.localName ?? null)
                     setField('ontologyRegionalEmbroideryIri', resource?.iri ?? null)
-                })}
-                {multi('TECHNIQUE', refs.techniques)}
-                {multi('ORNAMENT', refs.ornaments)}
+                }, embroideryCategories)}
+                {multi('TECHNIQUE', refs.techniques, techniqueCategories)}
+                {multi('ORNAMENT', refs.ornaments, ornamentCategories)}
                 {multi('MOTIF', refs.motifs)}
                 {multi('COLOR', refs.colors)}
             </Box>
         </Stack>
     )
+}
+
+function referenceOption(resource: ReferenceResource): SelectOption {
+    return { value: resource.localName, label: `${resource.label} (${resource.localName})` }
+}
+
+function referenceCategory(resource: ReferenceResource, members: Record<string, string[]>): OptionCategory {
+    return { ...referenceOption(resource), optionValues: members[resource.localName] ?? [] }
 }
 
 export function MediaSection({

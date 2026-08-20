@@ -6,11 +6,13 @@ import {
 } from '@mui/material'
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import { uploadMediaAsset } from '../../api/ArchiveAdminApi'
 import type { MediaAssetDetails, MediaType, SourceReferenceDetails } from '../../types/archive'
 import { apiErrorMessage } from '../../api/http'
 import { useTranslation } from 'react-i18next'
 import AdminModal from './AdminModal'
+import PdfViewerDialog from './PdfViewerDialog'
 
 type Props = {
     open: boolean
@@ -29,6 +31,7 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
     const [dragging, setDragging] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
     const formId = 'media-upload-form'
     const preview = useMemo(() => file?.type.startsWith('image/') ? URL.createObjectURL(file) : null, [file])
 
@@ -37,7 +40,14 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
     function choose(candidate: File | undefined) {
         if (!candidate) return
         setFile(candidate)
+        setPdfPreviewOpen(false)
         setError(null)
+    }
+
+    function close() {
+        if (uploading) return
+        setPdfPreviewOpen(false)
+        onClose()
     }
 
     async function submit(event: React.SubmitEvent<HTMLFormElement>) {
@@ -57,6 +67,7 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
             setFile(null)
             setDescription('')
             setSourceReferenceId('')
+            setPdfPreviewOpen(false)
         } catch (caught) {
             setError(apiErrorMessage(caught, t('curator.uploadDialog.failed')))
         } finally {
@@ -67,13 +78,13 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
     return (
         <AdminModal
             open={open}
-            onClose={onClose}
+            onClose={close}
             closeDisabled={uploading}
             maxWidth="sm"
             title={t('curator.uploadDialog.title')}
             actions={
                 <>
-                    <Button onClick={onClose} disabled={uploading}>{t('admin.cancel')}</Button>
+                    <Button onClick={close} disabled={uploading}>{t('admin.cancel')}</Button>
                     <Button type="submit" form={formId} variant="contained" disabled={!file || uploading}>{t('curator.media.upload')}</Button>
                 </>
             }
@@ -93,10 +104,13 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
                                 {preview ? <Box component="img" src={preview} alt={t('curator.uploadDialog.preview')} sx={{ maxWidth: '100%', maxHeight: 150, objectFit: 'contain' }} /> : <InsertDriveFileOutlinedIcon color="action" sx={{ fontSize: 46 }} />}
                                 <Typography sx={{ fontWeight: 600 }}>{file?.name ?? t('curator.uploadDialog.drop')}</Typography>
                                 {file && <Typography variant="body2" color="text.secondary">{(file.size / 1024 / 1024).toFixed(2)} MB</Typography>}
-                                <Button component="label" variant="outlined" startIcon={<CloudUploadOutlinedIcon />}>
-                                    {t('curator.uploadDialog.choose')}
-                                    <input hidden type="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" onChange={event => choose(event.target.files?.[0])} />
-                                </Button>
+                                <Stack direction="row" spacing={1}>
+                                    <Button component="label" variant="outlined" startIcon={<CloudUploadOutlinedIcon />}>
+                                        {t('curator.uploadDialog.choose')}
+                                        <input hidden type="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" onChange={event => choose(event.target.files?.[0])} />
+                                    </Button>
+                                    {file?.type === 'application/pdf' && <Button startIcon={<VisibilityOutlinedIcon />} onClick={() => setPdfPreviewOpen(true)}>{t('pdfViewer.preview')}</Button>}
+                                </Stack>
                             </Stack>
                         </Box>
                         <FormControl fullWidth>
@@ -110,6 +124,13 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
                         <Alert severity="info">{t('curator.uploadDialog.automaticMetadata')}</Alert>
                     </Stack>
             </Box>
+            {pdfPreviewOpen && file?.type === 'application/pdf' && <PdfViewerDialog
+                open
+                source={file}
+                title={file.name}
+                downloadName={file.name}
+                onClose={() => setPdfPreviewOpen(false)}
+            />}
         </AdminModal>
     )
 }

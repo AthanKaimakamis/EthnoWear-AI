@@ -21,39 +21,50 @@ import FolderCopyOutlinedIcon from '@mui/icons-material/FolderCopyOutlined'
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined'
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined'
 import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined'
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useAdminAuth } from '../../app/adminAuth'
+import { administratorRoles, hasAnyRole, managementRoles, reviewRoles, type RoleName } from '../../app/permissions'
 
 const drawerWidth = 248
-const ontologyItems = [
-    { path: '/admin/ornaments', key: 'ornaments', icon: CategoryOutlinedIcon },
-    { path: '/admin/techniques', key: 'techniques', icon: DesignServicesOutlinedIcon },
-    { path: '/admin/motifs', key: 'motifs', icon: HubOutlinedIcon },
-    { path: '/admin/regions', key: 'regions', icon: MapOutlinedIcon },
-    { path: '/admin/regional-embroideries', key: 'regionalEmbroideries', icon: TextureOutlinedIcon },
-] as const
+type NavigationItem = {
+    path: string
+    key: string
+    icon: typeof CategoryOutlinedIcon
+    roles: readonly RoleName[]
+}
 
-const primaryItems = [
-    { path: '/admin/archive', key: 'archive', icon: Inventory2OutlinedIcon },
-    { path: '/admin/documents', key: 'documents', icon: FolderCopyOutlinedIcon },
-    { path: '/admin/media', key: 'media', icon: CollectionsOutlinedIcon },
-    { path: '/admin/processing', key: 'processing', icon: PendingActionsOutlinedIcon },
-] as const
-const archiveItems = [
-    { path: '/admin/advanced/archive-items', key: 'archiveitems', icon: Inventory2OutlinedIcon },
-    { path: '/admin/advanced/sources', key: 'sources', icon: MenuBookOutlinedIcon },
-    { path: '/admin/advanced/source-references', key: 'sourcereferences', icon: BookmarkBorderOutlinedIcon },
-    { path: '/admin/advanced/archive-item-features', key: 'archiveitemfeatures', icon: FactCheckOutlinedIcon },
-    { path: '/admin/advanced/media-assets', key: 'mediaassets', icon: PermMediaOutlinedIcon },
-    { path: '/admin/advanced/archive-item-media', key: 'archiveitemmedia', icon: LinkOutlinedIcon },
-    { path: '/admin/advanced/media-feature-annotations', key: 'mediafeatureannotations', icon: CropFreeOutlinedIcon },
-    { path: '/admin/advanced/knowledge-chunks', key: 'knowledgechunks', icon: ArticleOutlinedIcon },
-] as const
+const ontologyItems: NavigationItem[] = [
+    { path: '/admin/ornaments', key: 'ornaments', icon: CategoryOutlinedIcon, roles: managementRoles },
+    { path: '/admin/techniques', key: 'techniques', icon: DesignServicesOutlinedIcon, roles: managementRoles },
+    { path: '/admin/motifs', key: 'motifs', icon: HubOutlinedIcon, roles: managementRoles },
+    { path: '/admin/regions', key: 'regions', icon: MapOutlinedIcon, roles: managementRoles },
+    { path: '/admin/regional-embroideries', key: 'regionalEmbroideries', icon: TextureOutlinedIcon, roles: managementRoles },
+]
+
+const primaryItems: NavigationItem[] = [
+    { path: '/admin/archive', key: 'archive', icon: Inventory2OutlinedIcon, roles: managementRoles },
+    { path: '/admin/documents', key: 'documents', icon: FolderCopyOutlinedIcon, roles: managementRoles },
+    { path: '/admin/media', key: 'media', icon: CollectionsOutlinedIcon, roles: managementRoles },
+    { path: '/admin/processing', key: 'processing', icon: PendingActionsOutlinedIcon, roles: reviewRoles },
+]
+const archiveItems: NavigationItem[] = [
+    { path: '/admin/advanced/archive-items', key: 'archiveitems', icon: Inventory2OutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/sources', key: 'sources', icon: MenuBookOutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/source-references', key: 'sourcereferences', icon: BookmarkBorderOutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/archive-item-features', key: 'archiveitemfeatures', icon: FactCheckOutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/media-assets', key: 'mediaassets', icon: PermMediaOutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/archive-item-media', key: 'archiveitemmedia', icon: LinkOutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/media-feature-annotations', key: 'mediafeatureannotations', icon: CropFreeOutlinedIcon, roles: reviewRoles },
+    { path: '/admin/advanced/knowledge-chunks', key: 'knowledgechunks', icon: ArticleOutlinedIcon, roles: reviewRoles },
+]
 
 function AdminLayout() {
     const { t } = useTranslation()
+    const { admin } = useAdminAuth()
     const location = useLocation()
     const desktop = useMediaQuery(useTheme().breakpoints.up('md'))
     const [open, setOpen] = useState(false)
@@ -61,10 +72,14 @@ function AdminLayout() {
     const [ontologyOpen, setOntologyOpen] = useState(ontologyActive)
     const [advancedOpen, setAdvancedOpen] = useState(false)
 
+    const visiblePrimaryItems = primaryItems.filter(item => admin && hasAnyRole(admin.roles, item.roles))
+    const visibleOntologyItems = ontologyItems.filter(item => admin && hasAnyRole(admin.roles, item.roles))
+    const visibleArchiveItems = archiveItems.filter(item => admin && hasAnyRole(admin.roles, item.roles))
+
     const navigation = (
-        <Box sx={{ width: drawerWidth, py: 2 }}>
+        <Box sx={{ width: drawerWidth, minHeight: 'calc(100vh - 68px)', py: 2, display: 'flex', flexDirection: 'column' }}>
             <List sx={{ px: 1.25 }}>
-                {primaryItems.map((item) => {
+                {visiblePrimaryItems.map((item) => {
                     const Icon = item.icon
                     return (
                         <ListItemButton key={item.path} component={NavLink} to={item.path}
@@ -96,7 +111,7 @@ function AdminLayout() {
                 </ListItemButton>
                 <Collapse in={ontologyOpen} unmountOnExit>
                     <List disablePadding sx={{ pl: 2 }}>
-                        {ontologyItems.map((item) => {
+                        {visibleOntologyItems.map((item) => {
                             const Icon = item.icon
                             return (
                                 <ListItemButton
@@ -117,9 +132,9 @@ function AdminLayout() {
                         })}
                     </List>
                 </Collapse>
-                <ListItemButton onClick={() => setAdvancedOpen(value => !value)}><ListItemIcon sx={{ minWidth: 40 }}><ArticleOutlinedIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('curator.navigation.advanced')} />{advancedOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}</ListItemButton>
+                {visibleArchiveItems.length > 0 && <ListItemButton onClick={() => setAdvancedOpen(value => !value)}><ListItemIcon sx={{ minWidth: 40 }}><ArticleOutlinedIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('curator.navigation.advanced')} />{advancedOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}</ListItemButton>}
                 <Collapse in={advancedOpen} unmountOnExit><List disablePadding sx={{ pl: 2 }}>
-                {archiveItems.map((item) => {
+                {visibleArchiveItems.map((item) => {
                     const Icon = item.icon
                     return (
                         <ListItemButton key={item.path} component={NavLink} to={item.path}
@@ -132,6 +147,13 @@ function AdminLayout() {
                     )
                 })}
                 </List></Collapse>
+                {admin && hasAnyRole(admin.roles, administratorRoles) && (
+                    <ListItemButton component={NavLink} to="/admin/users" onClick={() => setOpen(false)}
+                        sx={{ mt: .5, borderRadius: 1, borderLeft: 3, borderColor: 'transparent', '&.active': { color: 'primary.main', bgcolor: '#F4E9EB', borderLeftColor: 'primary.main' } }}>
+                        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}><PeopleAltOutlinedIcon fontSize="small" /></ListItemIcon>
+                        <ListItemText primary={t('curator.navigation.users')} />
+                    </ListItemButton>
+                )}
             </List>
         </Box>
     )

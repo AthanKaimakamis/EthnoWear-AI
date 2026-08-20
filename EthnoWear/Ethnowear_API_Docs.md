@@ -119,7 +119,7 @@ Binary media endpoints return a streamed resource or an HTTP redirect.
 
 ## Authentication
 
-Public exploration endpoints require no authentication. Authenticated users can inspect their own identity and change their password. All `/api/admin/**` endpoints require the `ADMINISTRATOR` role.
+Public exploration endpoints require no authentication. Authenticated users can inspect their own identity and change their password. Administrative endpoints use the role matrix below; access is not limited to administrators alone.
 
 ### 1. Sign in
 
@@ -224,6 +224,28 @@ The new password must:
 - Account disablement, password reset, password change, role changes, and administrative unlocking revoke existing tokens.
 - Temporary passwords expire after 24 hours and require a password change after sign-in.
 - Refresh tokens are not currently implemented.
+
+### Role-based access control
+
+Roles grant different administrative capabilities:
+
+| Capability | `ADMINISTRATOR` | `REVIEWER` | `EDITOR` |
+|---|:---:|:---:|:---:|
+| Read administrative resources | Yes | Yes | Yes |
+| Manage users, roles, credentials, and account state | Yes | No | No |
+| Create or edit ontology, archive, media, and document resources | Yes | No | Yes |
+| Publish, return, or archive an archive item | Yes | Yes | No |
+| Approve or reject a document transcription | Yes | Yes | No |
+| Change provenance trust or canonical-page relationships | Yes | Yes | No |
+
+Important details:
+
+- All authenticated roles may issue `GET` requests under `/api/admin/**`, including `GET /api/admin/auth`.
+- `REVIEWER` write access is intentionally limited to the review and publication decisions listed above.
+- `EDITOR` handles ordinary creation, editing, ingestion, processing, and deletion operations, but cannot perform reviewer-only decisions.
+- `ADMINISTRATOR` has the combined permissions and is the only role allowed under `/api/admin/users/**`.
+- Unrecognized administrative paths are denied by default.
+- A valid token can still receive `403 Forbidden` when its roles do not authorize the requested method and path.
 
 ## Common conventions
 
@@ -562,7 +584,7 @@ Password reset returns:
 
 ## Administrative archive API
 
-All endpoints in this section require an `ADMINISTRATOR` bearer token.
+All authenticated roles may read these resources. `ADMINISTRATOR` and `EDITOR` may perform ordinary mutations. Archive publication decisions follow the reviewer rules in the [role-based access-control matrix](#role-based-access-control).
 
 ### Standard CRUD resources
 
@@ -643,17 +665,19 @@ The default maximum file size is 25 MB.
 
 Base path: `/api/admin/archive-items/{archiveItemId}`
 
-| Method | Relative path | Description |
-|---|---|---|
-| `GET` | `/publication-readiness` | Evaluates required data without changing state. |
-| `POST` | `/submit` | Submits a draft for review. |
-| `POST` | `/publish` | Publishes a ready item. |
-| `POST` | `/return-to-draft` | Returns an item to editable draft state. |
-| `POST` | `/archive` | Archives the item. |
+| Method | Relative path | Required role | Description |
+|---|---|---|---|
+| `GET` | `/publication-readiness` | Any authenticated role | Evaluates required data without changing state. |
+| `POST` | `/submit` | `ADMINISTRATOR` or `EDITOR` | Submits a draft for review. |
+| `POST` | `/publish` | `ADMINISTRATOR` or `REVIEWER` | Publishes a ready item. |
+| `POST` | `/return-to-draft` | `ADMINISTRATOR` or `REVIEWER` | Returns an item to editable draft state. |
+| `POST` | `/archive` | `ADMINISTRATOR` or `REVIEWER` | Archives the item. |
 
 Invalid transitions or missing publication requirements return `409 Conflict`.
 
 ## Administrative ontology API
+
+All authenticated roles may read ontology administration endpoints. Creating, updating, linking, unlinking, and deleting ontology entities requires `ADMINISTRATOR` or `EDITOR`.
 
 Ontology administration writes directly to the configured OWL model. Use stable English local names and localized labels.
 
@@ -702,6 +726,8 @@ Ontology operations reject:
 - Duplicates and referenced-resource deletion with `409`.
 
 ## Administrative document API
+
+All authenticated roles may inspect document administration resources. Ingestion, metadata changes, OCR import, transcription editing, processing requests, source-provenance changes, job retry, and cancellation require `ADMINISTRATOR` or `EDITOR`. Approval, rejection, trust changes, and canonical-page decisions require `ADMINISTRATOR` or `REVIEWER`.
 
 The document API manages evidence from upload through human review and job scheduling.
 
@@ -819,6 +845,8 @@ Base path: `/api/admin/document-pages/{pageId}`
 
 `PATCH /transcription`
 
+Requires `ADMINISTRATOR` or `EDITOR`.
+
 ```json
 {
   "correctedText": "Провереният и коригиран текст на страницата..."
@@ -829,6 +857,8 @@ Base path: `/api/admin/document-pages/{pageId}`
 
 `POST /approve`
 
+Requires `ADMINISTRATOR` or `REVIEWER`.
+
 ```json
 {
   "notes": "Compared with the visible scan."
@@ -838,6 +868,8 @@ Base path: `/api/admin/document-pages/{pageId}`
 #### Reject transcription
 
 `POST /reject`
+
+Requires `ADMINISTRATOR` or `REVIEWER`.
 
 ```json
 {
@@ -851,15 +883,15 @@ Approval is the trust boundary for downstream chunk generation. Raw OCR alone is
 
 Base path: `/api/admin/document-pages/{pageId}/provenance-events`
 
-| Method | Relative path | Description |
-|---|---|---|
-| `POST` | `/source-change` | Changes or identifies the source reference. |
-| `POST` | `/trust-change` | Changes provenance trust state. |
-| `POST` | `/canonical-link` | Links the evidence unit to a canonical page. |
-| `POST` | `/canonical-merge` | Merges it into a canonical page. |
-| `POST` | `/canonical-link-reversal` | Reverses a canonical relationship with a reason. |
+| Method | Relative path | Required role | Description |
+|---|---|---|---|
+| `POST` | `/source-change` | `ADMINISTRATOR` or `EDITOR` | Changes or identifies the source reference. |
+| `POST` | `/trust-change` | `ADMINISTRATOR` or `REVIEWER` | Changes provenance trust state. |
+| `POST` | `/canonical-link` | `ADMINISTRATOR` or `REVIEWER` | Links the evidence unit to a canonical page. |
+| `POST` | `/canonical-merge` | `ADMINISTRATOR` or `REVIEWER` | Merges it into a canonical page. |
+| `POST` | `/canonical-link-reversal` | `ADMINISTRATOR` or `REVIEWER` | Reverses a canonical relationship with a reason. |
 
-Every change creates an auditable event associated with the authenticated administrator. Original evidence history is preserved.
+Every change creates an auditable event associated with the authenticated user. Original evidence history is preserved.
 
 ### Request processing
 
