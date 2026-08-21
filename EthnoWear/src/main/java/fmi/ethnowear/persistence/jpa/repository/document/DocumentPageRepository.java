@@ -45,6 +45,10 @@ public interface DocumentPageRepository extends JpaRepository<DocumentPage, Long
             Pageable pageable
     );
 
+    List<DocumentPage> findByDocument_IdOrderByPageSequenceAsc(
+            Long documentId
+    );
+
     @Query("""
             SELECT
                 page.document.id AS documentId,

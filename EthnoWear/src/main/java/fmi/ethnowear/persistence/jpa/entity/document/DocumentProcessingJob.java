@@ -17,6 +17,7 @@ import org.hibernate.generator.EventType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Getter
 @Setter
@@ -24,6 +25,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "DocumentProcessingJobs", schema = "ethnowear")
 public class DocumentProcessingJob extends UpdatableEntity {
+
+    private static final Pattern SHA_256_PATTERN = Pattern.compile("[0-9a-f]{64}");
 
     @Enumerated(EnumType.STRING)
     @Column(name = "JobType", nullable = false, length = 50)
@@ -73,6 +76,10 @@ public class DocumentProcessingJob extends UpdatableEntity {
 
     @Column(name = "ClaimExpiresAt")
     private LocalDateTime claimExpiresAt;
+
+    @Setter(AccessLevel.NONE)
+    @Column(name = "ClaimTokenHash", length = 64, columnDefinition = "char(64)")
+    private String claimTokenHash;
 
     @Column(name = "StartedAt")
     private LocalDateTime startedAt;
@@ -137,5 +144,24 @@ public class DocumentProcessingJob extends UpdatableEntity {
 
     public void clearActiveJobKey() {
         this.activeJobKey = null;
+    }
+
+    public void assignClaimTokenHash(String claimTokenHash) {
+        if (claimTokenHash == null || !SHA_256_PATTERN.matcher(claimTokenHash).matches())
+            throw new IllegalArgumentException("Claim token hash must be lowercase SHA-256 hexadecimal");
+
+        this.claimTokenHash = claimTokenHash;
+    }
+
+    public void clearClaimTokenHash() {
+        this.claimTokenHash = null;
+    }
+
+    public void clearClaimOwnership() {
+        claimedBy = null;
+        claimedAt = null;
+        claimExpiresAt = null;
+        claimTokenHash = null;
+        timeoutAt = null;
     }
 }

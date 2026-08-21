@@ -19,6 +19,7 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
     [ClaimedBy] NVARCHAR(150) NULL,
     [ClaimedAt] DATETIME2(7) NULL,
     [ClaimExpiresAt] DATETIME2(7) NULL,
+    [ClaimTokenHash] CHAR(64) NULL,
     [StartedAt] DATETIME2(7) NULL,
     [FinishedAt] DATETIME2(7) NULL,
     [TimeoutAt] DATETIME2(7) NULL,
@@ -125,6 +126,28 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
 
     CONSTRAINT [CK_DocumentProcessingJobs_Priority]
         CHECK ([Priority] >= 0),
+
+    CONSTRAINT [CK_DocumentProcessingJobs_ClaimTokenState]
+        CHECK (
+            (
+                [Status] IN (
+                    N'CLAIMED',
+                    N'RUNNING',
+                    N'CANCEL_REQUESTED'
+                )
+                AND [ClaimTokenHash] IS NOT NULL
+                AND LEN([ClaimTokenHash]) = 64
+                AND [ClaimTokenHash] NOT LIKE '%[^0-9A-Fa-f]%'
+            )
+            OR (
+                [Status] NOT IN (
+                    N'CLAIMED',
+                    N'RUNNING',
+                    N'CANCEL_REQUESTED'
+                )
+                AND [ClaimTokenHash] IS NULL
+            )
+        ),
 
     CONSTRAINT [CK_DocumentProcessingJobs_ParametersJson]
         CHECK ([ParametersJson] IS NULL OR ISJSON([ParametersJson]) = 1),

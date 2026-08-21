@@ -3,6 +3,7 @@ package fmi.ethnowear.application.service.archive.media;
 import fmi.ethnowear.application.service.archive.media.asset.MediaAssetMapper;
 import fmi.ethnowear.application.service.archive.media.storage.MediaContentValidator;
 import fmi.ethnowear.application.service.archive.media.storage.MediaFileCompensation;
+import fmi.ethnowear.application.service.archive.media.storage.MediaFileHasher;
 import fmi.ethnowear.application.service.archive.media.storage.MediaPathResolver;
 import fmi.ethnowear.application.service.archive.media.storage.MediaUploadService;
 import fmi.ethnowear.testutil.EntityTestUtils;
@@ -52,6 +53,7 @@ class MediaUploadServiceTest {
         assertEquals(64, first.checksum().length());
         assertEquals("Licensed demo", first.description());
         assertFalse(Path.of(first.filePath()).isAbsolute());
+        assertFalse(first.filePath().contains("original.png"));
         assertNotEquals(first.filePath(), second.filePath());
         assertTrue(Files.isRegularFile(root.resolve(first.filePath())));
         assertTrue(Files.isRegularFile(root.resolve(first.thumbnailPath())));
@@ -176,6 +178,29 @@ class MediaUploadServiceTest {
         assertFalse(persisted.get());
     }
 
+    @Test
+    void rejectsSymlinkedUploadDirectoryEscapingStorageRoot() throws Exception {
+        Path outside = Files.createTempDirectory("ethnowear-media-outside-");
+        Files.createSymbolicLink(root.resolve("archive"), outside);
+
+        try {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service().upload(
+                            file("capture.png", PNG, "image/png"),
+                            new MediaUploadRequest(null, MediaType.IMAGE, "archive", null)
+                    )
+            );
+
+            try(var files = Files.list(outside)) {
+                assertEquals(0, files.count());
+            }
+        } finally {
+            Files.deleteIfExists(root.resolve("archive"));
+            Files.deleteIfExists(outside);
+        }
+    }
+
     private MediaUploadService service() { return service(properties()); }
 
     private MediaUploadService service(MediaStorageProperties properties) {
@@ -205,7 +230,8 @@ class MediaUploadServiceTest {
                 resolver,
                 properties,
                 new MediaContentValidator(),
-                new MediaFileCompensation()
+                new MediaFileCompensation(),
+                new MediaFileHasher()
         );
     }
 

@@ -97,7 +97,7 @@ class ReplacementRenditionUploadServiceTest {
                 }
         );
 
-        MediaUploadService uploads = new MediaUploadService(null, null, null, null, null, null, null) {
+        MediaUploadService uploads = new MediaUploadService(null, null, null, null, null, null, null, null) {
             @Override
             public MediaAssetDetails upload(
                     MultipartFile file,

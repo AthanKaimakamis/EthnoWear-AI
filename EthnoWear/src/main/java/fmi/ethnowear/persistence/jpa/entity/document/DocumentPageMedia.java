@@ -4,9 +4,12 @@ import fmi.ethnowear.domain.model.document.DocumentPageRenditionType;
 import fmi.ethnowear.persistence.jpa.entity.UpdatableEntity;
 import fmi.ethnowear.persistence.jpa.entity.MediaAsset;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -43,8 +46,13 @@ public class DocumentPageMedia extends UpdatableEntity {
     private DocumentPageMedia derivativeOf;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @Setter(AccessLevel.NONE)
     @JoinColumn(name = "ProducingJobId")
     private DocumentProcessingJob producingJob;
+
+    @Setter(AccessLevel.NONE)
+    @Column(name = "ProducingAttempt")
+    private Integer producingAttempt;
 
     @Column(name = "DisplayOrder", nullable = false)
     private Integer displayOrder = 0;
@@ -67,4 +75,17 @@ public class DocumentPageMedia extends UpdatableEntity {
     @Lob
     @Column(name = "Notes")
     private String notes;
+
+    public void assignProducingAttempt(
+            DocumentProcessingJob producingJob,
+            int producingAttempt
+    ) {
+        Objects.requireNonNull(producingJob, "Producing job is required");
+
+        if (producingAttempt <= 0)
+            throw new IllegalArgumentException("Producing attempt must be positive");
+
+        this.producingJob = producingJob;
+        this.producingAttempt = producingAttempt;
+    }
 }

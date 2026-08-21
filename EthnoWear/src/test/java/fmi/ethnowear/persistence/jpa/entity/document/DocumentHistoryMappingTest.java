@@ -62,6 +62,33 @@ class DocumentHistoryMappingTest {
                 .contains("assignActiveJobKey", "clearActiveJobKey");
     }
 
+    @Test
+    void claimTokenHashIsMappedAsSystemManagedCanonicalSha256() throws Exception {
+        Column column = DocumentProcessingJob.class
+                .getDeclaredField("claimTokenHash")
+                .getAnnotation(Column.class);
+
+        assertThat(column.name()).isEqualTo("ClaimTokenHash");
+        assertThat(column.columnDefinition()).isEqualTo("char(64)");
+        assertThat(Arrays.stream(DocumentProcessingJob.class.getDeclaredMethods())
+                .map(method -> method.getName()))
+                .doesNotContain("setClaimTokenHash")
+                .contains("assignClaimTokenHash", "clearClaimTokenHash");
+    }
+
+    @Test
+    void renditionProvenanceIsAssignedAsOneJobAttemptPair() throws Exception {
+        Column column = DocumentPageMedia.class
+                .getDeclaredField("producingAttempt")
+                .getAnnotation(Column.class);
+
+        assertThat(column.name()).isEqualTo("ProducingAttempt");
+        assertThat(Arrays.stream(DocumentPageMedia.class.getDeclaredMethods())
+                .map(method -> method.getName()))
+                .doesNotContain("setProducingJob", "setProducingAttempt")
+                .contains("assignProducingAttempt");
+    }
+
     private void assertColumnIsNotUpdatable(Class<?> entityType, String fieldName) throws Exception {
         Column column = entityType.getDeclaredField(fieldName).getAnnotation(Column.class);
         assertThat(column.updatable()).isFalse();

@@ -25,6 +25,7 @@ public final class MediaUploadDestination {
         );
     }
 
+
     @Contract("_ -> new")
     public static @NonNull MediaUploadDestination captureOriginal(Long documentId) {
         requireId(documentId, "Document");
@@ -42,6 +43,19 @@ public final class MediaUploadDestination {
         return new MediaUploadDestination(
                 "documents/" + documentId + "/pages",
                 "documents/" + documentId + "/thumbnails"
+        );
+    }
+
+    public static @NonNull MediaUploadDestination documentPageRendition(
+            Long documentId,
+            Long pageId
+    ) {
+        requireId(documentId, "Document");
+        requireId(pageId, "Document page");
+
+        return new MediaUploadDestination(
+                "documents/" + documentId + "/pages/" + pageId + "/renditions",
+                "documents/" + documentId + "/pages/" + pageId + "/thumbnails"
         );
     }
 

@@ -9,6 +9,7 @@ CREATE TABLE [ethnowear].[DocumentPageMedia]
     [IsPreferredOcrInput] BIT NOT NULL,
     [DerivativeOfDocumentPageMediaId] BIGINT NULL,
     [ProducingJobId] BIGINT NULL,
+    [ProducingAttempt] INT NULL,
     [DisplayOrder] INT NOT NULL,
 
     [Width] INT NULL,
@@ -67,7 +68,20 @@ CREATE TABLE [ethnowear].[DocumentPageMedia]
         ),
 
     CONSTRAINT [CK_DocumentPageMedia_OriginalDerivative]
-        CHECK ([IsOriginal] = 0 OR [DerivativeOfDocumentPageMediaId] IS NULL)
+        CHECK ([IsOriginal] = 0 OR [DerivativeOfDocumentPageMediaId] IS NULL),
+
+    CONSTRAINT [CK_DocumentPageMedia_ProducingAttempt]
+        CHECK (
+            (
+                [ProducingJobId] IS NULL
+                AND [ProducingAttempt] IS NULL
+            )
+            OR (
+                [ProducingJobId] IS NOT NULL
+                AND [ProducingAttempt] IS NOT NULL
+                AND [ProducingAttempt] > 0
+            )
+        )
 );
 
 GO
@@ -96,6 +110,19 @@ GO
 CREATE INDEX [IX_DocumentPageMedia_ProducingJobId]
 ON [ethnowear].[DocumentPageMedia] ([ProducingJobId])
 WHERE [ProducingJobId] IS NOT NULL;
+
+GO
+
+CREATE UNIQUE INDEX [UQ_DocumentPageMedia_LogicalRendition]
+ON [ethnowear].[DocumentPageMedia]
+(
+    [DocumentPageId],
+    [RenditionType],
+    [ProducingJobId],
+    [ProducingAttempt]
+)
+WHERE [ProducingJobId] IS NOT NULL
+  AND [ProducingAttempt] IS NOT NULL;
 
 GO
 

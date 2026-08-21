@@ -2,6 +2,7 @@ package fmi.ethnowear.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import fmi.ethnowear.application.service.auth.JwtUserStateValidator;
+import fmi.ethnowear.infrastructure.security.worker.WorkerApiAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -30,6 +32,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Map;
+
+import static fmi.ethnowear.infrastructure.security.worker.WorkerApiAuthenticationFilter.WORKER_AUTHORITY;
 
 @EnableMethodSecurity
 @Configuration
@@ -40,7 +44,8 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            JwtAuthenticationConverter jwtAuthenticationConverter
+            JwtAuthenticationConverter jwtAuthenticationConverter,
+            WorkerApiAuthenticationFilter workerAuthenticationFilter
     ) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -48,6 +53,10 @@ public class SecurityConfig {
                         .sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         ))
+                .addFilterBefore(
+                        workerAuthenticationFilter,
+                        BearerTokenAuthenticationFilter.class
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 HttpMethod.OPTIONS,
@@ -105,6 +114,8 @@ public class SecurityConfig {
                                 "ADMINISTRATOR",
                                 "EDITOR"
                         )
+                        .requestMatchers("/api/internal/worker/**")
+                        .hasAuthority(WORKER_AUTHORITY)
                         .requestMatchers("/api/admin/**")
                         .denyAll()
                         .anyRequest()

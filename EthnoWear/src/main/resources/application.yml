@@ -76,3 +76,19 @@ ethnowear:
       - OPTIONS
     allowed-headers:
       - "*"
+
+  worker-api:
+    enabled: ${ETHNOWEAR_WORKER_API_ENABLED:false}
+    token: ${ETHNOWEAR_WORKER_API_TOKEN:}
+    minimum-lease: ${ETHNOWEAR_WORKER_MINIMUM_LEASE:30s}
+    default-lease: ${ETHNOWEAR_WORKER_DEFAULT_LEASE:120s}
+    maximum-lease: ${ETHNOWEAR_WORKER_MAXIMUM_LEASE:5m}
+    heartbeat-interval: ${ETHNOWEAR_WORKER_HEARTBEAT_INTERVAL:30s}
+    recovery-interval: ${ETHNOWEAR_WORKER_RECOVERY_INTERVAL:30s}
+    job-timeout: ${ETHNOWEAR_WORKER_JOB_TIMEOUT:30m}
+    maximum-input-size: ${ETHNOWEAR_WORKER_MAXIMUM_INPUT_SIZE:250MB}
+    maximum-rendition-size: ${ETHNOWEAR_WORKER_MAXIMUM_RENDITION_SIZE:25MB}
+    maximum-page-count: ${ETHNOWEAR_WORKER_MAXIMUM_PAGE_COUNT:2000}
+    render-dpi: ${ETHNOWEAR_WORKER_RENDER_DPI:300}
+    maximum-pixel-width: ${ETHNOWEAR_WORKER_MAXIMUM_PIXEL_WIDTH:20000}
+    maximum-pixel-height: ${ETHNOWEAR_WORKER_MAXIMUM_PIXEL_HEIGHT:20000}

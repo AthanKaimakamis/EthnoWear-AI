@@ -1,5 +1,6 @@
 package fmi.ethnowear.persistence.jpa.repository.document;
 
+import fmi.ethnowear.domain.model.document.DocumentPageRenditionType;
 import fmi.ethnowear.persistence.jpa.entity.document.DocumentPageMedia;
 import fmi.ethnowear.persistence.jpa.projection.document.DocumentPagePreviewMediaProjection;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -41,5 +42,34 @@ public interface DocumentPageMediaRepository extends JpaRepository<DocumentPageM
     Optional<DocumentPageMedia> findByIdAndDocumentPage_Id(
             Long mediaId,
             Long documentPageId
+    );
+
+    @Query("""
+        SELECT pageMedia.documentPage.id
+        FROM DocumentPageMedia pageMedia
+        WHERE pageMedia.documentPage.id IN :pageIds
+          AND pageMedia.renditionType = :renditionType
+        """)
+    List<Long> findPageIdsWithRendition(
+            @Param("pageIds") Collection<Long> pageIds,
+            @Param("renditionType") DocumentPageRenditionType renditionType
+    );
+
+    @EntityGraph(attributePaths = "mediaAsset")
+    Optional<DocumentPageMedia>
+    findByDocumentPage_IdAndRenditionTypeAndProducingJob_IdAndProducingAttempt(
+            Long pageId,
+            DocumentPageRenditionType renditionType,
+            Long producingJobId,
+            Integer producingAttempt
+    );
+
+    @EntityGraph(attributePaths = {
+            "documentPage",
+            "mediaAsset"
+    })
+    List<DocumentPageMedia>
+    findByDocumentPage_IdInAndPreferredOcrInputTrue(
+            Collection<Long> pageIds
     );
 }

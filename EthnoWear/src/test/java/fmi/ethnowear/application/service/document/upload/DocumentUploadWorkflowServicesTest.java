@@ -410,7 +410,7 @@ class DocumentUploadWorkflowServicesTest {
         private MediaUploadDestination destination;
 
         private CapturingUploadService(MediaAssetDetails result) {
-            super(null, null, null, null, null, null, null);
+            super(null, null, null, null, null, null, null, null);
             this.result = result;
         }
 

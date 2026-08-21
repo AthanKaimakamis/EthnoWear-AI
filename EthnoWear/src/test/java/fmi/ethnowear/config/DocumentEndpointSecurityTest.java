@@ -17,6 +17,7 @@ import fmi.ethnowear.application.service.document.processing.DocumentProcessingR
 import fmi.ethnowear.domain.model.document.processing.JobStatus;
 import fmi.ethnowear.domain.model.document.processing.JobType;
 import fmi.ethnowear.domain.model.user.RoleName;
+import fmi.ethnowear.infrastructure.security.worker.WorkerApiAuthenticationFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,6 +59,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class DocumentEndpointSecurityTest {
+
+    private static final String WORKER_TOKEN =
+            "test-worker-token-with-at-least-32-bytes";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -196,6 +201,21 @@ class DocumentEndpointSecurityTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void isolatesWorkerAuthenticationFromUserJwtAuthentication() throws Exception {
+        mockMvc.perform(post("/api/internal/worker/security-check")
+                        .header("Authorization", "Bearer " + validToken("ADMINISTRATOR")))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/internal/worker/security-check")
+                        .header("Authorization", "Worker " + WORKER_TOKEN))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/admin/security-check")
+                        .header("Authorization", "Worker " + WORKER_TOKEN))
+                .andExpect(status().isUnauthorized());
+    }
+
     private String login(String username, String password) throws Exception {
         String body = mockMvc.perform(post("/api/auth/admin/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -252,6 +272,31 @@ class DocumentEndpointSecurityTest {
                     "test-jwt-secret-with-at-least-32-bytes",
                     "ethnowear-api",
                     Duration.ofMinutes(15)
+            );
+        }
+
+        @Bean
+        WorkerApiAuthenticationFilter workerApiAuthenticationFilter() {
+            WorkerApiProperties properties = new WorkerApiProperties(
+                    true,
+                    WORKER_TOKEN,
+                    Duration.ofSeconds(30),
+                    Duration.ofSeconds(120),
+                    Duration.ofMinutes(5),
+                    Duration.ofSeconds(30),
+                    Duration.ofSeconds(30),
+                    Duration.ofMinutes(30),
+                    DataSize.ofMegabytes(250),
+                    DataSize.ofMegabytes(25),
+                    2000,
+                    300,
+                    20000,
+                    20000
+            );
+
+            return new WorkerApiAuthenticationFilter(
+                    properties,
+                    new ObjectMapper()
             );
         }
 
@@ -369,6 +414,11 @@ class DocumentEndpointSecurityTest {
         AdminSecurityController adminSecurityController() {
             return new AdminSecurityController();
         }
+
+        @Bean
+        WorkerSecurityController workerSecurityController() {
+            return new WorkerSecurityController();
+        }
     }
 
     @RestController
@@ -404,6 +454,15 @@ class DocumentEndpointSecurityTest {
                 "/api/admin/unclassified"
         )
         String unclassified() {
+            return "ok";
+        }
+    }
+
+    @RestController
+    static class WorkerSecurityController {
+
+        @PostMapping("/api/internal/worker/security-check")
+        String check() {
             return "ok";
         }
     }

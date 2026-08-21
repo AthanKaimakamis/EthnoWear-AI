@@ -49,6 +49,7 @@ public class MediaUploadService {
     private final MediaStorageProperties properties;
     private final MediaContentValidator contentValidator;
     private final MediaFileCompensation compensation;
+    private final MediaFileHasher fileHasher;
 
     @Transactional
     public MediaAssetDetails upload(
@@ -142,7 +143,7 @@ public class MediaUploadService {
             asset.setWidth(inspection.width());
             asset.setHeight(inspection.height());
             asset.setSizeBytes(Files.size(target));
-            asset.setChecksum(sha256(target));
+            asset.setChecksum(fileHasher.sha256(target));
             asset.setDescription(request.description());
             asset.setThumbnailPath(thumbnailPath);
 
@@ -253,18 +254,6 @@ public class MediaUploadService {
             String relativePath,
             Path path
     ) {
-    }
-
-    private String sha256(Path path) throws IOException {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            try (DigestInputStream input = new DigestInputStream(Files.newInputStream(path), digest)) {
-                input.transferTo(java.io.OutputStream.nullOutputStream());
-            }
-            return HexFormat.of().formatHex(digest.digest());
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IllegalStateException("SHA-256 is unavailable", ex);
-        }
     }
 
     private @NonNull String safeOriginalName(String name) {
