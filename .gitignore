@@ -2,6 +2,9 @@
 /Resources/
 /tmp/
 /media/
+/Essay/
+/tools/ethnowear-password
+/tools/password-tool/
 
 ### macOS ###
 .DS_Store
