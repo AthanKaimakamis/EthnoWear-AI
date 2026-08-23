@@ -64,7 +64,9 @@ public class InternalWorkerJobController {
             description = """
                     Atomically claims one supported queued job. The requested lease must be
                     within the configured minimum and maximum. The returned claim token is
-                    valid only for the claimed job and attempt.
+                    valid only for the claimed job and attempt. Every successful response
+                    guarantees leaseExpiresAt > claimedAt and
+                    heartbeatIntervalSeconds < maximumLeaseSeconds.
                     """
     )
     @ApiResponses({
@@ -89,7 +91,9 @@ public class InternalWorkerJobController {
             description = """
                     Renews the active lease without exceeding the job timeout. Workers should
                     heartbeat at the interval returned in the claim resource limits and stop
-                    processing when cancellationRequested is true.
+                    processing when cancellationRequested is true. Every successful heartbeat
+                    returns a lease expiry in the future. A 409 means ownership is stale and a
+                    410 means the claim expired; in both cases the worker must stop processing.
                     """
     )
     @ApiResponses({
@@ -233,7 +237,12 @@ public class InternalWorkerJobController {
     //---------------------------------------------------------------------------------------
     @Operation(
             summary = "Upload a page rendition",
-            description = "Multipart upload containing file and JSON metadata. Identical retries are idempotent."
+            description = """
+                    Multipart upload containing file and JSON metadata. Identical retries are
+                    idempotent while the same claim remains valid. If a later heartbeat returns
+                    409 or 410, an already accepted rendition remains accepted, but the worker
+                    must not retry uploads using the stale or expired claim.
+                    """
     )
     @PostMapping(
             value = "/{jobId}/pages/{pageId}/renditions",
@@ -337,7 +346,12 @@ public class InternalWorkerJobController {
     //---------------------------------------------------------------------------------------
     @Operation(
             summary = "Report job failure",
-            description = "Moves the job to retry wait or a terminal failure state."
+            description = """
+                    Moves the job to retry wait or a terminal failure state. On 409 or 410 the
+                    worker must stop because it no longer owns a valid claim. On 5xx the worker
+                    may retry reporting with bounded backoff while its claim remains valid; if
+                    reporting cannot be completed, it must stop and allow lease recovery.
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Job state updated"),

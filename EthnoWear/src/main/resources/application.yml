@@ -92,3 +92,4 @@ ethnowear:
     render-dpi: ${ETHNOWEAR_WORKER_RENDER_DPI:300}
     maximum-pixel-width: ${ETHNOWEAR_WORKER_MAXIMUM_PIXEL_WIDTH:20000}
     maximum-pixel-height: ${ETHNOWEAR_WORKER_MAXIMUM_PIXEL_HEIGHT:20000}
+    maximum-page-pixels: ${ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS:100000000}

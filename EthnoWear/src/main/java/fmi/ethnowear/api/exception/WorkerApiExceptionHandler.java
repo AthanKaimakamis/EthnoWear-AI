@@ -16,6 +16,15 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice(basePackages = "fmi.ethnowear.api.controller.worker.internal")
 public class WorkerApiExceptionHandler {
 
+    @ExceptionHandler(WorkerNotReadyException.class)
+    public ResponseEntity<WorkerApiError> notReady(@NonNull WorkerNotReadyException ex) {
+        return error(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "WORKER_API_NOT_READY",
+                ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<WorkerApiError> notFound(@NonNull ResourceNotFoundException ex) {
         return error(

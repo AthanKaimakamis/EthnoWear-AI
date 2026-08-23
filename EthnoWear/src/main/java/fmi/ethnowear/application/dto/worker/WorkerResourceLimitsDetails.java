@@ -6,6 +6,7 @@ public record WorkerResourceLimitsDetails(
         int renderDpi,
         int maximumPixelWidth,
         int maximumPixelHeight,
+        long maximumPagePixels,
         long maximumRenditionBytes,
         long jobTimeoutSeconds,
         long heartbeatIntervalSeconds,

@@ -21,7 +21,8 @@ public record WorkerApiProperties(
         int maximumPageCount,
         int renderDpi,
         int maximumPixelWidth,
-        int maximumPixelHeight
+        int maximumPixelHeight,
+        long maximumPagePixels
 ) {
 
     private static final int MINIMUM_TOKEN_BYTES = 32;
@@ -43,12 +44,16 @@ public record WorkerApiProperties(
         if (defaultLease.compareTo(maximumLease) > 0)
             throw new IllegalStateException("Default worker lease cannot exceed the maximum lease");
 
+        if (heartbeatInterval.compareTo(maximumLease) >= 0)
+            throw new IllegalStateException("Worker heartbeat interval must be shorter than the maximum lease");
+
         if (maximumInputSize.toBytes() <= 0
                 || maximumRenditionSize.toBytes() <= 0
                 || maximumPageCount <= 0
                 || renderDpi <= 0
                 || maximumPixelWidth <= 0
-                || maximumPixelHeight <= 0)
+                || maximumPixelHeight <= 0
+                || maximumPagePixels <= 0)
             throw new IllegalStateException("Worker resource limits must be positive");
     }
 

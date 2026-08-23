@@ -7,6 +7,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import org.junit.jupiter.api.Test;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -64,12 +66,13 @@ class DocumentHistoryMappingTest {
 
     @Test
     void claimTokenHashIsMappedAsSystemManagedCanonicalSha256() throws Exception {
-        Column column = DocumentProcessingJob.class
-                .getDeclaredField("claimTokenHash")
-                .getAnnotation(Column.class);
+        Field field = DocumentProcessingJob.class.getDeclaredField("claimTokenHash");
+        Column column = field.getAnnotation(Column.class);
+        JdbcTypeCode jdbcType = field.getAnnotation(JdbcTypeCode.class);
 
         assertThat(column.name()).isEqualTo("ClaimTokenHash");
         assertThat(column.columnDefinition()).isEqualTo("char(64)");
+        assertThat(jdbcType.value()).isEqualTo(SqlTypes.CHAR);
         assertThat(Arrays.stream(DocumentProcessingJob.class.getDeclaredMethods())
                 .map(method -> method.getName()))
                 .doesNotContain("setClaimTokenHash")

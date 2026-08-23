@@ -109,6 +109,33 @@ class WorkerPageRenditionServiceTest {
         );
     }
 
+    @Test
+    void rejectsRenditionExceedingMaximumTotalPixels() {
+        DocumentProcessingJob job = activePageExtractionJob(11L, document(7L));
+        WorkerPageRenditionCommand oversized = new WorkerPageRenditionCommand(
+                0,
+                1,
+                WorkerPageRenditionType.PDF_PAGE_RENDER,
+                300,
+                WorkerColorMode.RGB,
+                11000,
+                10000,
+                "test-renderer",
+                "1.0"
+        );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service(job, null, Optional.empty()).upload(
+                        11L,
+                        21L,
+                        credentials(),
+                        oversized,
+                        file("image")
+                )
+        );
+    }
+
     private WorkerPageRenditionService service(
             DocumentProcessingJob job,
             DocumentPage page,
@@ -181,7 +208,8 @@ class WorkerPageRenditionServiceTest {
                 defaults.maximumPageCount(),
                 defaults.renderDpi(),
                 defaults.maximumPixelWidth(),
-                defaults.maximumPixelHeight()
+                defaults.maximumPixelHeight(),
+                defaults.maximumPagePixels()
         );
     }
 

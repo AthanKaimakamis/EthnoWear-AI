@@ -157,7 +157,8 @@ public class WorkerPageRenditionService {
         if(command.pixelWidth() == null
                 || command.pixelWidth() > properties.maximumPixelWidth()
                 || command.pixelHeight() == null
-                || command.pixelHeight() > properties.maximumPixelHeight())
+                || command.pixelHeight() > properties.maximumPixelHeight()
+                || (long) command.pixelWidth() * command.pixelHeight() > properties.maximumPagePixels())
             throw new IllegalArgumentException("Rendition dimensions exceed configured limits");
     }
 

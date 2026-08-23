@@ -144,7 +144,8 @@ class WorkerJobHeartbeatServiceTest {
                 1000,
                 300,
                 10000,
-                10000
+                10000,
+                50000000
         );
     }
 }

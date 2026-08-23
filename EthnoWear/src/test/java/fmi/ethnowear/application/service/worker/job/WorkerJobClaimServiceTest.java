@@ -66,6 +66,7 @@ class WorkerJobClaimServiceTest {
         assertEquals(2, result.attempt());
         assertEquals(250L * 1024 * 1024, result.limits().maximumInputBytes());
         assertEquals(300, result.limits().renderDpi());
+        assertEquals(100000000, result.limits().maximumPagePixels());
     }
 
     @Test

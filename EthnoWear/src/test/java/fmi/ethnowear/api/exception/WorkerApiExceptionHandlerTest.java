@@ -2,6 +2,7 @@ package fmi.ethnowear.api.exception;
 
 import fmi.ethnowear.application.dto.worker.WorkerApiError;
 import fmi.ethnowear.application.exception.WorkerPayloadTooLargeException;
+import fmi.ethnowear.application.exception.WorkerNotReadyException;
 import fmi.ethnowear.application.exception.WorkerUnsupportedMediaTypeException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,16 @@ class WorkerApiExceptionHandlerTest {
 
         assertEquals(415, response.getStatusCode().value());
         assertEquals("UNSUPPORTED_MEDIA_TYPE", response.getBody().code());
+    }
+
+    @Test
+    void mapsUnavailableWorkerDependencyTo503() {
+        ResponseEntity<WorkerApiError> response = handler.notReady(
+                new WorkerNotReadyException("Database is unavailable")
+        );
+
+        assertEquals(503, response.getStatusCode().value());
+        assertEquals("WORKER_API_NOT_READY", response.getBody().code());
     }
 
     @Test

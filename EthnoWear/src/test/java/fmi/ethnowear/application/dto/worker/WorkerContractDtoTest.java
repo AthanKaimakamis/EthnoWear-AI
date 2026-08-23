@@ -32,7 +32,18 @@ class WorkerContractDtoTest {
                         Instant.parse("2026-08-21T08:00:00Z"),
                         Instant.parse("2026-08-21T08:02:00Z"),
                         new WorkerJobTargetDetails(7L, null, null, true),
-                        new WorkerResourceLimitsDetails(100, 10, 300, 1000, 1000, 100, 1800, 30, 300)
+                        new WorkerResourceLimitsDetails(
+                                100,
+                                10,
+                                300,
+                                1000,
+                                1000,
+                                1000000,
+                                100,
+                                1800,
+                                30,
+                                300
+                        )
                 ),
                 new WorkerHeartbeatDetails(Instant.parse("2026-08-21T08:02:00Z"), false),
                 new PageExtractionManifestDetails(

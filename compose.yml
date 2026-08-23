@@ -31,6 +31,7 @@ services:
       ETHNOWEAR_WORKER_API_ENABLED: "true"
       ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
       ETHNOWEAR_WORKER_RECOVERY_INTERVAL: "${ETHNOWEAR_WORKER_RECOVERY_INTERVAL:-30s}"
+      ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS: "${ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS:-100000000}"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -39,6 +40,36 @@ services:
     volumes:
       - backend-ontology:/app/Ontology
       - ${ETHNOWEAR_MEDIA_ROOT:-./media}:/app/media
+    restart: unless-stopped
+
+  pdf-worker:
+    build:
+      context: ./ethnowear-document-worker
+      dockerfile: Dockerfile
+    image: ethnowear-pdf-worker:local
+    environment:
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_WORKER_ID:-page-extractor-1}"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
+      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
+      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-worker
+      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
+      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
+    depends_on:
+      - backend
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m,mode=1777
+    mem_limit: "${ETHNOWEAR_WORKER_MEMORY_LIMIT:-1g}"
+    cpus: "${ETHNOWEAR_WORKER_CPU_LIMIT:-1.0}"
+    pids_limit: ${ETHNOWEAR_WORKER_PIDS_LIMIT:-128}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: "${ETHNOWEAR_WORKER_STOP_GRACE_PERIOD:-35m}"
     restart: unless-stopped
 
   sqlserver:

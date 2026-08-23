@@ -133,7 +133,8 @@ class WorkerApiAuthenticationFilterTest {
                 2000,
                 300,
                 20000,
-                20000
+                20000,
+                100000000
         );
     }
 }

@@ -96,6 +96,7 @@ public class WorkerJobClaimService {
                 properties.renderDpi(),
                 properties.maximumPixelWidth(),
                 properties.maximumPixelHeight(),
+                properties.maximumPagePixels(),
                 properties.maximumRenditionSize().toBytes(),
                 properties.jobTimeout().toSeconds(),
                 properties.heartbeatInterval().toSeconds(),

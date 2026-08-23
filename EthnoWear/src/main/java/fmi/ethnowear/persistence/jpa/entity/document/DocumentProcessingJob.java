@@ -12,8 +12,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.generator.EventType;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -78,6 +80,7 @@ public class DocumentProcessingJob extends UpdatableEntity {
     private LocalDateTime claimExpiresAt;
 
     @Setter(AccessLevel.NONE)
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "ClaimTokenHash", length = 64, columnDefinition = "char(64)")
     private String claimTokenHash;
 
