@@ -29,6 +29,7 @@ import type { SelectChangeEvent } from '@mui/material/Select'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminAuth } from '../../app/adminAuth'
+import AdminLoginDialog from '../admin/AdminLoginDialog'
 
 type NavItem = {
     translationKey: 'nav.archive' | 'nav.management'
@@ -41,6 +42,7 @@ function MainLayout() {
     const language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false)
     const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null)
+    const [loginOpen, setLoginOpen] = useState(false)
     const { admin, authenticated, logout } = useAdminAuth()
     const navigate = useNavigate()
     const navItems: NavItem[] = [
@@ -243,7 +245,7 @@ function MainLayout() {
                             </Menu>
                         </>
                     ) : (
-                        <Button component={NavLink} to="/admin/login" color="inherit" startIcon={<LoginOutlinedIcon />} sx={{ fontWeight: 700 }}>
+                        <Button onClick={() => setLoginOpen(true)} color="inherit" startIcon={<LoginOutlinedIcon />} sx={{ fontWeight: 700 }}>
                             {t('nav.login')}
                         </Button>
                     )}
@@ -358,7 +360,7 @@ function MainLayout() {
                             <ListItemText primary={admin.username} secondary={t('admin.session.signOut')} />
                         </ListItemButton>
                     ) : (
-                        <ListItemButton component={NavLink} to="/admin/login" onClick={() => setMobileNavigationOpen(false)} sx={{ borderRadius: 1 }}>
+                        <ListItemButton onClick={() => { setMobileNavigationOpen(false); setLoginOpen(true) }} sx={{ borderRadius: 1 }}>
                             <ListItemIcon><LoginOutlinedIcon /></ListItemIcon>
                             <ListItemText primary={t('nav.login')} />
                         </ListItemButton>
@@ -380,6 +382,7 @@ function MainLayout() {
             >
                 <Outlet />
             </Box>
+            <AdminLoginDialog open={loginOpen && !authenticated} onClose={() => setLoginOpen(false)} onSuccess={() => setLoginOpen(false)} />
         </Box>
     )
 }

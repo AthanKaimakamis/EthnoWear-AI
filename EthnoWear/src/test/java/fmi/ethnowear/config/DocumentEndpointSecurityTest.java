@@ -13,6 +13,7 @@ import fmi.ethnowear.application.service.auth.JwtUserStateValidator;
 import fmi.ethnowear.application.service.auth.JwtTokenService;
 import fmi.ethnowear.application.service.auth.LoginAttemptService;
 import fmi.ethnowear.application.service.auth.PasswordChangeService;
+import fmi.ethnowear.application.service.auth.TokenRefreshService;
 import fmi.ethnowear.application.service.document.processing.DocumentProcessingRequestService;
 import fmi.ethnowear.domain.model.document.processing.JobStatus;
 import fmi.ethnowear.domain.model.document.processing.JobType;
@@ -291,7 +292,8 @@ class DocumentEndpointSecurityTest {
                     2000,
                     300,
                     20000,
-                    20000
+                    20000,
+                    100000000
             );
 
             return new WorkerApiAuthenticationFilter(
@@ -326,13 +328,23 @@ class DocumentEndpointSecurityTest {
         AdminAuthController adminAuthController(
                 AdminAuthenticationService authenticationService,
                 PasswordChangeService passwordChangeService,
-                CurrentUserService currentUserService
+                CurrentUserService currentUserService,
+                TokenRefreshService tokenRefreshService
         ) {
             return new AdminAuthController(
                     authenticationService,
                     passwordChangeService,
-                    currentUserService
+                    currentUserService,
+                    tokenRefreshService
             );
+        }
+
+        @Bean
+        TokenRefreshService tokenRefreshService(
+                UserDetailsService userDetailsService,
+                JwtTokenService tokenService
+        ) {
+            return new TokenRefreshService(userDetailsService, tokenService);
         }
 
         @Bean

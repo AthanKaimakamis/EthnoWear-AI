@@ -18,6 +18,7 @@ public class AdminAuthController {
     private final AdminAuthenticationService authenticationService;
     private final PasswordChangeService passwordChangeService;
     private final CurrentUserService currentUserService;
+    private final TokenRefreshService tokenRefreshService;
 
     @PostMapping({
             "/api/auth/login",
@@ -31,6 +32,12 @@ public class AdminAuthController {
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public CurrentUserDetails currentUser(@AuthenticationPrincipal Jwt jwt) {
         return currentUserService.getCurrentUser(userId(jwt));
+    }
+
+    @PostMapping("/api/auth/refresh")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    public AdminTokenDetails refresh(@AuthenticationPrincipal Jwt jwt) {
+        return tokenRefreshService.refresh(userId(jwt), jwt.getSubject());
     }
 
     @PostMapping("/api/auth/password/change")

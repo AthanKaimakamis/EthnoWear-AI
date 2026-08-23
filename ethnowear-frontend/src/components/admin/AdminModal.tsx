@@ -16,6 +16,7 @@ type Props = {
     onClose: () => void
     closeDisabled?: boolean
     maxWidth?: DialogProps['maxWidth']
+    blurBackdrop?: boolean
 }
 
 export default function AdminModal({
@@ -27,6 +28,7 @@ export default function AdminModal({
     onClose,
     closeDisabled = false,
     maxWidth = 'md',
+    blurBackdrop = false,
 }: Props) {
     const { t } = useTranslation()
 
@@ -37,6 +39,7 @@ export default function AdminModal({
             fullWidth
             maxWidth={maxWidth}
             scroll="paper"
+            slotProps={{ backdrop: { sx: blurBackdrop ? { backdropFilter: 'blur(7px)' } : undefined } }}
         >
             <DialogTitle component="div" sx={{ px: 3, py: 2 }}>
                 <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>

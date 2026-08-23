@@ -69,6 +69,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 "/api/auth/me",
+                                "/api/auth/refresh",
                                 "/api/auth/password/change"
                         ).authenticated()
                         .requestMatchers("/api/admin/users/**")

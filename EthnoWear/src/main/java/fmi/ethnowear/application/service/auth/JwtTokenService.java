@@ -30,6 +30,11 @@ public class JwtTokenService {
         if(!(authentication.getPrincipal() instanceof EthnoWearUserPrincipal principal))
             throw new IllegalArgumentException("Database user principal is required");
 
+        return issue(principal);
+    }
+
+    public AdminTokenDetails issue(EthnoWearUserPrincipal principal) {
+
         Instant issuedAt = clock.instant();
         Instant expiresAt = issuedAt.plus(properties.ttl());
 

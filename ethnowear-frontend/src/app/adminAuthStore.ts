@@ -8,6 +8,8 @@ export type AdminSession = {
 const STORAGE_KEY = 'ethnowear.admin.session'
 const SESSION_CHANGED_EVENT = 'ethnowear:admin-session-changed'
 
+export type SessionChangeReason = 'updated' | 'expired' | 'unauthorized' | 'logout'
+
 let adminSession = readStoredSession()
 let expiryTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -48,8 +50,8 @@ function readStoredSession() {
     return null
 }
 
-function notifySessionChanged() {
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event(SESSION_CHANGED_EVENT))
+function notifySessionChanged(reason: SessionChangeReason) {
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(SESSION_CHANGED_EVENT, { detail: reason }))
 }
 
 function scheduleExpiry(session: AdminSession | null) {
@@ -59,16 +61,16 @@ function scheduleExpiry(session: AdminSession | null) {
 
     const delay = Date.parse(session.expiresAt) - Date.now()
     if (delay <= 0) {
-        clearAdminSession()
+        clearAdminSession('expired')
         return
     }
 
-    expiryTimer = setTimeout(clearAdminSession, Math.min(delay, 2_147_483_647))
+    expiryTimer = setTimeout(() => clearAdminSession('expired'), Math.min(delay, 2_147_483_647))
 }
 
 export function getAdminSession() {
     if (adminSession && Date.parse(adminSession.expiresAt) <= Date.now()) {
-        clearAdminSession()
+        clearAdminSession('expired')
     }
     return adminSession
 }
@@ -86,21 +88,22 @@ export function setAdminSession(session: AdminSession) {
     adminSession = session
     storage()?.setItem(STORAGE_KEY, JSON.stringify(session))
     scheduleExpiry(session)
-    notifySessionChanged()
+    notifySessionChanged('updated')
 }
 
-export function clearAdminSession() {
+export function clearAdminSession(reason: SessionChangeReason = 'logout') {
     const changed = adminSession !== null || storage()?.getItem(STORAGE_KEY) !== null
     adminSession = null
     storage()?.removeItem(STORAGE_KEY)
     scheduleExpiry(null)
-    if (changed) notifySessionChanged()
+    if (changed) notifySessionChanged(reason)
 }
 
 scheduleExpiry(adminSession)
 
-export function subscribeToAdminSessionChanges(listener: () => void) {
+export function subscribeToAdminSessionChanges(listener: (reason: SessionChangeReason) => void) {
     if (typeof window === 'undefined') return () => undefined
-    window.addEventListener(SESSION_CHANGED_EVENT, listener)
-    return () => window.removeEventListener(SESSION_CHANGED_EVENT, listener)
+    const handler = (event: Event) => listener((event as CustomEvent<SessionChangeReason>).detail)
+    window.addEventListener(SESSION_CHANGED_EVENT, handler)
+    return () => window.removeEventListener(SESSION_CHANGED_EVENT, handler)
 }

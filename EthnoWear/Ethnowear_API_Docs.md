@@ -196,7 +196,13 @@ Requires any valid bearer token. Returns the authenticated user's identity, prof
 }
 ```
 
-### 4. Change the current password
+### 4. Refresh an active session
+
+`POST /api/auth/refresh`
+
+Requires a valid, unexpired bearer token. Returns a replacement token with the same response shape as login. It does not accept credentials or refresh expired sessions.
+
+### 5. Change the current password
 
 `POST /api/auth/password/change`
 

@@ -21,7 +21,7 @@ export function adminAuthorizationHeaders(headers?: HeadersInit) {
 }
 
 export function handleAdminResponseStatus(status: number) {
-    if (status === 401) clearAdminSession()
+    if (status === 401) clearAdminSession('unauthorized')
 }
 
 export class ApiError extends Error {

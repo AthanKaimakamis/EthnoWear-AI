@@ -1,4 +1,4 @@
-import { setAdminSession, type AdminSession } from '../app/adminAuthStore'
+import { getAdminSession, setAdminSession, type AdminSession } from '../app/adminAuthStore'
 import type { RoleName } from '../app/permissions'
 import { apiRequest } from './http'
 
@@ -38,6 +38,17 @@ export async function loginAdmin(username: string, password: string) {
         username,
     }
     setAdminSession(session)
+    return token
+}
+
+export async function refreshAdminToken() {
+    const username = getAdminSession()?.username
+    if (!username) throw new Error('No session is available to refresh.')
+    const token = await apiRequest<AuthTokenDetails>('/api/auth/refresh', {
+        method: 'POST',
+        authorization: 'protected',
+    })
+    setAdminSession({ accessToken: token.accessToken, tokenType: 'Bearer', expiresAt: token.expiresAt, username })
     return token
 }
 

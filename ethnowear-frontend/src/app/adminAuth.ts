@@ -4,6 +4,7 @@ import type { CurrentUser } from '../api/AdminAuthApi'
 export type AdminAuth = {
     authenticated: boolean
     initializing: boolean
+    sessionExpired: boolean
     admin: CurrentUser | null
     login: (username: string, password: string) => Promise<CurrentUser>
     logout: () => void
