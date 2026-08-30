@@ -41,6 +41,8 @@ CREATE TABLE [ethnowear].[ArchiveItems]
     CONSTRAINT [CK_ArchiveItems_ArchiveType]
         CHECK ([ArchiveType] IN (
             N'ORNAMENT_EXAMPLE',
+            N'MOTIF_EXAMPLE',
+            N'TECHNIQUE_EXAMPLE',
             N'EMBROIDERY_SAMPLE',
             N'CLOTHING_ITEM',
             N'PHOTO_REFERENCE',

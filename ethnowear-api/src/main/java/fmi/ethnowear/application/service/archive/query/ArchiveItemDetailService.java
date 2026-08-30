@@ -1,0 +1,85 @@
+package fmi.ethnowear.application.service.archive.query;
+
+import fmi.ethnowear.application.dto.archive.media.MediaFeatureAnnotationDetails;
+import fmi.ethnowear.application.dto.archive.query.ArchiveItemDetailDetails;
+import fmi.ethnowear.application.dto.archive.query.ArchiveItemMediaContentDetails;
+import fmi.ethnowear.application.exception.ResourceNotFoundException;
+import fmi.ethnowear.application.service.archive.item.ArchiveItemFeatureMapper;
+import fmi.ethnowear.application.service.archive.item.ArchiveItemMapper;
+import fmi.ethnowear.application.service.archive.media.asset.MediaAssetMapper;
+import fmi.ethnowear.application.service.archive.media.attachment.ArchiveItemMediaMapper;
+import fmi.ethnowear.application.service.archive.media.attachment.MediaFeatureAnnotationMapper;
+import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
+import fmi.ethnowear.persistence.jpa.entity.UpdatableEntity;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
+import fmi.ethnowear.persistence.jpa.repository.ArchiveItemRepository;
+import fmi.ethnowear.persistence.jpa.repository.MediaFeatureAnnotationRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static fmi.ethnowear.util.IdentifierUtils.requireId;
+import fmi.ethnowear.domain.model.document.figure.FigureReviewState;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ArchiveItemDetailService {
+
+    private final ArchiveItemRepository archiveItemRepository;
+    private final ArchiveItemFeatureRepository featureRepository;
+    private final ArchiveItemMediaRepository mediaRepository;
+    private final MediaFeatureAnnotationRepository annotationRepository;
+
+    private final ArchiveItemMapper archiveItemMapper;
+    private final ArchiveItemFeatureMapper featureMapper;
+    private final ArchiveItemMediaMapper mediaMapper;
+    private final MediaAssetMapper mediaAssetMapper;
+    private final MediaFeatureAnnotationMapper annotationMapper;
+    private final EntitySourceCitationMapper sourceCitationMapper;
+
+    public ArchiveItemDetailDetails findById(Long id) {
+        requireId(id, "Archive item");
+
+        ArchiveItem archiveItem = archiveItemRepository
+                .findPublishedById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Archive item", id));
+
+        Map<Long, List<MediaFeatureAnnotationDetails>> annotationsByMedia = annotationRepository
+                .findByArchiveItemMedia_ArchiveItem_Id(id)
+                .stream()
+                .collect(Collectors.groupingBy(
+                                annotation -> annotation.getArchiveItemMedia().getId(),
+                                Collectors.mapping(annotationMapper::toDetails, Collectors.toList())
+                        )
+                );
+
+        List<ArchiveItemMediaContentDetails> media = mediaRepository
+                .findPublicByArchiveItemId(id, FigureReviewState.APPROVED)
+                .stream()
+                .sorted(Comparator.comparing(UpdatableEntity::getId))
+                .map(itemMedia -> new ArchiveItemMediaContentDetails(
+                        mediaMapper.toDetails(itemMedia),
+                        mediaAssetMapper.toDetails(itemMedia.getMediaAsset()),
+                        annotationsByMedia.getOrDefault(itemMedia.getId(), List.of())
+                ))
+                .toList();
+
+        return new ArchiveItemDetailDetails(
+                archiveItemMapper.toDetails(archiveItem),
+                sourceCitationMapper.toDetails(archiveItem.getSourceReference()),
+                featureRepository.findByArchiveItem_Id(id)
+                        .stream()
+                        .sorted(Comparator.comparing(UpdatableEntity::getId))
+                        .map(featureMapper::toDetails)
+                        .toList(),
+                media
+        );
+    }
+}

@@ -11,6 +11,7 @@ type RequestOptions = {
     body?: unknown
     signal?: AbortSignal
     authorization?: 'auto' | 'protected' | 'none'
+    headers?: HeadersInit
 }
 
 export function adminAuthorizationHeaders(headers?: HeadersInit) {
@@ -37,7 +38,7 @@ export class ApiError extends Error {
 }
 
 export function apiErrorMessage(error: unknown, fallback = 'Unexpected error') {
-    if (error instanceof ApiError) return localizedErrorMessages(error.status, error.details, error.message, fallback)[0]
+    if (error instanceof ApiError) return localizedErrorMessages(error.status, error.details, error.message, fallback).join('\n')
     return localizedNonApiError(error, fallback)
 }
 
@@ -87,7 +88,7 @@ export function apiUrl(path: string, query?: QueryParams) {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const requiresAdmin = options.authorization === 'protected'
         || (options.authorization !== 'none' && path.startsWith('/api/admin/'))
-    const headers = requiresAdmin ? adminAuthorizationHeaders() : new Headers()
+    const headers = requiresAdmin ? adminAuthorizationHeaders(options.headers) : new Headers(options.headers)
     headers.set('Accept', 'application/json')
     if (options.body) headers.set('Content-Type', 'application/json')
     const response = await fetch(apiUrl(path, options.query), {

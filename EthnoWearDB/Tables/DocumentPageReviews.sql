@@ -2,6 +2,8 @@ CREATE TABLE [ethnowear].[DocumentPageReviews]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL,
     [DocumentPageId] BIGINT NOT NULL,
+    [SourceTextSuggestionId] BIGINT NULL,
+    [SourceTextSuggestionIssueOrdinal] INT NULL,
 
     [ReviewAction] NVARCHAR(50) NOT NULL,
     [Reviewer] NVARCHAR(150) NOT NULL,
@@ -20,10 +22,15 @@ CREATE TABLE [ethnowear].[DocumentPageReviews]
         FOREIGN KEY ([DocumentPageId])
         REFERENCES [ethnowear].[DocumentPages] ([Id]),
 
+    CONSTRAINT [FK_DocumentPageReviews_SourceTextSuggestions]
+        FOREIGN KEY ([SourceTextSuggestionId])
+        REFERENCES [ethnowear].[DocumentPageTextSuggestions] ([Id]),
+
     CONSTRAINT [CK_DocumentPageReviews_ReviewAction]
         CHECK ([ReviewAction] IN (
             N'REVIEW_STARTED',
             N'CORRECTED_TEXT_SAVED',
+            N'RESET_FROM_CURRENT_OCR',
             N'APPROVED',
             N'REJECTED',
             N'APPROVAL_REVOKED'
@@ -31,6 +38,15 @@ CREATE TABLE [ethnowear].[DocumentPageReviews]
 
     CONSTRAINT [CK_DocumentPageReviews_Reviewer]
         CHECK (LEN(LTRIM(RTRIM([Reviewer]))) > 0),
+
+    CONSTRAINT [CK_DocumentPageReviews_SourceTextSuggestionIssueOrdinal]
+        CHECK (
+            [SourceTextSuggestionIssueOrdinal] IS NULL
+            OR (
+                [SourceTextSuggestionId] IS NOT NULL
+                AND [SourceTextSuggestionIssueOrdinal] >= 0
+            )
+        ),
 
     CONSTRAINT [CK_DocumentPageReviews_CorrectedTextHash]
         CHECK (
@@ -91,3 +107,18 @@ GO
 
 CREATE INDEX [IX_DocumentPageReviews_Reviewer_CreatedAt]
 ON [ethnowear].[DocumentPageReviews] ([Reviewer], [CreatedAt] DESC);
+
+GO
+
+CREATE UNIQUE INDEX [UQ_DocumentPageReviews_WholeTextSuggestion]
+ON [ethnowear].[DocumentPageReviews] ([SourceTextSuggestionId])
+WHERE [SourceTextSuggestionId] IS NOT NULL
+  AND [SourceTextSuggestionIssueOrdinal] IS NULL;
+
+GO
+
+CREATE UNIQUE INDEX [UQ_DocumentPageReviews_TextSuggestionIssue]
+ON [ethnowear].[DocumentPageReviews]
+    ([SourceTextSuggestionId], [SourceTextSuggestionIssueOrdinal])
+WHERE [SourceTextSuggestionId] IS NOT NULL
+  AND [SourceTextSuggestionIssueOrdinal] IS NOT NULL;

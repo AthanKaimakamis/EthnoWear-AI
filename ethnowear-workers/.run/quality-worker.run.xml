@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="quality-worker" type="PythonConfigurationType" factoryName="Python">
+    <module name="ethnowear-quality-worker" />
+    <option name="ENV_FILES" value="$PROJECT_DIR$/quality-worker/.env" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs><env name="PYTHONUNBUFFERED" value="1" /></envs>
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/quality-worker" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="SCRIPT_NAME" value="ethnowear_quality_worker.main" />
+    <option name="MODULE_MODE" value="true" />
+    <method v="2" />
+  </configuration>
+</component>

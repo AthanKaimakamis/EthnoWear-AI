@@ -13,6 +13,7 @@ import { apiErrorMessage } from '../../api/http'
 import { useTranslation } from 'react-i18next'
 import AdminModal from './AdminModal'
 import PdfViewerDialog from './PdfViewerDialog'
+import { PreviewableImage } from '../common/ImageViewerDialog'
 
 type Props = {
     open: boolean
@@ -101,7 +102,7 @@ export default function MediaUploadDialog({ open, category, sourceReferences, so
                             sx={{ minHeight: 190, border: '1px dashed', borderColor: dragging ? 'primary.main' : 'divider', bgcolor: dragging ? '#F8EDEF' : 'background.default', display: 'grid', placeItems: 'center', p: 3, textAlign: 'center' }}
                         >
                             <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
-                                {preview ? <Box component="img" src={preview} alt={t('curator.uploadDialog.preview')} sx={{ maxWidth: '100%', maxHeight: 150, objectFit: 'contain' }} /> : <InsertDriveFileOutlinedIcon color="action" sx={{ fontSize: 46 }} />}
+                                {preview ? <PreviewableImage src={preview} alt={file?.name ?? t('curator.uploadDialog.preview')} buttonSx={{ maxWidth: '100%' }} imageSx={{ maxWidth: '100%', maxHeight: 150, objectFit: 'contain' }} /> : <InsertDriveFileOutlinedIcon color="action" sx={{ fontSize: 46 }} />}
                                 <Typography sx={{ fontWeight: 600 }}>{file?.name ?? t('curator.uploadDialog.drop')}</Typography>
                                 {file && <Typography variant="body2" color="text.secondary">{(file.size / 1024 / 1024).toFixed(2)} MB</Typography>}
                                 <Stack direction="row" spacing={1}>

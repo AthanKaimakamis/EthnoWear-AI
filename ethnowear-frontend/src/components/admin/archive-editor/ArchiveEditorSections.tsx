@@ -14,6 +14,7 @@ import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternate
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined'
 import StarOutlinedIcon from '@mui/icons-material/StarOutlined'
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import AdminModal from '../AdminModal'
@@ -27,6 +28,7 @@ import type {
     SourceDetails,
     SourceReferenceDetails,
 } from '../../../types/archive'
+import { ARCHIVE_TYPES } from '../../../types/archive'
 import type { ReferenceData, ReferenceResource } from '../../../types/reference'
 
 export type FeatureSelections = Record<
@@ -64,7 +66,7 @@ export function BasicSection({ item, setField, t }: SectionProps) {
                     name="archive-type"
                     label={t('curator.fields.archiveType')}
                     value={item.archiveType}
-                    options={['ORNAMENT_EXAMPLE', 'EMBROIDERY_SAMPLE', 'CLOTHING_ITEM', 'PHOTO_REFERENCE', 'TEXT_REFERENCE'].map(value => ({ value, label: t(`archiveDetails.types.${value}`) }))}
+                    options={ARCHIVE_TYPES.map(value => ({ value, label: t(`archiveDetails.types.${value}`) }))}
                     onChange={event => setField('archiveType', event.target.value as ArchiveItemWriteDto['archiveType'])}
                 />
                 <TextField label={t('curator.fields.inventory')} value={item.inventoryNumber ?? ''} onChange={event => setField('inventoryNumber', nullText(event.target.value))} />
@@ -240,6 +242,9 @@ export function SourceSection({
     value,
     setValue,
     selectedSource,
+    canCreateCitation,
+    onCreateSource,
+    onCreateCitation,
     t,
 }: {
     references: SourceReferenceDetails[]
@@ -247,24 +252,37 @@ export function SourceSection({
     value: number
     setValue: (value: number) => void
     selectedSource: SourceDetails | null | undefined
+    canCreateCitation: boolean
+    onCreateSource: () => void
+    onCreateCitation: () => void
     t: TFunction
 }) {
     return (
         <Stack spacing={2}>
-            <Autocomplete
-                options={references}
-                getOptionLabel={sourceReferenceLabel}
-                value={references.find(reference => reference.id === value) ?? null}
-                onChange={(_, next) => setValue(next?.id ?? 0)}
-                renderInput={params => <TextField {...params} required label={t('curator.fields.citation')} />}
-            />
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ alignItems: { md: 'flex-start' } }}>
+                <Autocomplete
+                    sx={{ flex: 1 }}
+                    options={references}
+                    getOptionLabel={sourceReferenceLabel}
+                    value={references.find(reference => reference.id === value) ?? null}
+                    onChange={(_, next) => setValue(next?.id ?? 0)}
+                    noOptionsText={t('curator.source.noCitations')}
+                    renderInput={params => <TextField {...params} required label={t('curator.fields.citation')} />}
+                />
+                <Button variant="outlined" startIcon={<AddOutlinedIcon />} onClick={onCreateCitation} disabled={!canCreateCitation} sx={{ minHeight: 56 }}>
+                    {t('curator.source.createCitation')}
+                </Button>
+                <Button variant="text" startIcon={<AddOutlinedIcon />} onClick={onCreateSource} sx={{ minHeight: 56 }}>
+                    {t('curator.source.createSource')}
+                </Button>
+            </Stack>
             {selectedSource && (
                 <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography sx={{ fontWeight: 700 }}>{selectedSource.title}</Typography>
                     <Typography color="text.secondary">{[selectedSource.author, selectedSource.year].filter(Boolean).join(' · ')}</Typography>
                 </Paper>
             )}
-            <Alert severity="info">{t('curator.source.manageAdvanced')}</Alert>
+            {!canCreateCitation && <Alert severity="info">{t('curator.source.createSourceFirst')}</Alert>}
         </Stack>
     )
 }

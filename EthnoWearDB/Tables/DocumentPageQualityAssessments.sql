@@ -94,6 +94,12 @@ WHERE [ProcessingJobId] IS NOT NULL;
 
 GO
 
+CREATE UNIQUE INDEX [UQ_DocumentPageQualityAssessments_ProcessingJobId]
+ON [ethnowear].[DocumentPageQualityAssessments] ([ProcessingJobId])
+WHERE [ProcessingJobId] IS NOT NULL;
+
+GO
+
 CREATE INDEX [IX_DocumentPageQualityAssessments_OcrResultId]
 ON [ethnowear].[DocumentPageQualityAssessments] ([DocumentPageOcrResultId])
 WHERE [DocumentPageOcrResultId] IS NOT NULL;

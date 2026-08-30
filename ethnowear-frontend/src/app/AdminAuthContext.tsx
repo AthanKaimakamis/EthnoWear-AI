@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { changeCurrentPassword, getCurrentAdmin, loginAdmin, refreshAdminToken, type CurrentUser } from '../api/AdminAuthApi'
-import { clearAdminSession, getAdminSession, subscribeToAdminSessionChanges } from './adminAuthStore'
+import { clearAdminSession, getAdminSession, restoreAdminSessionFromAnotherTab, subscribeToAdminSessionChanges } from './adminAuthStore'
 import { AdminAuthContext, type AdminAuth } from './adminAuth'
+
+const SESSION_IDLE_LIMIT_MS = 30 * 60_000
+const SESSION_REFRESH_LEAD_MS = 3 * 60_000
+const SESSION_REFRESH_CHECK_MS = 30_000
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const [admin, setAdmin] = useState<CurrentUser | null>(null)
-    const [initializing, setInitializing] = useState(() => getAdminSession() !== null)
+    const [initializing, setInitializing] = useState(true)
     const [sessionExpired, setSessionExpired] = useState(false)
     const adminRef = useRef<CurrentUser | null>(null)
     const refreshingRef = useRef(false)
@@ -22,7 +26,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         })
         const controller = new AbortController()
 
-        if (getAdminSession()) {
+        async function restoreSession() {
+            const session = getAdminSession() ?? await restoreAdminSessionFromAnotherTab()
+            if (controller.signal.aborted) return
+            if (!session) {
+                setInitializing(false)
+                return
+            }
             getCurrentAdmin(controller.signal)
                 .then(setAdmin)
                 .catch(error => {
@@ -34,6 +44,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
                     if (!controller.signal.aborted) setInitializing(false)
                 })
         }
+        void restoreSession()
 
         return () => {
             controller.abort()
@@ -43,27 +54,34 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         let lastActivity = Date.now()
-        const active = () => { lastActivity = Date.now() }
-        const events: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'scroll', 'focus']
-        events.forEach(event => window.addEventListener(event, active, { passive: true }))
-        const timer = window.setInterval(async () => {
+        const refreshIfNeeded = async () => {
             const session = getAdminSession()
-            if (!session || refreshingRef.current || Date.now() - lastActivity > 5 * 60_000) return
-            if (Date.parse(session.expiresAt) - Date.now() > 5 * 60_000) return
+            if (!session || refreshingRef.current || Date.now() - lastActivity > SESSION_IDLE_LIMIT_MS) return
+            if (Date.parse(session.expiresAt) - Date.now() > SESSION_REFRESH_LEAD_MS) return
             refreshingRef.current = true
             try { await refreshAdminToken() } catch { /* 401 handling clears the session. */ }
             finally { refreshingRef.current = false }
-        }, 60_000)
+        }
+        const active = () => {
+            lastActivity = Date.now()
+            void refreshIfNeeded()
+        }
+        const windowEvents: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'focus']
+        windowEvents.forEach(event => window.addEventListener(event, active, { passive: true }))
+        document.addEventListener('scroll', active, { capture: true, passive: true })
+        document.addEventListener('visibilitychange', active)
+        const timer = window.setInterval(() => void refreshIfNeeded(), SESSION_REFRESH_CHECK_MS)
         return () => {
             window.clearInterval(timer)
-            events.forEach(event => window.removeEventListener(event, active))
+            windowEvents.forEach(event => window.removeEventListener(event, active))
+            document.removeEventListener('scroll', active, { capture: true })
+            document.removeEventListener('visibilitychange', active)
         }
     }, [])
 
     const login = useCallback(async (username: string, password: string) => {
         clearAdminSession()
         setAdmin(null)
-        setSessionExpired(false)
         const token = await loginAdmin(username, password)
 
         try {

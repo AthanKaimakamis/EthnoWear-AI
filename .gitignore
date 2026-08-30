@@ -57,5 +57,6 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .env
 .gitignore
+!ethnowear-api/.gitignore
 .env.example
 !.env.example

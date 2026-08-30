@@ -26,7 +26,7 @@ export default function PasswordChangePage() {
         newPassword.toLocaleLowerCase() !== admin?.username.toLocaleLowerCase(),
     ], [admin?.username, newPassword])
 
-    if (!authenticated) return <Navigate to="/admin/login" replace />
+    if (!authenticated) return <Navigate to="/management/login" replace />
 
     async function submit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -46,7 +46,7 @@ export default function PasswordChangePage() {
         setError(null)
         try {
             await changePassword(currentPassword, newPassword)
-            navigate('/admin', { replace: true })
+            navigate('/management', { replace: true })
         } catch (cause) {
             setError(apiErrorMessage(cause, t('auth.passwordChange.failed')))
         } finally {

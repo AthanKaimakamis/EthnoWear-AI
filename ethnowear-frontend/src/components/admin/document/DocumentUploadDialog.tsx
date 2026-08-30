@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
     Alert, Box, Button, Checkbox, FormControl, FormControlLabel, InputLabel,
-    LinearProgress, MenuItem, Select, Stack, TextField, ToggleButton, ToggleButtonGroup,
+    LinearProgress, MenuItem, Paper, Select, Stack, TextField, ToggleButton, ToggleButtonGroup,
     Typography,
 } from '@mui/material'
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
@@ -44,6 +44,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
     const { t } = useTranslation()
     const [kind, setKind] = useState<UploadKind>('pdf')
     const [file, setFile] = useState<File | null>(null)
+    const [thumbnail, setThumbnail] = useState<File | null>(null)
     const [metadata, setMetadata] = useState(emptyMetadata)
     const [provenanceStatus, setProvenanceStatus] = useState<ProvenanceStatus>('UNKNOWN_SOURCE')
     const [provenanceTrust, setProvenanceTrust] = useState<ProvenanceTrustState>('UNKNOWN')
@@ -77,6 +78,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
         if (!next || uploading) return
         setKind(next)
         setFile(null)
+        setThumbnail(null)
         setPdfPreviewOpen(false)
         setError(null)
     }
@@ -124,8 +126,19 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
         setError(null)
     }
 
+    function chooseThumbnail(candidate?: File) {
+        if (!candidate) return
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(candidate.type)) {
+            setError(t('documents.uploadDialog.thumbnailAccepted'))
+            return
+        }
+        setThumbnail(candidate)
+        setError(null)
+    }
+
     function reset() {
         setFile(null)
+        setThumbnail(null)
         setPdfPreviewOpen(false)
         setMetadata(emptyMetadata)
         setProvenanceStatus('UNKNOWN_SOURCE')
@@ -156,6 +169,9 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
 
         const bibliographic = {
             sourceId: metadata.sourceId ? Number(metadata.sourceId) : null,
+            defaultSourceReferenceId: sourceReferenceId
+                ? Number(sourceReferenceId)
+                : null,
             title: metadata.title.trim(),
             author: metadata.author.trim() || null,
             publisher: metadata.publisher.trim() || null,
@@ -175,7 +191,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
                     provenanceStatus,
                     provenanceTrustState: provenanceTrust,
                     mediaDescription: description.trim() || null,
-                }, file, setProgress)
+                }, file, thumbnail, setProgress)
                 : await uploadStandaloneCapture({
                     metadata: bibliographic,
                     provenance: {
@@ -191,7 +207,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
                     pageLabel: pageLabel.trim() || null,
                     queueOcr,
                     mediaDescription: description.trim() || null,
-                }, file, setProgress)
+                }, file, thumbnail, setProgress)
             onUploaded(result, kind, kind === 'pdf' || queueOcr)
             reset()
         } catch (caught) {
@@ -221,7 +237,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
         >
             <Box component="form" id={formId} onSubmit={submit}>
                 <Stack spacing={2.5}>
-                    {error && <Alert severity="error">{error}</Alert>}
+                    {error && <Alert severity="error" sx={{ whiteSpace: 'pre-line' }}>{error}</Alert>}
                     {uploading && <Box><LinearProgress variant="determinate" value={progress} /><Typography variant="caption">{t('documents.uploadDialog.uploading', { progress })}</Typography></Box>}
                     <ToggleButtonGroup exclusive fullWidth value={kind} onChange={(_, value) => changeKind(value)} aria-label={t('documents.uploadDialog.title')}>
                         <ToggleButton value="pdf"><Stack><Typography sx={{ fontWeight: 700 }}>{t('documents.uploadDialog.pdf')}</Typography><Typography variant="caption">{t('documents.uploadDialog.pdfHelp')}</Typography></Stack></ToggleButton>
@@ -249,6 +265,25 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
                             </Stack>
                         </Stack>
                     </Box>
+
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
+                            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                                <ImageOutlinedIcon color="action" />
+                                <Box>
+                                    <Typography sx={{ fontWeight: 700 }}>{t('documents.uploadDialog.thumbnail')}</Typography>
+                                    <Typography variant="body2" color="text.secondary">{thumbnail?.name ?? t('documents.uploadDialog.thumbnailHelp')}</Typography>
+                                </Box>
+                            </Stack>
+                            <Stack direction="row" spacing={1}>
+                                <Button component="label" variant="outlined" disabled={uploading}>
+                                    {thumbnail ? t('documents.uploadDialog.changeThumbnail') : t('documents.uploadDialog.chooseThumbnail')}
+                                    <input hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={event => chooseThumbnail(event.target.files?.[0])} />
+                                </Button>
+                                {thumbnail && <Button color="error" onClick={() => setThumbnail(null)}>{t('documents.uploadDialog.remove')}</Button>}
+                            </Stack>
+                        </Stack>
+                    </Paper>
 
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
                         <FormControl fullWidth><InputLabel id="document-source-label">{t('documents.uploadDialog.source')}</InputLabel><Select labelId="document-source-label" label={t('documents.uploadDialog.source')} value={metadata.sourceId} onChange={event => selectSource(availableSources.find(source => source.id === Number(event.target.value)))}><MenuItem value=""><em>{t('documents.uploadDialog.noSource')}</em></MenuItem>{availableSources.map(source => <MenuItem key={source.id} value={String(source.id)}>{source.title}</MenuItem>)}</Select></FormControl>

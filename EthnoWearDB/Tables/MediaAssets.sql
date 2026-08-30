@@ -3,6 +3,13 @@ CREATE TABLE [ethnowear].[MediaAssets]
     [Id] BIGINT IDENTITY(1,1) NOT NULL,
     [SourceReferenceId] BIGINT NULL,
 
+    [Origin] NVARCHAR(50) NOT NULL CONSTRAINT [DF_MediaAssets_Origin] DEFAULT N'USER_UPLOAD',
+    [RetentionPolicy] NVARCHAR(50) NOT NULL CONSTRAINT [DF_MediaAssets_RetentionPolicy] DEFAULT N'KEEP_PERMANENTLY',
+    [StorageState] NVARCHAR(50) NOT NULL CONSTRAINT [DF_MediaAssets_StorageState] DEFAULT N'AVAILABLE',
+    [RetentionUntil] DATETIME2(7) NULL,
+    [PurgedAt] DATETIME2(7) NULL,
+    [PurgeReason] NVARCHAR(500) NULL,
+
     [FileName] NVARCHAR(255) NULL,
     [FilePath] NVARCHAR(1000) NULL,
     [StorageUrl] NVARCHAR(1000) NULL,
@@ -33,6 +40,40 @@ CREATE TABLE [ethnowear].[MediaAssets]
             N'THUMBNAIL',
             N'OTHER'
         )),
+
+    CONSTRAINT [CK_MediaAssets_Origin]
+        CHECK ([Origin] IN (
+            N'USER_UPLOAD',
+            N'DOCUMENT_ORIGINAL',
+            N'MANUAL_REPLACEMENT',
+            N'GENERATED'
+        )),
+
+    CONSTRAINT [CK_MediaAssets_RetentionPolicy]
+        CHECK ([RetentionPolicy] IN (
+            N'KEEP_PERMANENTLY',
+            N'KEEP_ORIGINAL_ONLY'
+        )),
+
+    CONSTRAINT [CK_MediaAssets_StorageState]
+        CHECK ([StorageState] IN (N'AVAILABLE', N'PURGED')),
+
+    CONSTRAINT [CK_MediaAssets_PurgeState]
+        CHECK (
+            (
+                [StorageState] = N'AVAILABLE'
+                AND [PurgedAt] IS NULL
+                AND [PurgeReason] IS NULL
+            )
+            OR (
+                [StorageState] = N'PURGED'
+                AND [Origin] = N'GENERATED'
+                AND [RetentionPolicy] = N'KEEP_ORIGINAL_ONLY'
+                AND [PurgedAt] IS NOT NULL
+                AND [PurgeReason] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([PurgeReason]))) > 0
+            )
+        ),
 
     CONSTRAINT [CK_MediaAssets_Dimensions]
         CHECK (
@@ -97,3 +138,10 @@ GO
 CREATE INDEX [IX_MediaAssets_Checksum]
 ON [ethnowear].[MediaAssets] ([Checksum])
 WHERE [Checksum] IS NOT NULL;
+
+GO
+
+CREATE INDEX [IX_MediaAssets_Cleanup]
+ON [ethnowear].[MediaAssets] ([StorageState], [Origin], [RetentionUntil])
+WHERE [StorageState] = N'AVAILABLE'
+  AND [Origin] = N'GENERATED';

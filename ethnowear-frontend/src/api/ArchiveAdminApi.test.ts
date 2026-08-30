@@ -13,12 +13,14 @@ afterEach(() => {
 })
 
 describe('archive publication API', () => {
-    it('composes unpublished previews from protected admin CRUD endpoints', async () => {
+    it('composes unpublished previews from the protected aggregate endpoint', async () => {
         const fetchMock = vi.fn((input: RequestInfo | URL) => {
             const url = String(input)
-            if (url === '/api/admin/archive-items/42') return Promise.resolve(jsonResponse({ id: 42, sourceReferenceId: 5 }))
-            if (url.startsWith('/api/admin/archive-item-features?')) return Promise.resolve(jsonResponse(page([])))
-            if (url.startsWith('/api/admin/archive-item-media?')) return Promise.resolve(jsonResponse(page([])))
+            if (url === '/api/admin/archive-entries/42') return Promise.resolve(jsonResponse({
+                archiveItem: { id: 42, sourceReferenceId: 5 },
+                features: [],
+                media: [],
+            }))
             if (url === '/api/admin/source-references/5') return Promise.resolve(jsonResponse({ id: 5, sourceId: 9 }))
             if (url === '/api/admin/sources/9') return Promise.resolve(jsonResponse({ id: 9, title: 'Source' }))
             return Promise.reject(new Error(`Unexpected request: ${url}`))
@@ -36,36 +38,38 @@ describe('archive publication API', () => {
         expect(fetchMock.mock.calls.every(([url]) => !String(url).endsWith('/detail'))).toBe(true)
     })
 
-    it('creates the archive entry through the existing resource CRUD endpoints', async () => {
-        const fetchMock = vi.fn()
-            .mockResolvedValueOnce(jsonResponse({ id: 42, publicationStatus: 'DRAFT' }))
-            .mockResolvedValueOnce(jsonResponse({ id: 51, archiveItemId: 42, ...entry.features[0] }))
-            .mockResolvedValueOnce(jsonResponse({ id: 61, archiveItemId: 42, ...entry.media[0] }))
+    it('creates the complete archive entry transactionally', async () => {
+        const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse({
+            archiveItem: { id: 42, publicationStatus: 'DRAFT' },
+            features: [],
+            media: [],
+        }))
         vi.stubGlobal('fetch', fetchMock)
 
         await expect(createFullArchiveEntry(entry)).resolves.toMatchObject({ archiveItem: { id: 42 } })
 
-        expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/archive-items', expect.objectContaining({ method: 'POST' }))
-        expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/archive-item-features', expect.objectContaining({ method: 'POST' }))
-        expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/archive-item-media', expect.objectContaining({ method: 'POST' }))
-        expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('/full'))).toBe(true)
+        expect(fetchMock).toHaveBeenCalledOnce()
+        expect(fetchMock).toHaveBeenCalledWith('/api/admin/archive-entries', expect.objectContaining({
+            method: 'POST',
+            body: JSON.stringify(entry),
+        }))
     })
 
-    it('updates and synchronizes an archive entry through resource CRUD endpoints', async () => {
-        const fetchMock = vi.fn()
-            .mockResolvedValueOnce(jsonResponse({ id: 42, publicationStatus: 'DRAFT' }))
-            .mockResolvedValueOnce(jsonResponse(page([{ id: 51, archiveItemId: 42, ...entry.features[0] }])))
-            .mockResolvedValueOnce(jsonResponse(page([{ id: 61, archiveItemId: 42, ...entry.media[0] }])))
-            .mockResolvedValueOnce(jsonResponse({ id: 51, archiveItemId: 42, ...entry.features[0] }))
-            .mockResolvedValueOnce(jsonResponse({ id: 61, archiveItemId: 42, ...entry.media[0] }))
+    it('updates the complete archive entry transactionally', async () => {
+        const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse({
+            archiveItem: { id: 42, publicationStatus: 'DRAFT' },
+            features: [],
+            media: [],
+        }))
         vi.stubGlobal('fetch', fetchMock)
 
         await updateFullArchiveEntry(42, entry)
 
-        expect(fetchMock).toHaveBeenCalledWith('/api/admin/archive-items/42', expect.objectContaining({ method: 'PUT' }))
-        expect(fetchMock).toHaveBeenCalledWith('/api/admin/archive-item-features/51', expect.objectContaining({ method: 'PUT' }))
-        expect(fetchMock).toHaveBeenCalledWith('/api/admin/archive-item-media/61', expect.objectContaining({ method: 'PUT' }))
-        expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('/full'))).toBe(true)
+        expect(fetchMock).toHaveBeenCalledOnce()
+        expect(fetchMock).toHaveBeenCalledWith('/api/admin/archive-entries/42', expect.objectContaining({
+            method: 'PUT',
+            body: JSON.stringify(entry),
+        }))
     })
 
     it('loads backend publication readiness', async () => {
@@ -123,20 +127,6 @@ const entry: ArchiveEntryWriteDto = {
         sourceReferenceId: 5,
     }],
     media: [{ mediaAssetId: 7, role: 'PRIMARY', captionBg: null, captionEn: null }],
-}
-
-function page<T>(content: T[]) {
-    return {
-        content,
-        number: 0,
-        size: 200,
-        totalElements: content.length,
-        totalPages: 1,
-        first: true,
-        last: true,
-        numberOfElements: content.length,
-        empty: content.length === 0,
-    }
 }
 
 function jsonResponse(body: unknown, status = 200) {

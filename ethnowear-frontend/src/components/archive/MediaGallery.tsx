@@ -1,5 +1,6 @@
-import { Box, Card, CardContent, CardMedia, Stack, Typography } from '@mui/material'
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material'
 import { archiveMediaUrl } from '../../api/PublicArchiveApi'
+import { PreviewableImage } from '../common/ImageViewerDialog'
 
 export type MediaGalleryItem = {
     mediaAssetId: number
@@ -33,11 +34,13 @@ function MediaGallery({ title, items }: Props) {
                     {items.map((item) => (
                         <Card key={item.mediaAssetId} sx={{ overflow: 'hidden' }}>
                             {item.mimeType?.startsWith('image/') ? (
-                                <CardMedia
-                                    component="img"
-                                    image={archiveMediaUrl(item.mediaAssetId)}
-                                    alt={item.caption ?? item.title}
-                                    sx={{ height: 220, objectFit: 'cover' }}
+                                <PreviewableImage
+                                    src={archiveMediaUrl(item.mediaAssetId)}
+                                    alt={item.title}
+                                    caption={item.caption}
+                                    loading="lazy"
+                                    buttonSx={{ width: '100%' }}
+                                    imageSx={{ width: '100%', height: 220, objectFit: 'cover' }}
                                 />
                             ) : (
                                 <Box

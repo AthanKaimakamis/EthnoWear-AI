@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Button, Typography } from '@mui/material'
+import { Box, Button, type ButtonProps } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import AdminModal from './AdminModal'
 
@@ -8,7 +8,9 @@ type Props = {
     title: string
     children: ReactNode
     confirmLabel?: string
+    confirmColor?: ButtonProps['color']
     pending?: boolean
+    confirmDisabled?: boolean
     onCancel: () => void
     onConfirm: () => void
 }
@@ -18,7 +20,9 @@ export default function ConfirmDialog({
     title,
     children,
     confirmLabel,
+    confirmColor = 'error',
     pending = false,
+    confirmDisabled = false,
     onCancel,
     onConfirm,
 }: Props) {
@@ -34,13 +38,13 @@ export default function ConfirmDialog({
             actions={
                 <>
                     <Button onClick={onCancel} disabled={pending}>{t('admin.cancel')}</Button>
-                    <Button color="error" variant="contained" onClick={onConfirm} disabled={pending}>
+                    <Button color={confirmColor} variant="contained" onClick={onConfirm} disabled={pending || confirmDisabled}>
                         {confirmLabel ?? t('admin.delete')}
                     </Button>
                 </>
             }
         >
-            <Typography>{children}</Typography>
+            <Box>{children}</Box>
         </AdminModal>
     )
 }

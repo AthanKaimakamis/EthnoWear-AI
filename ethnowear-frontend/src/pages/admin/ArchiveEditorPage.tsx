@@ -30,10 +30,12 @@ import {
     BasicSection, ClassificationSection, DescriptionSection, MediaLibraryDialog,
     MediaSection, SourceSection, type FeatureSelections, type MediaDraft,
 } from '../../components/admin/archive-editor/ArchiveEditorSections'
+import SourceCreateDialog from '../../components/admin/document/SourceCreateDialog'
+import SourceReferenceCreateDialog from '../../components/admin/archive-editor/SourceReferenceCreateDialog'
 import FormSelectField from '../../components/forms/FormSelectField'
 import ArchiveEditorSkeleton from '../../components/loading/ArchiveEditorSkeleton'
 import type {
-    ArchiveEntryWriteDto, ArchiveItemDetails, ArchiveItemWriteDto, MediaAssetDetails,
+    ArchiveEntryWriteDto, ArchiveItemDetails, ArchiveItemFeatureDetails, ArchiveItemWriteDto, MediaAssetDetails,
     PublicationReadinessDetails, PublicationStatus,
     SourceDetails, SourceReferenceDetails,
 } from '../../types/archive'
@@ -94,6 +96,7 @@ export default function ArchiveEditorPage({
     const [item, setItem] = useState<ArchiveItemWriteDto>(emptyItem)
     const [publicationStatus, setPublicationStatus] = useState<PublicationStatus>('DRAFT')
     const [features, setFeatures] = useState<FeatureSelections>(emptyFeatures)
+    const [savedFeatures, setSavedFeatures] = useState<ArchiveItemFeatureDetails[]>([])
     const [media, setMedia] = useState<MediaDraft[]>([])
     const [assets, setAssets] = useState<MediaAssetDetails[]>([])
     const [sources, setSources] = useState<SourceDetails[]>([])
@@ -110,6 +113,9 @@ export default function ArchiveEditorPage({
     const [uploadOpen, setUploadOpen] = useState(false)
     const [libraryOpen, setLibraryOpen] = useState(false)
     const [previewOpen, setPreviewOpen] = useState(false)
+    const [sourceCreateOpen, setSourceCreateOpen] = useState(false)
+    const [citationCreateOpen, setCitationCreateOpen] = useState(false)
+    const [newCitationSourceId, setNewCitationSourceId] = useState<number | null>(null)
 
     const loadReadiness = useCallback(async (archiveItemId: number, signal?: AbortSignal) => {
         setReadinessLoading(true)
@@ -144,6 +150,7 @@ export default function ArchiveEditorPage({
             if (!details) return
             setItem(details.archiveItem)
             setPublicationStatus(details.archiveItem.publicationStatus)
+            setSavedFeatures(details.features)
             setFeatures({
                 ORNAMENT: selectedResources('ORNAMENT', details.features, refs.ornaments),
                 TECHNIQUE: selectedResources('TECHNIQUE', details.features, refs.techniques),
@@ -208,6 +215,11 @@ export default function ArchiveEditorPage({
             descriptionEn: nullText(item.descriptionEn),
         },
         features: Object.entries(features).flatMap(([featureType, resources]) => resources.map(resource => ({
+            id: savedFeatures.find(feature => featureKey(feature) === featureKey({
+                featureType: featureType as OntologyFeatureType,
+                ontologyIri: resource.iri,
+                ontologyLocalName: resource.localName,
+            }))?.id,
             featureType: featureType as OntologyFeatureType,
             ontologyIri: resource.iri,
             ontologyLocalName: resource.localName,
@@ -217,14 +229,20 @@ export default function ArchiveEditorPage({
             sourceReferenceId: item.sourceReferenceId || null,
         }))),
         media: media.map(link => ({
+            id: link.id,
             mediaAssetId: link.asset.id,
             role: link.role,
             captionBg: nullText(link.captionBg),
             captionEn: nullText(link.captionEn),
         })),
-    }), [features, item, media])
+    }), [features, item, media, savedFeatures])
 
     async function saveDraft() {
+        if (!item.sourceReferenceId) {
+            setTab(3)
+            setErrorMessages([t('curator.validation.source')])
+            return
+        }
         setSaving(true)
         setErrorMessages([])
         try {
@@ -233,11 +251,16 @@ export default function ArchiveEditorPage({
                 : await createFullArchiveEntry(aggregatePayload)
             setItem(saved.archiveItem)
             setPublicationStatus(saved.archiveItem.publicationStatus)
+            setSavedFeatures(saved.features)
+            setMedia(current => current.map(draft => ({
+                ...draft,
+                id: saved.media.find(link => link.mediaAssetId === draft.asset.id)?.id,
+            })))
             setDirty(false)
             void invalidatePublicQueries()
             await loadReadiness(saved.archiveItem.id)
             onSaved?.(saved.archiveItem)
-            if (!onSaved && !itemId) navigate(`/admin/archive/${saved.archiveItem.id}/edit`, { replace: true })
+            if (!onSaved && !itemId) navigate(`/management/archive/${saved.archiveItem.id}/edit`, { replace: true })
         } catch (caught) {
             setErrorMessages(publicationErrorMessages(caught, t('publication.errors.save'), t))
         } finally {
@@ -344,7 +367,7 @@ export default function ArchiveEditorPage({
                     {tab === 0 && <BasicSection item={item} setField={setField} t={t} />}
                     {tab === 1 && referenceData && <ClassificationSection item={item} setField={setField} features={features} setFeatures={value => { setFeatures(value); markDirty() }} refs={referenceData} t={t} />}
                     {tab === 2 && <MediaSection media={media} setMedia={value => { setMedia(value); markDirty() }} onRemove={removeMedia} onUpload={() => setUploadOpen(true)} onLibrary={() => setLibraryOpen(true)} t={t} />}
-                    {tab === 3 && <SourceSection references={references} sourceReferenceLabel={sourceReferenceLabel} value={item.sourceReferenceId} setValue={value => setField('sourceReferenceId', value)} selectedSource={selectedSource} t={t} />}
+                    {tab === 3 && <SourceSection references={references} sourceReferenceLabel={sourceReferenceLabel} value={item.sourceReferenceId} setValue={value => setField('sourceReferenceId', value)} selectedSource={selectedSource} canCreateCitation={sources.length > 0} onCreateSource={() => setSourceCreateOpen(true)} onCreateCitation={() => { setNewCitationSourceId(selectedSource?.id ?? newCitationSourceId ?? sources[0]?.id ?? null); setCitationCreateOpen(true) }} t={t} />}
                     {tab === 4 && <DescriptionSection item={item} setField={setField} t={t} />}
                     {tab === 5 && reviewContent}
                 </Box>
@@ -352,6 +375,29 @@ export default function ArchiveEditorPage({
             <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sourceReferenceLabel={sourceReferenceLabel} onClose={() => setUploadOpen(false)} onUploaded={addAsset} />
             <MediaLibraryDialog open={libraryOpen} assets={assets} used={new Set(media.map(link => link.asset.id))} onClose={() => setLibraryOpen(false)} onSelect={addAsset} />
             {previewOpen && itemId && <ArchiveItemPreviewDialog itemId={itemId} onClose={() => setPreviewOpen(false)} onEdit={() => setPreviewOpen(false)} />}
+            {sourceCreateOpen && (
+                <SourceCreateDialog
+                    initialValues={{ title: '', author: null, publisher: null, year: null, language: i18n.resolvedLanguage === 'en' ? 'en' : 'bg' }}
+                    onClose={() => setSourceCreateOpen(false)}
+                    onCreated={source => {
+                        setSources(current => [...current, source])
+                        setSourceCreateOpen(false)
+                        setNewCitationSourceId(source.id)
+                    }}
+                />
+            )}
+            {citationCreateOpen && (
+                <SourceReferenceCreateDialog
+                    sources={sources}
+                    initialSourceId={newCitationSourceId}
+                    onClose={() => setCitationCreateOpen(false)}
+                    onCreated={reference => {
+                        setReferences(current => [...current, reference])
+                        setField('sourceReferenceId', reference.id)
+                        setCitationCreateOpen(false)
+                    }}
+                />
+            )}
         </Stack>
     )
 
@@ -384,7 +430,7 @@ export default function ArchiveEditorPage({
             <AdminPageHeader
                 title={editorTitle}
                 description={t('curator.editor.description')}
-                actions={<><Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/admin/archive')}>{t('curator.actions.back')}</Button>{editorActions}</>}
+                actions={<><Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/management/archive')}>{t('curator.actions.back')}</Button>{editorActions}</>}
             />
             {editorContent}
         </Stack>
@@ -398,6 +444,10 @@ function selectedResources(
 ) {
     const names = new Set(features.filter(feature => feature.featureType === type).map(feature => feature.ontologyLocalName))
     return resources.filter(resource => names.has(resource.localName))
+}
+
+function featureKey(feature: Pick<ArchiveItemFeatureDetails, 'featureType' | 'ontologyIri' | 'ontologyLocalName'>) {
+    return `${feature.featureType}\u0000${feature.ontologyIri}\u0000${feature.ontologyLocalName}`
 }
 
 function nullText(value: string | null | undefined) {

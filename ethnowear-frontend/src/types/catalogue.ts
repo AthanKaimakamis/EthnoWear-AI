@@ -40,6 +40,8 @@ export type EntityCardDetails = {
     label: string
     comment: string | null
     categories: CategoryLinkDetails[]
+    evidenceCount: number
+    representativeMediaAssetId: number | null
 }
 
 export type CatalogFacetValueDetails = {

@@ -13,6 +13,10 @@ CREATE TABLE [ethnowear].[DocumentPageOcrResults]
     [ParametersJson] NVARCHAR(MAX) NULL,
     [StructuredOutputJson] NVARCHAR(MAX) NULL,
     [IsCurrent] BIT NOT NULL,
+    [FigureExtractionState] NVARCHAR(50) NOT NULL
+        CONSTRAINT [DF_DocumentPageOcrResults_FigureExtractionState]
+        DEFAULT N'NOT_REQUESTED',
+    [FigureExtractionMessage] NVARCHAR(500) NULL,
 
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_DocumentPageOcrResults_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_DocumentPageOcrResults_UpdatedAt] DEFAULT SYSUTCDATETIME(),
@@ -41,7 +45,23 @@ CREATE TABLE [ethnowear].[DocumentPageOcrResults]
         CHECK ([ParametersJson] IS NULL OR ISJSON([ParametersJson]) = 1),
 
     CONSTRAINT [CK_DocumentPageOcrResults_StructuredOutputJson]
-        CHECK ([StructuredOutputJson] IS NULL OR ISJSON([StructuredOutputJson]) = 1)
+        CHECK ([StructuredOutputJson] IS NULL OR ISJSON([StructuredOutputJson]) = 1),
+
+    CONSTRAINT [CK_DocumentPageOcrResults_FigureExtractionState]
+        CHECK ([FigureExtractionState] IN (
+            N'NOT_REQUESTED',
+            N'PENDING',
+            N'COMPLETED',
+            N'FAILED',
+            N'SCHEDULING_FAILED',
+            N'OUTDATED'
+        )),
+
+    CONSTRAINT [CK_DocumentPageOcrResults_FigureExtractionMessage]
+        CHECK (
+            [FigureExtractionMessage] IS NULL
+            OR LEN([FigureExtractionMessage]) BETWEEN 1 AND 500
+        )
 );
 
 GO

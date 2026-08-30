@@ -13,3 +13,5 @@ export function hasAnyRole(roles: readonly RoleName[], allowed: readonly RoleNam
 export const managementRoles: readonly RoleName[] = roleNames
 export const reviewRoles: readonly RoleName[] = ['ADMINISTRATOR', 'REVIEWER']
 export const administratorRoles: readonly RoleName[] = ['ADMINISTRATOR']
+export const processingReadRoles: readonly RoleName[] = roleNames
+export const processingMutationRoles: readonly RoleName[] = ['ADMINISTRATOR', 'EDITOR']

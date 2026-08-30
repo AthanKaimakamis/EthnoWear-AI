@@ -5,9 +5,9 @@ documenting, and interpreting traditional Bulgarian embroidery and clothing.
 
 ## Project documentation
 
-- [EthnoWear API documentation](EthnoWear/Ethnowear_API_Docs.md) — endpoints,
+- [EthnoWear API documentation](ethnowear-api/Ethnowear_API_Docs.md) — endpoints,
   authentication, roles, request examples, errors, and administrative workflows.
-- [Backend project](EthnoWear/README.md) — backend overview and local development
+- [Backend project](ethnowear-api/README.md) — backend overview and local development
   commands.
 - [Frontend project](ethnowear-frontend/README.md) — frontend setup and usage.
 

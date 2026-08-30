@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { getEntityDetails, searchCatalogue } from './CatalogueApi'
 import { getArchiveItemDetails, getRegionalEmbroideryArchive } from './PublicArchiveApi'
+import { getFullReference } from './ReferenceApi'
 import { publicQueryKeys } from '../app/queryClient'
 import type { PageRequest } from '../types/api'
 import type { ConceptCatalogQuery } from '../types/catalogue'
@@ -65,6 +66,14 @@ export function archiveItemDetailsQueryOptions(id: number) {
         queryFn: ({ signal }) => getArchiveItemDetails(id, signal),
         staleTime: publicDataStaleTime,
         enabled: Number.isInteger(id) && id > 0,
+    })
+}
+
+export function referenceDataQueryOptions(language: Language) {
+    return queryOptions({
+        queryKey: [...publicQueryKeys.all, 'reference', 'full', language] as const,
+        queryFn: () => getFullReference(language),
+        staleTime: publicDataStaleTime,
     })
 }
 

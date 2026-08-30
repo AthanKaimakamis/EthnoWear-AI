@@ -31,7 +31,7 @@ export default function AdminLoginDialog({ open, onClose, onSuccess, redirectAft
             if (currentUser.passwordChangeRequired) navigate('/account/password', { replace: true })
             else if (redirectAfterLogin) {
                 const from = typeof location.state === 'object' && location.state && 'from' in location.state
-                    ? String(location.state.from) : '/admin'
+                    ? String(location.state.from) : '/management'
                 navigate(from, { replace: true })
             }
             onSuccess?.()

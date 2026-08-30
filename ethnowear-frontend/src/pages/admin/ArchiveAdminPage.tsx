@@ -7,6 +7,7 @@ import {
     mediaAssetsApi, mediaFeatureAnnotationsApi, sourceReferencesApi, sourcesApi,
 } from '../../api/ArchiveAdminApi'
 import { apiErrorMessage } from '../../api/http'
+import { apiEnumLabel } from '../../app/apiEnumLabels'
 import { invalidatePublicQueries } from '../../app/queryClient'
 import { getFullReference } from '../../api/ReferenceApi'
 import ArchiveRecordDialog, {
@@ -21,6 +22,7 @@ import type {
     MediaAssetDetails,
     SourceDetails, SourceReferenceDetails,
 } from '../../types/archive'
+import { ARCHIVE_TYPES } from '../../types/archive'
 import {
     archiveAdminApi, type ArchiveAdminApi, type ArchiveAdminRecord,
     type ArchiveAdminResource, type ArchiveAdminWriteDto,
@@ -57,6 +59,7 @@ type Column = {
     key: string
     label: string
     value: (record: ArchiveAdminRecord) => string | number | boolean | null | undefined
+    enumGroup?: string
 }
 
 type ResourceDefinition = {
@@ -69,7 +72,7 @@ const emptyLookups: Lookups = {
     features: [], mediaAssets: [], itemMedia: [],
 }
 
-const archiveTypes = ['ORNAMENT_EXAMPLE', 'EMBROIDERY_SAMPLE', 'CLOTHING_ITEM', 'PHOTO_REFERENCE', 'TEXT_REFERENCE']
+const archiveTypes = [...ARCHIVE_TYPES]
 const trustedLevels = ['VERIFIED', 'LIKELY', 'UNVERIFIED']
 const sourceTypes = ['BOOK', 'SCANNED_BOOK', 'WEBSITE', 'MUSEUM_CATALOG', 'ARTICLE', 'FIELD_NOTE']
 const mediaTypes = ['IMAGE', 'PDF', 'THUMBNAIL', 'SCAN', 'OTHER']
@@ -78,8 +81,8 @@ const featureTypes = ['ORNAMENT', 'COLOR', 'TECHNIQUE', 'MOTIF']
 const annotationTypes = ['VISIBLE_IN_IMAGE', 'PRIMARY_SUBJECT', 'DETAIL_VIEW', 'CROP_REGION']
 const chunkTypes = ['GENERAL', 'REGION', 'ORNAMENT', 'TECHNIQUE', 'MOTIF', 'COLOR', 'REGIONAL_EMBROIDERY', 'SOURCE_EXCERPT']
 
-function enumOptions(values: string[]): ArchiveFieldOption[] {
-    return values.map(value => ({ value, label: value.replaceAll('_', ' ').toLocaleLowerCase().replace(/^./, letter => letter.toLocaleUpperCase()) }))
+function enumOptions(values: string[], group: string, label: (group: string, value: string) => string): ArchiveFieldOption[] {
+    return values.map(value => ({ value, label: label(group, value) }))
 }
 
 function ontologyOptions(resources: ReferenceResource[] | undefined): ArchiveFieldOption[] {
@@ -119,7 +122,7 @@ function chunkOntologyOptions(values: ArchiveFormValues, reference: ReferenceDat
     return featureOntologyOptions({ featureType: values.chunkType === 'SOURCE_EXCERPT' || values.chunkType === 'GENERAL' ? '' : values.chunkType }, reference)
 }
 
-function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (key: string) => string): ResourceDefinition {
+function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (key: string) => string, enumLabel: (group: string, value: string) => string): ResourceDefinition {
     const identity = label('sections.identity')
     const details = label('sections.details')
     const links = label('sections.links')
@@ -127,8 +130,8 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
     const field = (name: string, section: string, overrides: Partial<ArchiveField> = {}): ArchiveField => ({
         name, label: label(`fields.${name}`), section, nullable: true, ...overrides,
     })
-    const column = (key: string, accessor?: Column['value']): Column => ({
-        key, label: label(`fields.${key}`), value: accessor ?? (record => (record as unknown as Record<string, string | number | boolean | null>)[key]),
+    const column = (key: string, accessor?: Column['value'], enumGroup?: string): Column => ({
+        key, label: label(`fields.${key}`), value: accessor ?? (record => (record as unknown as Record<string, string | number | boolean | null>)[key]), enumGroup,
     })
     const sourceOptions = recordOptions(lookups.sources, item => item.title)
     const sourceReferenceOptions = recordOptions(lookups.sourceReferences, item => referenceLabel(item, lookups))
@@ -140,11 +143,11 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
     if (resource === 'sources') return {
         fields: [
             field('title', identity, { required: true, nullable: false }), field('author', identity), field('publisher', identity),
-            field('year', identity, { kind: 'number', min: 1 }), field('sourceType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(sourceTypes) }),
+            field('year', identity, { kind: 'number', min: 1 }), field('sourceType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(sourceTypes, 'sourceType', enumLabel) }),
             field('language', details), field('isbn', details), field('url', details, { kind: 'url' }), field('filePath', details),
             field('notes', details, { kind: 'textarea' }), field('trusted', details, { kind: 'boolean', nullable: false }),
         ],
-        columns: [column('title'), column('author'), column('year'), column('sourceType'), column('trusted')],
+        columns: [column('title'), column('author'), column('year'), column('sourceType', undefined, 'sourceType'), column('trusted')],
     }
     if (resource === 'source-references') return {
         fields: [
@@ -160,8 +163,8 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
         fields: [
             field('sourceReferenceId', links, { kind: 'select', required: true, nullable: false, options: sourceReferenceOptions }),
             field('titleBg', identity), field('titleEn', identity), field('collectionId', identity), field('inventoryNumber', identity),
-            field('archiveType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(archiveTypes) }),
-            field('trustedLevel', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(trustedLevels) }),
+            field('archiveType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(archiveTypes, 'archiveType', enumLabel) }),
+            field('trustedLevel', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(trustedLevels, 'trustedLevel', enumLabel) }),
             field('descriptionBg', details, { kind: 'textarea' }), field('descriptionEn', details, { kind: 'textarea' }),
             field('periodText', details), field('originText', details), field('currentLocation', details),
             field('ontologyRegionLocalName', links, { kind: 'select', options: ontologyOptions(lookups.reference?.regions), pairedIriField: 'ontologyRegionIri' }),
@@ -169,60 +172,60 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
             field('ontologyRegionalEmbroideryLocalName', links, { kind: 'select', options: ontologyOptions(lookups.reference?.regionalEmbroideryTypes), pairedIriField: 'ontologyRegionalEmbroideryIri' }),
             field('ontologyRegionalEmbroideryIri', links, { kind: 'hidden' }),
         ],
-        columns: [column('titleBg', record => archiveTitle(record as ArchiveItemDetails)), column('archiveType'), column('trustedLevel'), column('inventoryNumber')],
+        columns: [column('titleBg', record => archiveTitle(record as ArchiveItemDetails)), column('archiveType', undefined, 'archiveType'), column('trustedLevel', undefined, 'trustedLevel'), column('inventoryNumber')],
     }
     if (resource === 'archive-item-features') return {
         fields: [
             field('archiveItemId', links, { kind: 'select', required: true, nullable: false, options: archiveItemOptions }),
-            field('featureType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(featureTypes), clearFields: ['ontologyLocalName', 'ontologyIri'] }),
+            field('featureType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(featureTypes, 'featureType', enumLabel), clearFields: ['ontologyLocalName', 'ontologyIri'] }),
             field('ontologyLocalName', identity, { kind: 'select', required: true, nullable: false, options: values => featureOntologyOptions(values, lookups.reference), pairedIriField: 'ontologyIri' }),
             field('ontologyIri', technical, { kind: 'hidden', required: true, nullable: false }),
             field('confidence', details, { kind: 'number', min: 0, max: 1, step: 0.01 }),
             field('validated', details, { kind: 'boolean', nullable: false }), field('sourceReferenceId', links, { kind: 'select', options: sourceReferenceOptions }),
             field('notes', details, { kind: 'textarea' }),
         ],
-        columns: [column('archiveItemId'), column('featureType'), column('ontologyLocalName'), column('validated')],
+        columns: [column('archiveItemId'), column('featureType', undefined, 'featureType'), column('ontologyLocalName'), column('validated')],
     }
     if (resource === 'media-assets') return {
         fields: [
             field('sourceReferenceId', links, { kind: 'select', options: sourceReferenceOptions }),
-            field('fileName', identity), field('mediaType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(mediaTypes) }),
+            field('fileName', identity), field('mediaType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(mediaTypes, 'mediaType', enumLabel) }),
             field('mimeType', identity), field('storageUrl', details, { kind: 'url' }), field('filePath', details),
             field('width', technical, { kind: 'number', min: 1 }), field('height', technical, { kind: 'number', min: 1 }),
             field('sizeBytes', technical, { kind: 'number', min: 0 }), field('checksum', technical),
         ],
-        columns: [column('fileName'), column('mediaType'), column('mimeType'), column('storageUrl')],
+        columns: [column('fileName'), column('mediaType', undefined, 'mediaType'), column('mimeType'), column('storageUrl')],
     }
     if (resource === 'archive-item-media') return {
         fields: [
             field('archiveItemId', links, { kind: 'select', required: true, nullable: false, options: archiveItemOptions }),
             field('mediaAssetId', links, { kind: 'select', required: true, nullable: false, options: mediaAssetOptions }),
-            field('role', details, { kind: 'select', required: true, nullable: false, options: enumOptions(mediaRoles) }),
+            field('role', details, { kind: 'select', required: true, nullable: false, options: enumOptions(mediaRoles, 'mediaRole', enumLabel) }),
             field('captionBg', details, { kind: 'textarea' }), field('captionEn', details, { kind: 'textarea' }),
         ],
-        columns: [column('archiveItemId'), column('mediaAssetId'), column('role'), column('captionBg')],
+        columns: [column('archiveItemId'), column('mediaAssetId'), column('role', undefined, 'mediaRole'), column('captionBg')],
     }
     if (resource === 'media-feature-annotations') return {
         fields: [
             field('archiveItemMediaId', links, { kind: 'select', required: true, nullable: false, options: itemMediaOptions }),
             field('archiveItemFeatureId', links, { kind: 'select', required: true, nullable: false, options: featureOptions }),
-            field('annotationType', details, { kind: 'select', required: true, nullable: false, options: enumOptions(annotationTypes) }),
+            field('annotationType', details, { kind: 'select', required: true, nullable: false, options: enumOptions(annotationTypes, 'annotationType', enumLabel) }),
             field('x', technical, { kind: 'number', min: 0, max: 1, step: 0.000001 }), field('y', technical, { kind: 'number', min: 0, max: 1, step: 0.000001 }),
             field('width', technical, { kind: 'number', min: 0.000001, max: 1, step: 0.000001 }), field('height', technical, { kind: 'number', min: 0.000001, max: 1, step: 0.000001 }),
             field('note', details, { kind: 'textarea' }),
         ],
-        columns: [column('archiveItemMediaId'), column('archiveItemFeatureId'), column('annotationType'), column('note')],
+        columns: [column('archiveItemMediaId'), column('archiveItemFeatureId'), column('annotationType', undefined, 'annotationType'), column('note')],
     }
     return {
         fields: [
-            field('chunkType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(chunkTypes), clearFields: ['ontologyLocalName', 'ontologyIri'] }),
+            field('chunkType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(chunkTypes, 'chunkType', enumLabel), clearFields: ['ontologyLocalName', 'ontologyIri'] }),
             field('language', identity, { required: true, nullable: false }),
             field('ontologyLocalName', links, { kind: 'select', options: values => chunkOntologyOptions(values, lookups.reference), pairedIriField: 'ontologyIri' }),
             field('ontologyIri', technical, { kind: 'hidden' }), field('sourceReferenceId', links, { kind: 'select', options: sourceReferenceOptions }),
             field('content', details, { kind: 'textarea', required: true, nullable: false, rows: 7 }),
             field('embeddingModel', technical), field('embeddingId', technical),
         ],
-        columns: [column('chunkType'), column('language'), column('ontologyLocalName'), column('content')],
+        columns: [column('chunkType', undefined, 'chunkType'), column('language'), column('ontologyLocalName'), column('content')],
     }
 }
 
@@ -242,7 +245,8 @@ function ArchiveAdminPage() {
     const [notice, setNotice] = useState<string | null>(null)
     const api = apis[resource]
     const tr = useCallback((key: string) => t(`admin.archive.${key}`), [t])
-    const resourceDefinition = useMemo(() => definition(resource, lookups, tr), [lookups, resource, tr])
+    const enumTr = useCallback((group: string, value: string) => apiEnumLabel(t, group, value), [t])
+    const resourceDefinition = useMemo(() => definition(resource, lookups, tr, enumTr), [enumTr, lookups, resource, tr])
 
     const load = useCallback(async (signal?: AbortSignal) => {
         await Promise.resolve()
@@ -282,11 +286,12 @@ function ArchiveAdminPage() {
             sortValue: column.value,
             cellSx: { maxWidth: column.key === 'content' ? 360 : 260 },
             render: (item: ArchiveAdminRecord) => {
-                const value = String(column.value(item) ?? '—')
+                const rawValue = column.value(item)
+                const value = column.enumGroup && rawValue != null ? enumTr(column.enumGroup, String(rawValue)) : String(rawValue ?? '—')
                 return <Typography variant="body2" noWrap title={value}>{value}</Typography>
             },
         })),
-    ], [resourceDefinition.columns])
+    ], [enumTr, resourceDefinition.columns])
 
     async function save(input: ArchiveAdminWriteDto) {
         setSaving(true); setError(null)

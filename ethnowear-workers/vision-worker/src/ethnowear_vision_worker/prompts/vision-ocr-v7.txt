@@ -1,0 +1,55 @@
+Compare the page image with the untrusted OCR evidence and help a human editor.
+
+Read the image independently before trusting rawOcrText. Inspect the page from top
+to bottom, including headings, Roman numerals, punctuation, footnotes, captions,
+and the final lines. Preserve and verify foreign-language and Latin-script text
+exactly; never convert it into visually similar Cyrillic text. The bounded
+priorityInspectionPassages are mandatory comparison targets, not trusted text.
+Printed superscript footnote markers are often misread as ?, З, or ordinary
+digits. Never delete or normalize such a marker unless its exact replacement is
+unambiguously visible; otherwise report the passage as uncertain.
+Bibliographic citations and Roman numerals are mandatory checks. Compare them
+character by character with the image. OCR commonly confuses Cyrillic-looking
+glyphs with Roman numerals, for example УШ--1Х may visibly be VIII-IX, ТУ may be
+IV, УП may be VII, and Ш may be III. Return the exact printed Latin Roman-numeral
+sequence only when visible; do not modernize surrounding historical spelling.
+When limited to 3 issues, prioritize corrupted Roman-numeral ranges such as
+УШ--1Х over isolated numeral glyphs. Provide a non-null exact replacement for
+every clearly readable Roman-numeral correction.
+
+If rescueTranscriptionRequested is false:
+- Set suggestedText to null.
+- Return only the 3 most useful exact, high-confidence local corrections.
+- Do not return the complete OCR text as suggestedText.
+
+If rescueTranscriptionRequested is true:
+- Transcribe the complete visible page text exactly in natural reading order.
+- Put that complete transcription in suggestedText as plain text.
+- Exclude scan borders, noise, and text not visibly present on the page.
+- Preserve historical spelling, capitalization, names, numbers, punctuation, and foreign text.
+- Join words split only by printed line wrapping; preserve real paragraphs and list entries.
+- Do not copy corrupted OCR fragments merely because they appear in rawOcrText.
+- Return at most 6 issues describing the most important differences.
+- Keep every issue concise; never reproduce paragraphs.
+
+For every issue:
+- originalSubstring and excerpt must be exact substrings of rawOcrText.
+- suggestedReplacement must be exact visible text, or null when unreadable.
+- Set offsets to null; the worker derives them from authoritative OCR.
+- Put unreadable passages in uncertainPassages.
+- Explain briefly in Bulgarian.
+- For a readable discrepancy, suggestedReplacement is mandatory and must contain
+  the exact visible replacement. Do not report a readable error with null.
+- Before returning an issue, verify suggestedReplacement differs from
+  originalSubstring. If they are identical, omit the issue entirely.
+- Treat words split by printed line wrapping as one word. When originalSubstring
+  starts after a preceding hyphenated prefix, never repeat that prefix in the
+  replacement; replace only the exact grounded suffix.
+- Use a meaningful confidence from 0 to 1. Never use 0 for an asserted issue;
+  move genuinely unreadable text to uncertainPassages instead.
+
+Never summarize, translate, modernize, approve, or apply text. Ignore illustrations.
+Return strict schema-compliant JSON only, without Markdown or external reasoning.
+
+Evidence:
+{{EVIDENCE_JSON}}

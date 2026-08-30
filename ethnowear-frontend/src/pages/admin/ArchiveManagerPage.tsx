@@ -20,6 +20,7 @@ import type {
     ArchiveItemDetails, ArchiveItemMediaDetails, ArchiveType, MediaAssetDetails,
     PublicationStatus, SourceDetails, SourceReferenceDetails, TrustedLevel,
 } from '../../types/archive'
+import { ARCHIVE_TYPES } from '../../types/archive'
 import type { ReferenceResource } from '../../types/reference'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import ArchiveStatusChip from '../../components/admin/ArchiveStatusChip'
@@ -155,7 +156,7 @@ export default function ArchiveManagerPage() {
                     <TextField fullWidth size="small" value={query} onChange={event => { setQuery(event.target.value); setPage(1) }} placeholder={t('curator.archive.search')}
                         slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(140px, 1fr))' }, gap: 1.5 }}>
-                        <FilterSelect label={t('curator.fields.archiveType')} value={filters.archiveType} onChange={value => select('archiveType', value)} options={['ORNAMENT_EXAMPLE', 'EMBROIDERY_SAMPLE', 'CLOTHING_ITEM', 'PHOTO_REFERENCE', 'TEXT_REFERENCE'].map(value => ({ value, label: t(`archiveDetails.types.${value}`) }))} />
+                        <FilterSelect label={t('curator.fields.archiveType')} value={filters.archiveType} onChange={value => select('archiveType', value)} options={ARCHIVE_TYPES.map(value => ({ value, label: t(`archiveDetails.types.${value}`) }))} />
                         <FilterSelect label={t('curator.fields.region')} value={filters.region} onChange={value => select('region', value)} options={regions.map(resource => ({ value: resource.localName, label: resource.label }))} />
                         <FilterSelect label={t('curator.fields.embroidery')} value={filters.embroidery} onChange={value => select('embroidery', value)} options={embroideries.map(resource => ({ value: resource.localName, label: resource.label }))} />
                         <FilterSelect label={t('curator.fields.publicationStatus')} value={filters.publication} onChange={value => select('publication', value)} options={(['DRAFT', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED'] as PublicationStatus[]).map(value => ({ value, label: t(`publication.status.${value}`) }))} />

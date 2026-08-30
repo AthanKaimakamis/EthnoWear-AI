@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter, Navigate, useLocation } from 'react-router'
 import MainLayout from "../components/layout/MainLayout.tsx";
 import RequireAdmin from "../components/admin/RequireAdmin.tsx";
-import { administratorRoles, reviewRoles } from './permissions'
+import { administratorRoles, processingReadRoles, reviewRoles } from './permissions'
 import RouterErrorPage from "../pages/RouterErrorPage.tsx";
 import ArchiveLayout from '../components/archive/ArchiveLayout'
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
@@ -18,6 +18,7 @@ import {
     ArchiveReferencePage,
     DocumentsPage,
     DocumentDetailPage,
+    DocumentPageDetailPage,
     EntityDetailPage,
     MediaLibraryPage,
     OntologyEntityPage,
@@ -59,7 +60,7 @@ export const router = createBrowserRouter([
                 ],
             },
             {
-                path: 'admin/login',
+                path: 'management/login',
                 element: <AdminLoginPage />,
             },
             {
@@ -67,24 +68,32 @@ export const router = createBrowserRouter([
                 element: <RequireAdmin allowPasswordChange><PasswordChangePage /></RequireAdmin>,
             },
             {
-                path: 'admin',
+                path: 'management',
                 element: <RequireAdmin><AdminLayout /></RequireAdmin>,
                 children: [
                     { index: true, element: <Navigate to="archive" replace /> },
                     { path: 'archive', element: <ArchiveManagerPage /> },
-                    { path: 'archive/new', element: <Navigate to="/admin/archive?create=1" replace /> },
+                    { path: 'archive/new', element: <Navigate to="/management/archive?create=1" replace /> },
                     { path: 'archive/:id/edit', element: <ArchiveEditRedirect /> },
                     { path: 'documents', element: <DocumentsPage /> },
                     { path: 'documents/:documentId', element: <DocumentDetailPage /> },
+                    { path: 'documents/:documentId/pages/:pageId', element: <DocumentPageDetailPage /> },
                     { path: 'media', element: <MediaLibraryPage /> },
-                    { path: 'processing', element: <RequireAdmin roles={reviewRoles}><ProcessingStatusPage /></RequireAdmin> },
+                    { path: 'processing', element: <RequireAdmin roles={processingReadRoles}><ProcessingStatusPage /></RequireAdmin> },
                     { path: 'users', element: <RequireAdmin roles={administratorRoles}><UserManagementPage /></RequireAdmin> },
-                    { path: 'ontology', element: <Navigate to="/admin/ornaments" replace /> },
+                    { path: 'ontology', element: <Navigate to="/management/ornaments" replace /> },
                     { path: 'advanced/:resource', element: <RequireAdmin roles={reviewRoles}><ArchiveAdminPage /></RequireAdmin> },
                     { path: 'archive/:resource', element: <ArchiveAdminPage /> },
                     { path: ':entityType', element: <OntologyEntityPage /> },
                 ],
             },
+            { path: 'admin/*', element: <LegacyAdminRedirect /> },
         ]
     }
 ])
+
+function LegacyAdminRedirect() {
+    const location = useLocation()
+    const path = location.pathname.replace(/^\/admin(?=\/|$)/, '/management')
+    return <Navigate to={`${path}${location.search}${location.hash}`} replace />
+}

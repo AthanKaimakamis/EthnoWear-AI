@@ -1,11 +1,16 @@
 import type { EntityCardDetails, OntologyFeatureType } from './catalogue'
 
-export type ArchiveType =
-    | 'ORNAMENT_EXAMPLE'
-    | 'EMBROIDERY_SAMPLE'
-    | 'CLOTHING_ITEM'
-    | 'PHOTO_REFERENCE'
-    | 'TEXT_REFERENCE'
+export const ARCHIVE_TYPES = [
+    'ORNAMENT_EXAMPLE',
+    'MOTIF_EXAMPLE',
+    'TECHNIQUE_EXAMPLE',
+    'EMBROIDERY_SAMPLE',
+    'CLOTHING_ITEM',
+    'PHOTO_REFERENCE',
+    'TEXT_REFERENCE',
+] as const
+
+export type ArchiveType = typeof ARCHIVE_TYPES[number]
 
 export type TrustedLevel = 'VERIFIED' | 'LIKELY' | 'UNVERIFIED'
 export type PublicationStatus = 'DRAFT' | 'IN_REVIEW' | 'PUBLISHED' | 'ARCHIVED'
@@ -143,6 +148,27 @@ export type MediaAssetDetails = MediaAssetWriteDto & {
     description: string | null
     createdAt: string
     updatedAt: string
+    documentFigure: DocumentFigureMediaLinkDetails | null
+}
+
+export type DocumentFigureMediaLinkDetails = {
+    documentId: number
+    documentPageId: number
+    pageSequence: number
+    figureId: number
+    caption: string | null
+    printedFigureNumber: string | null
+    sourceReferenceId: number | null
+    reviewState: 'PENDING' | 'APPROVED' | 'REJECTED' | 'OUTDATED'
+}
+
+export type DocumentMediaLinkDetails = {
+    documentPageMediaId: number
+    mediaAssetId: number
+    documentPageId: number
+    documentId: number
+    sourceReferenceId: number | null
+    documentSourceId: number | null
 }
 
 export type MediaUploadRequest = {
@@ -333,8 +359,12 @@ export type ArchiveEntryDetails = {
     media: ArchiveItemMediaDetails[]
 }
 
-export type ArchiveEntryFeatureWriteDto = Omit<ArchiveItemFeatureWriteDto, 'archiveItemId'>
-export type ArchiveEntryMediaWriteDto = Omit<ArchiveItemMediaWriteDto, 'archiveItemId'>
+export type ArchiveEntryFeatureWriteDto = Omit<ArchiveItemFeatureWriteDto, 'archiveItemId'> & {
+    id?: number
+}
+export type ArchiveEntryMediaWriteDto = Omit<ArchiveItemMediaWriteDto, 'archiveItemId'> & {
+    id?: number
+}
 
 export type ArchiveEntryWriteDto = {
     archiveItem: ArchiveItemWriteDto

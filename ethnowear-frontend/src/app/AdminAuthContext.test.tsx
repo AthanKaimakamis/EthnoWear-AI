@@ -82,7 +82,7 @@ describe('AdminAuthProvider', () => {
         await userEvent.click(screen.getByRole('button', { name: 'login' }))
 
         await waitFor(() => expect(screen.getByText('failed')).toBeInTheDocument())
-        expect(screen.getByText('anonymous')).toBeInTheDocument()
+        await waitFor(() => expect(screen.getByText('anonymous')).toBeInTheDocument())
         expect(getAdminSession()).toBeNull()
     })
 

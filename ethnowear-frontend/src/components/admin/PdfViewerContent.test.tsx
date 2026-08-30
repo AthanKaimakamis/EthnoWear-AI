@@ -21,6 +21,7 @@ vi.mock('react-pdf', async () => {
         Page: ({ pageNumber, width, rotate }: { pageNumber: number; width: number; rotate: number }) => (
             <div data-testid="pdf-page" data-page={pageNumber} data-width={width} data-rotation={rotate} />
         ),
+        Thumbnail: ({ pageNumber }: { pageNumber: number }) => <div data-testid={`pdf-thumbnail-${pageNumber}`} />,
     }
 })
 
@@ -38,5 +39,8 @@ describe('PdfViewerContent', () => {
 
         await user.click(screen.getByRole('button', { name: 'Rotate right' }))
         expect(screen.getByTestId('pdf-page')).toHaveAttribute('data-rotation', '90')
+
+        await user.click(screen.getByRole('button', { name: 'Page 3 thumbnail' }))
+        expect(screen.getByTestId('pdf-page')).toHaveAttribute('data-page', '3')
     })
 })

@@ -21,6 +21,13 @@ CREATE TABLE [ethnowear].[DocumentPages]
     [OcrLanguage] NVARCHAR(20) NULL,
     [OcrConfidence] DECIMAL(5,4) NULL,
 
+    [CurrentQualityAssessmentId] BIGINT NULL,
+    [CurrentQualityScore] DECIMAL(5,4) NULL,
+    [CurrentQualityStatus] NVARCHAR(50) NULL,
+    [CurrentQualityPassedChecks] INT NULL,
+    [CurrentQualityFailedChecks] INT NULL,
+    [CurrentQualityAssessedAt] DATETIME2(7) NULL,
+
     [ProcessingState] NVARCHAR(50) NOT NULL,
     [ReviewState] NVARCHAR(50) NOT NULL,
     [TranscriptionApprovalState] NVARCHAR(50) NOT NULL,
@@ -36,6 +43,11 @@ CREATE TABLE [ethnowear].[DocumentPages]
     [ProvenanceNote] NVARCHAR(MAX) NULL,
     [ProvenanceReviewedBy] NVARCHAR(150) NULL,
     [ProvenanceReviewedAt] DATETIME2(7) NULL,
+
+    [RetiredAt] DATETIME2(7) NULL,
+    [RetiredBy] NVARCHAR(150) NULL,
+    [RetirementReason] NVARCHAR(500) NULL,
+    [RowVersion] ROWVERSION NOT NULL,
 
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_DocumentPages_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_DocumentPages_UpdatedAt] DEFAULT SYSUTCDATETIME(),
@@ -53,6 +65,10 @@ CREATE TABLE [ethnowear].[DocumentPages]
     CONSTRAINT [FK_DocumentPages_CanonicalDocumentPage]
         FOREIGN KEY ([CanonicalDocumentPageId])
         REFERENCES [ethnowear].[DocumentPages] ([Id]),
+
+    CONSTRAINT [FK_DocumentPages_CurrentQualityAssessment]
+        FOREIGN KEY ([CurrentQualityAssessmentId])
+        REFERENCES [ethnowear].[DocumentPageQualityAssessments] ([Id]),
 
     CONSTRAINT [UQ_DocumentPages_DocumentId_PageSequence]
         UNIQUE ([DocumentId], [PageSequence]),
@@ -138,7 +154,42 @@ CREATE TABLE [ethnowear].[DocumentPages]
         CHECK ([PdfPageIndex] IS NULL OR [PdfPageIndex] >= 0),
 
     CONSTRAINT [CK_DocumentPages_OcrConfidence]
-        CHECK ([OcrConfidence] IS NULL OR [OcrConfidence] BETWEEN 0 AND 1)
+        CHECK ([OcrConfidence] IS NULL OR [OcrConfidence] BETWEEN 0 AND 1),
+
+    CONSTRAINT [CK_DocumentPages_CurrentQualityScore]
+        CHECK ([CurrentQualityScore] IS NULL OR [CurrentQualityScore] BETWEEN 0 AND 1),
+
+    CONSTRAINT [CK_DocumentPages_CurrentQualityStatus]
+        CHECK ([CurrentQualityStatus] IS NULL OR [CurrentQualityStatus] IN (
+            N'HIGH_QUALITY',
+            N'MINOR_REVIEW',
+            N'REVIEW_REQUIRED',
+            N'POOR_QUALITY',
+            N'PROCESSING_FAILED',
+            N'INCOMPLETE'
+        )),
+
+    CONSTRAINT [CK_DocumentPages_CurrentQualityCounts]
+        CHECK (
+            ([CurrentQualityPassedChecks] IS NULL AND [CurrentQualityFailedChecks] IS NULL)
+            OR (
+                [CurrentQualityPassedChecks] >= 0
+                AND [CurrentQualityFailedChecks] >= 0
+            )
+        ),
+
+    CONSTRAINT [CK_DocumentPages_Retirement]
+        CHECK (
+            ([EvidenceState] <> N'RETIRED' AND [RetiredAt] IS NULL AND [RetiredBy] IS NULL AND [RetirementReason] IS NULL)
+            OR (
+                [EvidenceState] = N'RETIRED'
+                AND [RetiredAt] IS NOT NULL
+                AND [RetiredBy] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([RetiredBy]))) > 0
+                AND [RetirementReason] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([RetirementReason]))) > 0
+            )
+        )
 );
 
 GO
@@ -182,3 +233,19 @@ GO
 CREATE INDEX [IX_DocumentPages_CanonicalDocumentPageId]
 ON [ethnowear].[DocumentPages] ([CanonicalDocumentPageId])
 WHERE [CanonicalDocumentPageId] IS NOT NULL;
+
+GO
+
+CREATE INDEX [IX_DocumentPages_DocumentId_CurrentQuality]
+ON [ethnowear].[DocumentPages] (
+    [DocumentId],
+    [CurrentQualityStatus],
+    [CurrentQualityScore],
+    [CurrentQualityAssessedAt]
+);
+
+GO
+
+CREATE INDEX [IX_DocumentPages_RetiredAt]
+ON [ethnowear].[DocumentPages] ([RetiredAt])
+WHERE [RetiredAt] IS NOT NULL;

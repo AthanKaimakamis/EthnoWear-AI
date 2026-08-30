@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
     Alert, Box, Button, Divider, IconButton, LinearProgress, Paper, Stack, Tooltip, Typography,
 } from '@mui/material'
@@ -11,8 +11,9 @@ import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import RotateRightIcon from '@mui/icons-material/RotateRight'
 import DownloadIcon from '@mui/icons-material/Download'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined'
 import { useTranslation } from 'react-i18next'
-import { Document, Page, pdfjs } from 'react-pdf'
+import { Document, Page, Thumbnail, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import AdminModal from './AdminModal'
@@ -41,6 +42,8 @@ export default function PdfViewerContent({ source, title, onClose, downloadName 
     const [rotation, setRotation] = useState(0)
     const [loadFailed, setLoadFailed] = useState(false)
     const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 900 : window.innerWidth)
+    const [thumbnailsOpen, setThumbnailsOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 900)
+    const thumbnailsRef = useRef<HTMLDivElement>(null)
 
     const objectUrl = useMemo(() => source instanceof File ? URL.createObjectURL(source) : null, [source])
 
@@ -64,6 +67,12 @@ export default function PdfViewerContent({ source, title, onClose, downloadName 
         setPageNumber(Math.min(pageCount, Math.max(1, next)))
     }
 
+    useEffect(() => {
+        if (!thumbnailsOpen) return
+        const selected = thumbnailsRef.current?.querySelector<HTMLElement>(`[data-pdf-thumbnail="${pageNumber}"]`)
+        selected?.scrollIntoView?.({ block: 'nearest' })
+    }, [pageNumber, thumbnailsOpen])
+
     return (
         <AdminModal
             open
@@ -84,6 +93,8 @@ export default function PdfViewerContent({ source, title, onClose, downloadName 
                 <Paper square variant="outlined" sx={{ position: 'sticky', top: 0, zIndex: 2, borderTop: 0, borderLeft: 0, borderRight: 0, bgcolor: 'background.paper' }}>
                     <Stack direction="row" sx={{ minHeight: 52, px: 1, alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
                         <Stack direction="row" sx={{ alignItems: 'center' }}>
+                            <ViewerButton label={t('pdfViewer.toggleThumbnails')} onClick={() => setThumbnailsOpen(value => !value)}><ViewSidebarOutlinedIcon /></ViewerButton>
+                            <Divider orientation="vertical" flexItem sx={{ mx: .5 }} />
                             <ViewerButton label={t('pdfViewer.previous')} disabled={pageNumber <= 1} onClick={() => changePage(pageNumber - 1)}><NavigateBeforeIcon /></ViewerButton>
                             <Typography variant="body2" sx={{ minWidth: 92, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
                                 {pageCount ? t('pdfViewer.pageCount', { page: pageNumber, count: pageCount }) : t('pdfViewer.loading')}
@@ -108,7 +119,7 @@ export default function PdfViewerContent({ source, title, onClose, downloadName 
                     </Stack>
                 </Paper>
 
-                <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#E8E9EB', p: { xs: 1, md: 2 } }}>
+                <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', bgcolor: '#E8E9EB', '& > .react-pdf__Document': { height: '100%' } }}>
                     {loadFailed && <Alert severity="error" sx={{ maxWidth: 720, mx: 'auto' }}>{t('pdfViewer.loadFailed')}</Alert>}
                     {resolvedSource && !loadFailed && <Document
                         file={resolvedSource}
@@ -116,20 +127,70 @@ export default function PdfViewerContent({ source, title, onClose, downloadName 
                         onLoadSuccess={({ numPages }) => { setPageCount(numPages); setPageNumber(current => Math.min(current, numPages)) }}
                         onLoadError={() => setLoadFailed(true)}
                     >
-                        <Box sx={{ width: 'max-content', minWidth: '100%', display: 'flex', justifyContent: 'center' }}>
-                            <Page
-                                pageNumber={pageNumber}
-                                width={basePageWidth * zoom}
-                                rotate={rotation}
-                                loading={<LinearProgress sx={{ width: Math.min(basePageWidth, 720), mt: 3 }} />}
-                                canvasBackground="white"
-                            />
+                        <Box sx={{ height: '100%', display: 'flex', minWidth: 0 }}>
+                            {thumbnailsOpen && <Box ref={thumbnailsRef} component="nav" aria-label={t('pdfViewer.thumbnails')} sx={{ width: { xs: 128, sm: 168 }, flexShrink: 0, overflowY: 'auto', bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', p: 1 }}>
+                                <Stack spacing={1}>
+                                    {Array.from({ length: pageCount }, (_, index) => {
+                                        const thumbnailPage = index + 1
+                                        return <LazyThumbnail key={thumbnailPage} pageNumber={thumbnailPage} selected={thumbnailPage === pageNumber} onSelect={changePage} />
+                                    })}
+                                </Stack>
+                            </Box>}
+                            <Box sx={{ flex: 1, minWidth: 0, overflow: 'auto', p: { xs: 1, md: 2 } }}>
+                                <Box sx={{ width: 'max-content', minWidth: '100%', display: 'flex', justifyContent: 'center' }}>
+                                    <Page
+                                        pageNumber={pageNumber}
+                                        width={basePageWidth * zoom}
+                                        rotate={rotation}
+                                        loading={<LinearProgress sx={{ width: Math.min(basePageWidth, 720), mt: 3 }} />}
+                                        canvasBackground="white"
+                                    />
+                                </Box>
+                            </Box>
                         </Box>
                     </Document>}
                 </Box>
             </Box>
         </AdminModal>
     )
+}
+
+function LazyThumbnail({ pageNumber, selected, onSelect }: { pageNumber: number; selected: boolean; onSelect: (page: number) => void }) {
+    const { t } = useTranslation()
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [visible, setVisible] = useState(() => typeof IntersectionObserver === 'undefined')
+
+    useEffect(() => {
+        if (visible || !containerRef.current || typeof IntersectionObserver === 'undefined') return
+        const observer = new IntersectionObserver(entries => {
+            if (entries.some(entry => entry.isIntersecting)) {
+                setVisible(true)
+                observer.disconnect()
+            }
+        }, { rootMargin: '240px 0px' })
+        observer.observe(containerRef.current)
+        return () => observer.disconnect()
+    }, [visible])
+
+    const label = t('pdfViewer.thumbnailPage', { page: pageNumber })
+    return <Box
+        ref={containerRef}
+        role="button"
+        tabIndex={0}
+        aria-label={label}
+        aria-current={selected ? 'page' : undefined}
+        data-pdf-thumbnail={pageNumber}
+        onClick={() => onSelect(pageNumber)}
+        onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onSelect(pageNumber)
+            }
+        }}
+        sx={{ minHeight: 142, p: .75, display: 'grid', placeItems: 'center', cursor: 'pointer', border: 2, borderColor: selected ? 'primary.main' : 'transparent', bgcolor: selected ? 'action.selected' : 'transparent', '&:hover': { bgcolor: 'action.hover' }, '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 }, '& canvas': { maxWidth: '100%', height: 'auto !important' } }}
+    >
+        {visible ? <Stack spacing={.5} sx={{ alignItems: 'center', maxWidth: '100%' }}><Thumbnail pageNumber={pageNumber} width={112} /><Typography variant="caption">{pageNumber}</Typography></Stack> : <Box sx={{ width: 96, height: 128, bgcolor: 'action.hover' }} />}
+    </Box>
 }
 
 function ViewerButton({ label, disabled = false, onClick, children }: { label: string; disabled?: boolean; onClick: () => void; children: ReactNode }) {

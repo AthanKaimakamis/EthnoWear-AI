@@ -48,7 +48,7 @@ function MainLayout() {
     const navItems: NavItem[] = [
         { translationKey: 'nav.archive', path: '/archive', icon: ArchiveOutlinedIcon },
         ...(authenticated && !admin?.passwordChangeRequired
-            ? [{ translationKey: 'nav.management' as const, path: '/admin', icon: ManageAccountsOutlinedIcon }]
+            ? [{ translationKey: 'nav.management' as const, path: '/management', icon: ManageAccountsOutlinedIcon }]
             : []),
     ]
 

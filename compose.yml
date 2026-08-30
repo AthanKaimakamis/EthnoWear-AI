@@ -1,76 +1,6 @@
 name: ethnowear
 
 services:
-  frontend:
-    build:
-      context: ./ethnowear-frontend
-      dockerfile: Dockerfile
-    image: ethnowear-frontend:local
-    ports:
-      - "${FRONTEND_PORT:-5173}:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./EthnoWear
-      dockerfile: Dockerfile
-    image: ethnowear-backend:local
-    environment:
-      ETHNOWEAR_DB_URL: "jdbc:sqlserver://sqlserver:1433;databaseName=EthnoWear;encrypt=true;trustServerCertificate=true"
-      ETHNOWEAR_DB_USERNAME: "sa"
-      ETHNOWEAR_DB_PASSWORD: "${MSSQL_SA_PASSWORD}"
-      ETHNOWEAR_ONTOLOGY_PATH: /app/Ontology/EthnoWear.owx
-      ETHNOWEAR_MEDIA_STORAGE_ROOT: /app/media
-      ETHNOWEAR_MEDIA_MAX_FILE_SIZE: ${ETHNOWEAR_MEDIA_MAX_FILE_SIZE:-250MB}
-      ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE: ${ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE:-255MB}
-      ETHNOWEAR_JWT_SECRET: "${ETHNOWEAR_JWT_SECRET:?Set ETHNOWEAR_JWT_SECRET in .env}"
-      ETHNOWEAR_JWT_ISSUER: "${ETHNOWEAR_JWT_ISSUER:-ethnowear-api}"
-      ETHNOWEAR_JWT_TTL: "${ETHNOWEAR_JWT_TTL:-15m}"
-      ETHNOWEAR_WORKER_API_ENABLED: "true"
-      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
-      ETHNOWEAR_WORKER_RECOVERY_INTERVAL: "${ETHNOWEAR_WORKER_RECOVERY_INTERVAL:-30s}"
-      ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS: "${ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS:-100000000}"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-    ports:
-      - "${BACKEND_PORT:-8080}:8080"
-    volumes:
-      - backend-ontology:/app/Ontology
-      - ${ETHNOWEAR_MEDIA_ROOT:-./media}:/app/media
-    restart: unless-stopped
-
-  pdf-worker:
-    build:
-      context: ./ethnowear-document-worker
-      dockerfile: Dockerfile
-    image: ethnowear-pdf-worker:local
-    environment:
-      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
-      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_WORKER_ID:-page-extractor-1}"
-      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
-      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
-      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
-      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-worker
-      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
-      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
-    depends_on:
-      - backend
-    init: true
-    read_only: true
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=512m,mode=1777
-    mem_limit: "${ETHNOWEAR_WORKER_MEMORY_LIMIT:-1g}"
-    cpus: "${ETHNOWEAR_WORKER_CPU_LIMIT:-1.0}"
-    pids_limit: ${ETHNOWEAR_WORKER_PIDS_LIMIT:-128}
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    stop_grace_period: "${ETHNOWEAR_WORKER_STOP_GRACE_PERIOD:-35m}"
-    restart: unless-stopped
 
   sqlserver:
     container_name: ethnowear-sqlserver-local
@@ -114,9 +44,305 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  ollama:
+    profiles: ["container-ai"]
+    image: ollama/ollama:0.32.15
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  ollama-models:
+    profiles: ["container-ai"]
+    image: ollama/ollama:0.32.15
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_EMBEDDING_MODEL: "${ETHNOWEAR_EMBEDDING_MODEL:-bge-m3}"
+      OLLAMA_CHAT_MODEL: "${ETHNOWEAR_CHAT_MODEL:-qwen3:8b}"
+      OLLAMA_VISION_MODEL: "${ETHNOWEAR_VISION_MODEL:-qwen3-vl:8b}"
+    volumes:
+      - ollama-data:/root/.ollama
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        ollama pull "$$OLLAMA_EMBEDDING_MODEL"
+        ollama pull "$$OLLAMA_CHAT_MODEL"
+        ollama pull "$$OLLAMA_VISION_MODEL"
+    restart: "no"
+
+  document-worker:
+    build:
+      context: ./ethnowear-workers
+      dockerfile: document-worker/Dockerfile
+    image: ethnowear-document-worker:local
+    environment:
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_DOCUMENT_WORKER_ID:-document-worker-1}"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
+      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
+      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-document-worker
+      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
+      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
+      ETHNOWEAR_WORKER_TESSERACT_BINARY: "${ETHNOWEAR_WORKER_TESSERACT_BINARY:-tesseract}"
+      ETHNOWEAR_WORKER_OCR_LANGUAGE: "${ETHNOWEAR_WORKER_OCR_LANGUAGE:-bul+eng}"
+      ETHNOWEAR_WORKER_OCR_OEM: "${ETHNOWEAR_WORKER_OCR_OEM:-1}"
+      ETHNOWEAR_WORKER_OCR_PSM: "${ETHNOWEAR_WORKER_OCR_PSM:-3}"
+      ETHNOWEAR_WORKER_OCR_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_OCR_TIMEOUT_SECONDS:-300}"
+      ETHNOWEAR_WORKER_OCR_MAXIMUM_LAYOUT_REGIONS: "${ETHNOWEAR_WORKER_OCR_MAXIMUM_LAYOUT_REGIONS:-32}"
+    depends_on:
+      - backend
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m,mode=1777
+    mem_limit: "${ETHNOWEAR_WORKER_MEMORY_LIMIT:-1g}"
+    cpus: "${ETHNOWEAR_WORKER_CPU_LIMIT:-1.0}"
+    pids_limit: ${ETHNOWEAR_WORKER_PIDS_LIMIT:-128}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: "${ETHNOWEAR_WORKER_STOP_GRACE_PERIOD:-35m}"
+    restart: unless-stopped
+
+  indexing-worker:
+    build:
+      context: ./ethnowear-workers
+      dockerfile: indexing-worker/Dockerfile
+    image: ethnowear-indexing-worker:local
+    environment:
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_INDEXING_WORKER_ID:-indexing-worker-1}"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_QDRANT_URL: "http://qdrant:6333"
+      ETHNOWEAR_QDRANT_COLLECTION: "${ETHNOWEAR_QDRANT_COLLECTION:-ethnowear_chunks_bge_m3_v1}"
+      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
+      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
+      ETHNOWEAR_WORKER_LEASE_SECONDS: "${ETHNOWEAR_WORKER_LEASE_SECONDS:-120}"
+      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
+      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
+      ETHNOWEAR_EMBEDDING_TIMEOUT_SECONDS: "${ETHNOWEAR_EMBEDDING_TIMEOUT_SECONDS:-180}"
+      ETHNOWEAR_QDRANT_TIMEOUT_SECONDS: "${ETHNOWEAR_QDRANT_TIMEOUT_SECONDS:-30}"
+      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-indexing-worker
+    depends_on:
+      backend:
+        condition: service_started
+      qdrant:
+        condition: service_healthy
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,mode=1777
+    mem_limit: "${ETHNOWEAR_INDEXING_WORKER_MEMORY_LIMIT:-1g}"
+    cpus: "${ETHNOWEAR_INDEXING_WORKER_CPU_LIMIT:-1.0}"
+    pids_limit: ${ETHNOWEAR_INDEXING_WORKER_PIDS_LIMIT:-128}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: "${ETHNOWEAR_INDEXING_WORKER_STOP_GRACE_PERIOD:-30s}"
+    restart: unless-stopped
+
+  quality-worker:
+    build:
+      context: ./ethnowear-workers
+      dockerfile: quality-worker/Dockerfile
+    image: ethnowear-quality-worker:local
+    environment:
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_QUALITY_WORKER_ID:-quality-worker-1}"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
+      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
+      ETHNOWEAR_WORKER_LEASE_SECONDS: "${ETHNOWEAR_WORKER_LEASE_SECONDS:-120}"
+      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
+      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
+      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-quality-worker
+      ETHNOWEAR_WORKER_BULGARIAN_DICTIONARY_PATH: /usr/share/hunspell/bg_BG.dic
+    depends_on:
+      backend:
+        condition: service_started
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,mode=1777
+    mem_limit: "${ETHNOWEAR_QUALITY_WORKER_MEMORY_LIMIT:-512m}"
+    cpus: "${ETHNOWEAR_QUALITY_WORKER_CPU_LIMIT:-0.5}"
+    pids_limit: ${ETHNOWEAR_QUALITY_WORKER_PIDS_LIMIT:-64}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: "${ETHNOWEAR_QUALITY_WORKER_STOP_GRACE_PERIOD:-5m}"
+    restart: unless-stopped
+
+  figure-worker:
+    build:
+      context: ./ethnowear-workers
+      dockerfile: figure-worker/Dockerfile
+    image: ethnowear-figure-worker:local
+    environment:
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_FIGURE_WORKER_ID:-figure-worker-1}"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
+      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
+      ETHNOWEAR_WORKER_LEASE_SECONDS: "${ETHNOWEAR_WORKER_LEASE_SECONDS:-120}"
+      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
+      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
+      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-figure-worker
+      ETHNOWEAR_FIGURE_CROP_MARGIN_RATIO: "${ETHNOWEAR_FIGURE_CROP_MARGIN_RATIO:-0.015}"
+      ETHNOWEAR_FIGURE_MAXIMUM_LOCAL_CANDIDATES: "${ETHNOWEAR_FIGURE_MAXIMUM_LOCAL_CANDIDATES:-100}"
+      ETHNOWEAR_FIGURE_JPEG_QUALITY: "${ETHNOWEAR_FIGURE_JPEG_QUALITY:-95}"
+    depends_on:
+      backend:
+        condition: service_started
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m,mode=1777
+    mem_limit: "${ETHNOWEAR_FIGURE_WORKER_MEMORY_LIMIT:-1g}"
+    cpus: "${ETHNOWEAR_FIGURE_WORKER_CPU_LIMIT:-1.0}"
+    pids_limit: ${ETHNOWEAR_FIGURE_WORKER_PIDS_LIMIT:-64}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: "${ETHNOWEAR_FIGURE_WORKER_STOP_GRACE_PERIOD:-5m}"
+    restart: unless-stopped
+
+  vision-worker:
+    build:
+      context: ./ethnowear-workers
+      dockerfile: vision-worker/Dockerfile
+    image: ethnowear-vision-worker:local
+    environment:
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_VISION_WORKER_ID:-vision-worker-1}"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_OLLAMA_BASE_URL: "${ETHNOWEAR_VISION_OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+      ETHNOWEAR_VISION_MODEL: "${ETHNOWEAR_VISION_MODEL:-qwen3-vl:8b}"
+      ETHNOWEAR_VISION_PROMPT_VERSION: "${ETHNOWEAR_VISION_PROMPT_VERSION:-vision-ocr-v8}"
+      ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
+      ETHNOWEAR_WORKER_POLL_MAX_SECONDS: "${ETHNOWEAR_WORKER_POLL_MAX_SECONDS:-30}"
+      ETHNOWEAR_WORKER_LEASE_SECONDS: "${ETHNOWEAR_WORKER_LEASE_SECONDS:-120}"
+      ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_CONNECT_TIMEOUT_SECONDS:-10}"
+      ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_HTTP_READ_TIMEOUT_SECONDS:-60}"
+      ETHNOWEAR_VISION_TIMEOUT_SECONDS: "${ETHNOWEAR_VISION_TIMEOUT_SECONDS:-600}"
+      ETHNOWEAR_VISION_MAXIMUM_OUTPUT_BYTES: "${ETHNOWEAR_VISION_MAXIMUM_OUTPUT_BYTES:-1048576}"
+      ETHNOWEAR_VISION_CONTEXT_TOKENS: "${ETHNOWEAR_VISION_CONTEXT_TOKENS:-16384}"
+      ETHNOWEAR_VISION_MAXIMUM_GENERATED_TOKENS: "${ETHNOWEAR_VISION_MAXIMUM_GENERATED_TOKENS:-4096}"
+      ETHNOWEAR_VISION_MAXIMUM_IMAGE_EDGE_PIXELS: "${ETHNOWEAR_VISION_MAXIMUM_IMAGE_EDGE_PIXELS:-3072}"
+      ETHNOWEAR_VISION_IMAGE_JPEG_QUALITY: "${ETHNOWEAR_VISION_IMAGE_JPEG_QUALITY:-90}"
+      ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-vision-worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      backend:
+        condition: service_started
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m,mode=1777
+    mem_limit: "${ETHNOWEAR_VISION_WORKER_MEMORY_LIMIT:-2g}"
+    cpus: "${ETHNOWEAR_VISION_WORKER_CPU_LIMIT:-1.0}"
+    pids_limit: ${ETHNOWEAR_VISION_WORKER_PIDS_LIMIT:-128}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: "${ETHNOWEAR_VISION_WORKER_STOP_GRACE_PERIOD:-6m}"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./ethnowear-api
+      dockerfile: Dockerfile
+    image: ethnowear-backend:local
+    environment:
+      ETHNOWEAR_DB_URL: "jdbc:sqlserver://sqlserver:1433;databaseName=EthnoWear;encrypt=true;trustServerCertificate=true"
+      ETHNOWEAR_DB_USERNAME: "sa"
+      ETHNOWEAR_DB_PASSWORD: "${MSSQL_SA_PASSWORD}"
+      ETHNOWEAR_ONTOLOGY_PATH: /app/Ontology/EthnoWear.owx
+      ETHNOWEAR_MEDIA_STORAGE_ROOT: /app/media
+      ETHNOWEAR_MEDIA_MAX_FILE_SIZE: ${ETHNOWEAR_MEDIA_MAX_FILE_SIZE:-250MB}
+      ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE: ${ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE:-255MB}
+      ETHNOWEAR_JWT_SECRET: "${ETHNOWEAR_JWT_SECRET:?Set ETHNOWEAR_JWT_SECRET in .env}"
+      ETHNOWEAR_JWT_ISSUER: "${ETHNOWEAR_JWT_ISSUER:-ethnowear-api}"
+      ETHNOWEAR_JWT_TTL: "${ETHNOWEAR_JWT_TTL:-1h}"
+      ETHNOWEAR_RETRIEVAL_ENABLED: "${ETHNOWEAR_RETRIEVAL_ENABLED:-true}"
+      ETHNOWEAR_RETRIEVAL_OLLAMA_BASE_URL: "${ETHNOWEAR_RETRIEVAL_OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+      ETHNOWEAR_QDRANT_URL: "http://qdrant:6333"
+      ETHNOWEAR_QDRANT_COLLECTION: "${ETHNOWEAR_QDRANT_COLLECTION:-ethnowear_chunks_bge_m3_v1}"
+      ETHNOWEAR_WORKER_API_ENABLED: "true"
+      ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
+      ETHNOWEAR_WORKER_RECOVERY_INTERVAL: "${ETHNOWEAR_WORKER_RECOVERY_INTERVAL:-30s}"
+      ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS: "${ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS:-100000000}"
+      ETHNOWEAR_WORKER_MAXIMUM_OCR_TEXT_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_OCR_TEXT_CHARACTERS:-2000000}"
+      ETHNOWEAR_WORKER_MAXIMUM_OCR_OUTPUT_SIZE: "${ETHNOWEAR_WORKER_MAXIMUM_OCR_OUTPUT_SIZE:-10MB}"
+      ETHNOWEAR_WORKER_MAXIMUM_OCR_CONTEXT_SIZE: "${ETHNOWEAR_WORKER_MAXIMUM_OCR_CONTEXT_SIZE:-16MB}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_ASSESSMENT_PAYLOAD_SIZE: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_ASSESSMENT_PAYLOAD_SIZE:-1MB}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNALS: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNALS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNAL_TYPE_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNAL_TYPE_CHARACTERS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNAL_TEXT_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNAL_TEXT_CHARACTERS:-500}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SUMMARY_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SUMMARY_CHARACTERS:-1000}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_LIMITATIONS_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_LIMITATIONS_CHARACTERS:-1000}"
+      ETHNOWEAR_WORKER_MAXIMUM_QUALITY_MESSAGE_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_MESSAGE_CHARACTERS:-1000}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_ASSESSMENT_PAYLOAD_SIZE: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_ASSESSMENT_PAYLOAD_SIZE:-10MB}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_SUGGESTION_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_SUGGESTION_CHARACTERS:-2000000}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUES_JSON_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUES_JSON_CHARACTERS:-4000}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUES: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUES:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_UNCERTAIN_PASSAGES: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_UNCERTAIN_PASSAGES:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUE_CODE_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUE_CODE_CHARACTERS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_EXCERPT_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_EXCERPT_CHARACTERS:-500}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_REASON_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_REASON_CHARACTERS:-1000}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_MODEL_NAME_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_MODEL_NAME_CHARACTERS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_MODEL_VERSION_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_MODEL_VERSION_CHARACTERS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_VISION_PROMPT_VERSION_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_VISION_PROMPT_VERSION_CHARACTERS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CANDIDATES: "${ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CANDIDATES:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CAPTION_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CAPTION_CHARACTERS:-2000}"
+      ETHNOWEAR_WORKER_MAXIMUM_PRINTED_FIGURE_NUMBER_CHARACTERS: "${ETHNOWEAR_WORKER_MAXIMUM_PRINTED_FIGURE_NUMBER_CHARACTERS:-100}"
+      ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CROP_SIZE: "${ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CROP_SIZE:-25MB}"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - backend-ontology:/app/Ontology
+      - ${ETHNOWEAR_MEDIA_ROOT:-./media}:/app/media
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./ethnowear-frontend
+      dockerfile: Dockerfile
+    image: ethnowear-frontend:local
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+
 volumes:
   backend-ontology:
   qdrant-data:
+  ollama-data:
   sqlserver-data:
     external: true
     name: ethnowear_sqlserver_data

@@ -14,6 +14,9 @@ CREATE TABLE [ethnowear].[KnowledgeChunks]
     [SourceTextType] NVARCHAR(50) NOT NULL,
     [ChunkOrdinal] INT NULL,
     [ContentHash] NVARCHAR(128) NOT NULL,
+    [GenerationInputHash] CHAR(64) NULL,
+    [ChunkingStrategy] NVARCHAR(100) NULL,
+    [ChunkingVersion] NVARCHAR(50) NULL,
     [ReviewState] NVARCHAR(50) NOT NULL,
     [TranscriptionApprovalState] NVARCHAR(50) NOT NULL,
     [ProvenanceTrustState] NVARCHAR(50) NOT NULL,
@@ -109,6 +112,28 @@ CREATE TABLE [ethnowear].[KnowledgeChunks]
 
     CONSTRAINT [CK_KnowledgeChunks_ChunkOrdinal]
         CHECK ([ChunkOrdinal] IS NULL OR [ChunkOrdinal] >= 0),
+
+    CONSTRAINT [CK_KnowledgeChunks_GenerationMetadata]
+        CHECK (
+            (
+                [GenerationInputHash] IS NULL
+                AND [ChunkingStrategy] IS NULL
+                AND [ChunkingVersion] IS NULL
+            )
+            OR (
+                [GenerationInputHash] IS NOT NULL
+                AND LEN([GenerationInputHash]) = 64
+                AND [GenerationInputHash] COLLATE Latin1_General_100_BIN2
+                    NOT LIKE '%[^0-9a-f]%'
+                AND [ChunkingStrategy] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([ChunkingStrategy]))) > 0
+                AND [ChunkingVersion] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([ChunkingVersion]))) > 0
+                AND [DocumentId] IS NOT NULL
+                AND [ChunkOrdinal] IS NOT NULL
+                AND [SourceTextType] = N'CORRECTED_PAGE_TEXT'
+            )
+        ),
 
     CONSTRAINT [CK_KnowledgeChunks_EmbeddingDimensions]
         CHECK ([EmbeddingDimensions] IS NULL OR [EmbeddingDimensions] > 0),
@@ -208,3 +233,13 @@ GO
 CREATE INDEX [IX_KnowledgeChunks_SupersededByKnowledgeChunkId]
 ON [ethnowear].[KnowledgeChunks] ([SupersededByKnowledgeChunkId])
 WHERE [SupersededByKnowledgeChunkId] IS NOT NULL;
+
+GO
+
+CREATE UNIQUE INDEX [UQ_KnowledgeChunks_Document_Generation_Ordinal]
+ON [ethnowear].[KnowledgeChunks] (
+    [DocumentId],
+    [GenerationInputHash],
+    [ChunkOrdinal]
+)
+WHERE [GenerationInputHash] IS NOT NULL;

@@ -8,6 +8,7 @@ export type ApiErrorDetails = {
     errors?: unknown
     references?: unknown
     failedRequirements?: unknown
+    blockers?: unknown
 }
 
 const exactMessageKeys = new Map<string, string>(
@@ -20,6 +21,13 @@ const codeKeys: Record<string, string> = {
     AUTH_INVALID_CREDENTIALS: 'invalidCredentials',
     AUTH_CURRENT_PASSWORD_INVALID: 'currentPasswordInvalid',
     MEDIA_FILE_TOO_LARGE: 'mediaTooLarge',
+    PROCESSING_JOB_NOT_FOUND: 'processingJobNotFound',
+    PROCESSING_JOB_ACTIVE_CONFLICT: 'processingJobActiveConflict',
+    PROCESSING_JOB_INVALID_TRANSITION: 'processingJobInvalidTransition',
+    VISION_JOB_ALREADY_ACTIVE: 'visionJobAlreadyActive',
+    DOCUMENT_DEPENDENCY_CONFLICT: 'documentDependencyConflict',
+    DOCUMENT_VECTOR_CLEANUP_UNAVAILABLE: 'documentVectorCleanupUnavailable',
+    CHUNK_GENERATION_INELIGIBLE: 'chunkGenerationIneligible',
 }
 
 type DynamicMatch = {
@@ -96,6 +104,16 @@ export function localizedErrorMessages(
             if (typeof requirement !== 'string') return
             const key = `publication.requirementMessages.${requirement}`
             messages.push(i18n.exists(key) ? tr(key) : humanize(requirement))
+        })
+    }
+    if (Array.isArray(body?.blockers)) {
+        body.blockers.forEach(blocker => {
+            if (!blocker || typeof blocker !== 'object') return
+            const code = 'code' in blocker ? String(blocker.code) : 'UNKNOWN'
+            const key = `documents.chunks.blockers.${code}`
+            messages.push(i18n.exists(key)
+                ? tr(key)
+                : tr('documents.chunks.blockers.UNKNOWN'))
         })
     }
     if (Array.isArray(body?.references) && body.references.length > 0) {

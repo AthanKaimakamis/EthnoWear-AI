@@ -2,7 +2,9 @@ CREATE TABLE [ethnowear].[Documents]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL,
     [SourceId] BIGINT NULL,
+    [DefaultSourceReferenceId] BIGINT NULL,
     [OriginalMediaAssetId] BIGINT NULL,
+    [ThumbnailMediaAssetId] BIGINT NULL,
 
     [DocumentType] NVARCHAR(50) NOT NULL,
     [ProvenanceStatus] NVARCHAR(50) NOT NULL,
@@ -31,8 +33,16 @@ CREATE TABLE [ethnowear].[Documents]
         FOREIGN KEY ([SourceId])
         REFERENCES [ethnowear].[Sources] ([Id]),
 
+    CONSTRAINT [FK_Documents_DefaultSourceReference]
+        FOREIGN KEY ([DefaultSourceReferenceId])
+        REFERENCES [ethnowear].[SourceReference] ([Id]),
+
     CONSTRAINT [FK_Documents_OriginalMediaAsset]
         FOREIGN KEY ([OriginalMediaAssetId])
+        REFERENCES [ethnowear].[MediaAssets] ([Id]),
+
+    CONSTRAINT [FK_Documents_ThumbnailMediaAsset]
+        FOREIGN KEY ([ThumbnailMediaAssetId])
         REFERENCES [ethnowear].[MediaAssets] ([Id]),
 
     CONSTRAINT [FK_Documents_MergedInto]
@@ -106,8 +116,18 @@ ON [ethnowear].[Documents] ([SourceId]);
 
 GO
 
+CREATE INDEX [IX_Documents_DefaultSourceReferenceId]
+ON [ethnowear].[Documents] ([DefaultSourceReferenceId]);
+
+GO
+
 CREATE INDEX [IX_Documents_OriginalMediaAssetId]
 ON [ethnowear].[Documents] ([OriginalMediaAssetId]);
+
+GO
+
+CREATE INDEX [IX_Documents_ThumbnailMediaAssetId]
+ON [ethnowear].[Documents] ([ThumbnailMediaAssetId]);
 
 GO
 

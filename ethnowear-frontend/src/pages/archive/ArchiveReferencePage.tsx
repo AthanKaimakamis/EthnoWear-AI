@@ -20,6 +20,12 @@ type Props = {
     kind: ArchiveReferenceKind
 }
 
+const rootCategoryByType: Partial<Record<OntologyFeatureType, string>> = {
+    TECHNIQUE: 'Technique',
+    ORNAMENT: 'Ornament',
+    MOTIF: 'Motif',
+}
+
 function entityTypeForKind(kind: ArchiveReferenceKind): OntologyFeatureType {
     if (kind === 'techniques') return 'TECHNIQUE'
     if (kind === 'ornaments') return 'ORNAMENT'
@@ -34,6 +40,7 @@ export default function ArchiveReferencePage({ kind }: Props) {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const entityType = entityTypeForKind(kind)
+    const rootCategory = rootCategoryByType[entityType]
     const [selectedRegions, setSelectedRegions] = useState<string[]>([])
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [searchText, setSearchText] = useState('')
@@ -65,12 +72,13 @@ export default function ArchiveReferencePage({ kind }: Props) {
         [catalogue],
     )
     const availableCategories = useMemo(
-        () => catalogueFacetOptions(catalogue ?? null, 'CATEGORY', entityType),
-        [catalogue, entityType],
+        () => catalogueFacetOptions(catalogue ?? null, 'CATEGORY', entityType)
+            .filter(category => category.localName !== rootCategory),
+        [catalogue, entityType, rootCategory],
     )
     const categorySections = useMemo(
-        () => buildCatalogueCategories(catalogue?.items ?? [], t('archiveReference.uncategorized')),
-        [catalogue, t],
+        () => buildCatalogueCategories(catalogue?.items ?? [], t('archiveReference.uncategorized'), rootCategory ? [rootCategory] : []),
+        [catalogue, rootCategory, t],
     )
 
     function clearFilters() {
@@ -122,7 +130,6 @@ export default function ArchiveReferencePage({ kind }: Props) {
                     {catalogueQuery.isFetching && <LinearProgress aria-label={t('archiveReference.loading')} />}
                 </Stack>
                 {error && <Alert severity="error">{error}</Alert>}
-                {kind === 'motifs' && <Alert severity="info">{t('archiveReference.motifs.empty')}</Alert>}
                 {!error && categorySections.length === 0 && <Alert severity="warning">{t('archiveReference.noResults')}</Alert>}
                 {!error && (
                     <Stack spacing={5}>

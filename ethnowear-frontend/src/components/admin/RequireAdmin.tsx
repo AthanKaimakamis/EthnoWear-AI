@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Navigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 import { useAdminAuth } from '../../app/adminAuth'
 import { hasAnyRole, managementRoles, type RoleName } from '../../app/permissions'
 import PageLoading from '../loading/PageLoading'
@@ -13,15 +13,23 @@ type Props = {
 }
 
 function RequireAdmin({ children, roles = managementRoles, allowPasswordChange = false }: Props) {
-    const { admin, authenticated, initializing, sessionExpired } = useAdminAuth()
+    const { admin, authenticated, initializing, sessionExpired, logout } = useAdminAuth()
+    const navigate = useNavigate()
+
+    function closeExpiredLogin() {
+        logout()
+        navigate('/archive', { replace: true })
+    }
     if (initializing) {
         return <PageLoading />
     }
 
     if (!authenticated) {
+        if (!sessionExpired) return <AdminLoginDialog open />
+
         return <>
-            {sessionExpired && <div aria-hidden="true" style={{ pointerEvents: 'none' }}>{children}</div>}
-            <AdminLoginDialog open />
+            <div inert aria-hidden="true" style={{ display: 'contents', pointerEvents: 'none' }}>{children}</div>
+            <AdminLoginDialog open onClose={closeExpiredLogin} />
         </>
     }
 
@@ -33,7 +41,9 @@ function RequireAdmin({ children, roles = managementRoles, allowPasswordChange =
         return <PermissionDenied />
     }
 
-    return children
+    return <>
+        <div style={{ display: 'contents' }}>{children}</div>
+    </>
 }
 
 export default RequireAdmin

@@ -1,0 +1,166 @@
+spring:
+  application:
+    name: ethnowear
+
+  cache:
+    type: caffeine
+    cache-names:
+      - ontology-reference-full
+    caffeine:
+      spec: maximumSize=4,expireAfterWrite=30m
+
+  docker:
+    compose:
+      enabled: false
+
+  datasource:
+    url: ${ETHNOWEAR_DB_URL:jdbc:sqlserver://localhost:1433;databaseName=EthnoWear;encrypt=true;trustServerCertificate=true}
+    username: ${ETHNOWEAR_DB_USERNAME:sa}
+    password: ${ETHNOWEAR_DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 1
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: ethnowear
+        use_nationalized_character_data: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+  sql:
+    init:
+      mode: never
+
+  servlet:
+    multipart:
+      max-file-size: ${ETHNOWEAR_MEDIA_MAX_FILE_SIZE:25MB}
+      max-request-size: ${ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE:26MB}
+
+ethnowear:
+  document:
+    chunking:
+      enabled: ${ETHNOWEAR_CHUNKING_ENABLED:true}
+      maximum-chunk-characters: ${ETHNOWEAR_CHUNK_MAX_CHARACTERS:1600}
+      overlap-characters: ${ETHNOWEAR_CHUNK_OVERLAP_CHARACTERS:150}
+      strategy: ${ETHNOWEAR_CHUNK_STRATEGY:PAGE_AWARE_PARAGRAPH}
+      version: ${ETHNOWEAR_CHUNK_VERSION:1}
+      execution-interval: ${ETHNOWEAR_CHUNK_EXECUTION_INTERVAL:5s}
+      heartbeat-interval: ${ETHNOWEAR_CHUNK_HEARTBEAT_INTERVAL:30s}
+      maximum-execution-time: ${ETHNOWEAR_CHUNK_MAXIMUM_EXECUTION_TIME:10m}
+      retry-delay: ${ETHNOWEAR_CHUNK_RETRY_DELAY:30s}
+  ontology:
+    path: ${ETHNOWEAR_ONTOLOGY_PATH:Ontology/EthnoWear.owx}
+    namespace: ${ETHNOWEAR_ONTOLOGY_NAMESPACE:http://www.semanticweb.org/athan/ontologies/2026/4/ethno-wear#}
+
+  management-events:
+    connection-timeout: ${ETHNOWEAR_SSE_CONNECTION_TIMEOUT:30m}
+    heartbeat-interval: ${ETHNOWEAR_SSE_HEARTBEAT_INTERVAL:25s}
+    replay-capacity: ${ETHNOWEAR_SSE_REPLAY_CAPACITY:250}
+
+  media:
+    storage-root: ${ETHNOWEAR_MEDIA_STORAGE_ROOT:media}
+    max-file-size: ${ETHNOWEAR_MEDIA_MAX_FILE_SIZE:25MB}
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      - application/pdf
+    retention:
+      enabled: ${ETHNOWEAR_MEDIA_RETENTION_ENABLED:true}
+      default-period: ${ETHNOWEAR_MEDIA_RETENTION_PERIOD:30d}
+      execution-interval: ${ETHNOWEAR_MEDIA_CLEANUP_INTERVAL:1m}
+      retry-delay: ${ETHNOWEAR_MEDIA_CLEANUP_RETRY_DELAY:15m}
+      maximum-execution-time: ${ETHNOWEAR_MEDIA_CLEANUP_MAXIMUM_EXECUTION_TIME:30m}
+
+  security:
+    jwt:
+      secret: ${ETHNOWEAR_JWT_SECRET}
+      issuer: ${ETHNOWEAR_JWT_ISSUER:ethnowear-api}
+      ttl: ${ETHNOWEAR_JWT_TTL:1h}
+
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+
+  retrieval:
+    enabled: ${ETHNOWEAR_RETRIEVAL_ENABLED:true}
+    default-result-count: 5
+    maximum-result-count: 10
+    candidate-multiplier: 3
+    maximum-candidate-count: 30
+    maximum-question-characters: 1000
+    embedding-timeout: 15s
+    qdrant-timeout: 10s
+    client:
+      ollama-base-url: ${ETHNOWEAR_RETRIEVAL_OLLAMA_BASE_URL:http://localhost:11434}
+      qdrant-url: ${ETHNOWEAR_QDRANT_URL:http://localhost:6333}
+      qdrant-collection: ${ETHNOWEAR_QDRANT_COLLECTION:ethnowear_chunks_bge_m3_v1}
+
+  worker-api:
+    enabled: ${ETHNOWEAR_WORKER_API_ENABLED:false}
+    token: ${ETHNOWEAR_WORKER_API_TOKEN:}
+    minimum-lease: ${ETHNOWEAR_WORKER_MINIMUM_LEASE:30s}
+    default-lease: ${ETHNOWEAR_WORKER_DEFAULT_LEASE:120s}
+    maximum-lease: ${ETHNOWEAR_WORKER_MAXIMUM_LEASE:5m}
+    heartbeat-interval: ${ETHNOWEAR_WORKER_HEARTBEAT_INTERVAL:30s}
+    recovery-interval: ${ETHNOWEAR_WORKER_RECOVERY_INTERVAL:30s}
+    job-timeout: ${ETHNOWEAR_WORKER_JOB_TIMEOUT:30m}
+    maximum-input-size: ${ETHNOWEAR_WORKER_MAXIMUM_INPUT_SIZE:250MB}
+    maximum-rendition-size: ${ETHNOWEAR_WORKER_MAXIMUM_RENDITION_SIZE:25MB}
+    maximum-page-count: ${ETHNOWEAR_WORKER_MAXIMUM_PAGE_COUNT:2000}
+    render-dpi: ${ETHNOWEAR_WORKER_RENDER_DPI:300}
+    maximum-pixel-width: ${ETHNOWEAR_WORKER_MAXIMUM_PIXEL_WIDTH:20000}
+    maximum-pixel-height: ${ETHNOWEAR_WORKER_MAXIMUM_PIXEL_HEIGHT:20000}
+    maximum-page-pixels: ${ETHNOWEAR_WORKER_MAXIMUM_PAGE_PIXELS:100000000}
+    maximum-ocr-text-characters: ${ETHNOWEAR_WORKER_MAXIMUM_OCR_TEXT_CHARACTERS:2000000}
+    maximum-ocr-output-size: ${ETHNOWEAR_WORKER_MAXIMUM_OCR_OUTPUT_SIZE:10MB}
+    maximum-ocr-context-size: ${ETHNOWEAR_WORKER_MAXIMUM_OCR_CONTEXT_SIZE:16MB}
+    maximum-quality-assessment-payload-size: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_ASSESSMENT_PAYLOAD_SIZE:1MB}
+    maximum-quality-signals: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNALS:100}
+    maximum-quality-signal-type-characters: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNAL_TYPE_CHARACTERS:100}
+    maximum-quality-signal-text-characters: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SIGNAL_TEXT_CHARACTERS:500}
+    maximum-quality-summary-characters: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_SUMMARY_CHARACTERS:1000}
+    maximum-quality-limitations-characters: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_LIMITATIONS_CHARACTERS:1000}
+    maximum-quality-message-characters: ${ETHNOWEAR_WORKER_MAXIMUM_QUALITY_MESSAGE_CHARACTERS:1000}
+    maximum-vision-assessment-payload-size: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_ASSESSMENT_PAYLOAD_SIZE:10MB}
+    maximum-vision-suggestion-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_SUGGESTION_CHARACTERS:2000000}
+    maximum-vision-issues-json-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUES_JSON_CHARACTERS:4000}
+    maximum-vision-issues: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUES:100}
+    maximum-vision-uncertain-passages: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_UNCERTAIN_PASSAGES:100}
+    maximum-vision-issue-code-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_ISSUE_CODE_CHARACTERS:100}
+    maximum-vision-excerpt-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_EXCERPT_CHARACTERS:500}
+    maximum-vision-reason-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_REASON_CHARACTERS:1000}
+    maximum-vision-model-name-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_MODEL_NAME_CHARACTERS:100}
+    maximum-vision-model-version-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_MODEL_VERSION_CHARACTERS:100}
+    maximum-vision-prompt-version-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VISION_PROMPT_VERSION_CHARACTERS:100}
+    figure-extraction:
+      maximum-candidates: ${ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CANDIDATES:100}
+      maximum-caption-characters: ${ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CAPTION_CHARACTERS:2000}
+      maximum-printed-number-characters: ${ETHNOWEAR_WORKER_MAXIMUM_PRINTED_FIGURE_NUMBER_CHARACTERS:100}
+      maximum-crop-size: ${ETHNOWEAR_WORKER_MAXIMUM_FIGURE_CROP_SIZE:25MB}
+    indexing:
+      maximum-content-characters: ${ETHNOWEAR_WORKER_MAXIMUM_INDEXING_CONTENT_CHARACTERS:10000}
+      maximum-embedding-dimensions: ${ETHNOWEAR_WORKER_MAXIMUM_EMBEDDING_DIMENSIONS:4096}
+      maximum-embedding-model-characters: ${ETHNOWEAR_WORKER_MAXIMUM_EMBEDDING_MODEL_CHARACTERS:100}
+      maximum-vector-collection-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VECTOR_COLLECTION_CHARACTERS:150}
+      maximum-vector-point-id-characters: ${ETHNOWEAR_WORKER_MAXIMUM_VECTOR_POINT_ID_CHARACTERS:255}
+      expected-embedding-model: ${ETHNOWEAR_EMBEDDING_MODEL:bge-m3}
+      expected-embedding-dimensions: ${ETHNOWEAR_EMBEDDING_DIMENSIONS:1024}
+      expected-vector-collection: ${ETHNOWEAR_VECTOR_COLLECTION:ethnowear_chunks_bge_m3_v1}

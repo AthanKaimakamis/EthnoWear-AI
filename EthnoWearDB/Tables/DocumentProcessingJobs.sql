@@ -4,7 +4,9 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
 
     [JobType] NVARCHAR(50) NOT NULL,
     [Status] NVARCHAR(50) NOT NULL,
+    [JobKey] NVARCHAR(500) NULL,
     [ActiveJobKey] NVARCHAR(500) NULL,
+    [PreviousJobId] BIGINT NULL,
 
     [DocumentId] BIGINT NULL,
     [DocumentPageId] BIGINT NULL,
@@ -34,6 +36,9 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
     [SafeErrorMessage] NVARCHAR(1000) NULL,
     [ErrorDetailsJson] NVARCHAR(MAX) NULL,
     [CancellationReason] NVARCHAR(500) NULL,
+    [RetiredAt] DATETIME2(7) NULL,
+    [RetiredBy] NVARCHAR(150) NULL,
+    [RetirementReason] NVARCHAR(500) NULL,
     [CorrelationId] UNIQUEIDENTIFIER NULL,
     [RowVersion] ROWVERSION NOT NULL,
 
@@ -41,6 +46,10 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_DocumentProcessingJobs_UpdatedAt] DEFAULT SYSUTCDATETIME(),
 
     CONSTRAINT [PK_DocumentProcessingJobs] PRIMARY KEY CLUSTERED ([Id]),
+
+    CONSTRAINT [FK_DocumentProcessingJobs_PreviousJob]
+        FOREIGN KEY ([PreviousJobId])
+        REFERENCES [ethnowear].[DocumentProcessingJobs] ([Id]),
 
     CONSTRAINT [FK_DocumentProcessingJobs_Documents]
         FOREIGN KEY ([DocumentId])
@@ -62,12 +71,15 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
         CHECK ([JobType] IN (
             N'PAGE_EXTRACTION',
             N'OCR',
+            N'EXTRACT_PAGE_FIGURES',
             N'OCR_QUALITY_ASSESSMENT',
+            N'VISION_OCR_ASSESSMENT',
             N'CHUNK_GENERATION',
             N'INDEX_CHUNK',
             N'REINDEX_DOCUMENT',
             N'REMOVE_VECTOR',
-            N'GENERATE_THUMBNAIL'
+            N'GENERATE_THUMBNAIL',
+            N'MEDIA_CLEANUP'
         )),
 
     CONSTRAINT [CK_DocumentProcessingJobs_Status]
@@ -153,7 +165,20 @@ CREATE TABLE [ethnowear].[DocumentProcessingJobs]
         CHECK ([ParametersJson] IS NULL OR ISJSON([ParametersJson]) = 1),
 
     CONSTRAINT [CK_DocumentProcessingJobs_ErrorDetailsJson]
-        CHECK ([ErrorDetailsJson] IS NULL OR ISJSON([ErrorDetailsJson]) = 1)
+        CHECK ([ErrorDetailsJson] IS NULL OR ISJSON([ErrorDetailsJson]) = 1),
+
+    CONSTRAINT [CK_DocumentProcessingJobs_Retirement]
+        CHECK (
+            ([RetiredAt] IS NULL AND [RetiredBy] IS NULL AND [RetirementReason] IS NULL)
+            OR (
+                [RetiredAt] IS NOT NULL
+                AND [RetiredBy] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([RetiredBy]))) > 0
+                AND [RetirementReason] IS NOT NULL
+                AND LEN(LTRIM(RTRIM([RetirementReason]))) > 0
+                AND [Status] IN (N'SUCCEEDED', N'FAILED', N'CANCELLED', N'TIMED_OUT', N'DEAD')
+            )
+        )
 );
 
 GO
@@ -169,9 +194,20 @@ WHERE [ActiveJobKey] IS NOT NULL;
 
 GO
 
+CREATE UNIQUE INDEX [UQ_DocumentProcessingJobs_JobKey]
+ON [ethnowear].[DocumentProcessingJobs] ([JobKey])
+WHERE [JobKey] IS NOT NULL;
+
+GO
+
 CREATE INDEX [IX_DocumentProcessingJobs_ClaimExpiresAt]
 ON [ethnowear].[DocumentProcessingJobs] ([ClaimExpiresAt])
 WHERE [ClaimExpiresAt] IS NOT NULL;
+
+GO
+
+CREATE INDEX [IX_DocumentProcessingJobs_PreviousJobId]
+ON [ethnowear].[DocumentProcessingJobs] ([PreviousJobId]);
 
 GO
 
@@ -198,3 +234,9 @@ GO
 CREATE INDEX [IX_DocumentProcessingJobs_CorrelationId]
 ON [ethnowear].[DocumentProcessingJobs] ([CorrelationId])
 WHERE [CorrelationId] IS NOT NULL;
+
+GO
+
+CREATE INDEX [IX_DocumentProcessingJobs_RetiredAt]
+ON [ethnowear].[DocumentProcessingJobs] ([RetiredAt])
+WHERE [RetiredAt] IS NOT NULL;

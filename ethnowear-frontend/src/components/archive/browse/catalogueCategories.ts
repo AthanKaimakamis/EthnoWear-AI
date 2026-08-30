@@ -9,9 +9,11 @@ export type CatalogueCategory = {
 export function buildCatalogueCategories(
     items: EntityCardDetails[],
     uncategorizedLabel: string,
+    excludedCategoryLocalNames: readonly string[] = [],
 ): CatalogueCategory[] {
     const sections = new Map<string, CatalogueCategory>()
     const uncategorized: ReferenceResource[] = []
+    const excluded = new Set(excludedCategoryLocalNames)
 
     items.forEach(item => {
         const resource: ReferenceResource = {
@@ -19,14 +21,18 @@ export function buildCatalogueCategories(
             localName: item.localName,
             label: item.label,
             comment: item.comment ?? undefined,
+            evidenceCount: item.evidenceCount,
+            representativeMediaAssetId: item.representativeMediaAssetId,
         }
 
-        if (item.categories.length === 0) {
+        const categories = item.categories.filter(category => !excluded.has(category.localName))
+
+        if (categories.length === 0) {
             uncategorized.push(resource)
             return
         }
 
-        item.categories.forEach(category => {
+        categories.forEach(category => {
             const section = sections.get(category.localName) ?? {
                 category: {
                     iri: category.iri,

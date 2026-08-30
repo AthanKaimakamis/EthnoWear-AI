@@ -1,36 +1,62 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-    Alert, Box, Button, Chip,
-    InputAdornment, LinearProgress, Paper,
-    Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
+    Alert, Box, Button, Chip, InputAdornment, Paper, Skeleton, Stack, TextField,
+    ToggleButton, ToggleButtonGroup, Tooltip, Typography,
 } from '@mui/material'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined'
 import ListOutlinedIcon from '@mui/icons-material/ListOutlined'
+import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined'
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
-import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
-import AdminPageHeader from '../../components/admin/AdminPageHeader'
-import MediaUploadDialog from '../../components/admin/MediaUploadDialog'
-import AdminModal from '../../components/admin/AdminModal'
-import ConfirmDialog from '../../components/admin/ConfirmDialog'
-import PdfViewerDialog from '../../components/admin/PdfViewerDialog'
-import FormSelectField from '../../components/forms/FormSelectField'
-import { archiveItemMediaApi, mediaAssetsApi, mediaEntityLinksApi, sourceReferencesApi, sourcesApi } from '../../api/ArchiveAdminApi'
-import type { ArchiveItemMediaDetails, MediaAssetDetails, MediaEntityLinkDetails, SourceDetails, SourceReferenceDetails } from '../../types/archive'
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
+import { useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
+import { archiveItemMediaApi, findDocumentMediaLinks, mediaAssetsApi, mediaEntityLinksApi, sourceReferencesApi, sourcesApi } from '../../api/ArchiveAdminApi'
+import { deletePageFigure, documentQueryKeys, listDocuments, listPageFigures } from '../../api/DocumentAdminApi'
 import { apiErrorMessage, apiUrl } from '../../api/http'
+import { useAdminAuth } from '../../app/adminAuth'
+import { apiEnumLabel } from '../../app/apiEnumLabels'
+import { hasAnyRole, processingMutationRoles } from '../../app/permissions'
+import AdminModal from '../../components/admin/AdminModal'
+import AdminPageHeader from '../../components/admin/AdminPageHeader'
+import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import MediaOntologyLinksEditor from '../../components/admin/media/MediaOntologyLinksEditor'
+import MediaUploadDialog from '../../components/admin/MediaUploadDialog'
+import PdfViewerDialog from '../../components/admin/PdfViewerDialog'
+import InfiniteScrollTrigger from '../../components/common/InfiniteScrollTrigger'
+import { PreviewableImage } from '../../components/common/ImageViewerDialog'
+import FormSelectField from '../../components/forms/FormSelectField'
+import type { MediaAssetDetails, SourceReferenceDetails } from '../../types/archive'
+
+const PAGE_SIZE = 24
+const DOCUMENT_PAGE_SIZE = 100
+const mediaQueryKey = ['admin', 'media'] as const
+
+async function listAllDocuments(signal?: AbortSignal) {
+    const documents = []
+    let page = 0
+    let last = false
+
+    while (!last) {
+        const result = await listDocuments({ page, size: DOCUMENT_PAGE_SIZE }, signal)
+        documents.push(...result.content)
+        last = result.last
+        page += 1
+    }
+
+    return documents
+}
 
 export default function MediaLibraryPage() {
-    const { t } = useTranslation()
-    const [assets, setAssets] = useState<MediaAssetDetails[]>([])
-    const [itemLinks, setItemLinks] = useState<ArchiveItemMediaDetails[]>([])
-    const [entityLinks, setEntityLinks] = useState<MediaEntityLinkDetails[]>([])
-    const [sources, setSources] = useState<SourceDetails[]>([])
-    const [references, setReferences] = useState<SourceReferenceDetails[]>([])
+    const { t, i18n } = useTranslation()
+    const queryClient = useQueryClient()
+    const { admin } = useAdminAuth()
+    const canEditOntologyLinks = Boolean(admin && hasAnyRole(admin.roles, processingMutationRoles))
     const [query, setQuery] = useState('')
     const [type, setType] = useState('')
     const [usage, setUsage] = useState('')
@@ -39,84 +65,223 @@ export default function MediaLibraryPage() {
     const [selected, setSelected] = useState<MediaAssetDetails | null>(null)
     const [pdfPreview, setPdfPreview] = useState<MediaAssetDetails | null>(null)
     const [deleting, setDeleting] = useState<MediaAssetDetails | null>(null)
+    const [deletePending, setDeletePending] = useState(false)
     const [uploadOpen, setUploadOpen] = useState(false)
-    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    async function load() {
-        setLoading(true); setError(null)
-        try {
-            const [assetPage, itemPage, entityPage, sourcePage, referencePage] = await Promise.all([
-                mediaAssetsApi.findAll({ size: 1000, sort: 'createdAt,desc' }), archiveItemMediaApi.findAll({ size: 1000 }),
-                mediaEntityLinksApi.findAll({ size: 1000 }), sourcesApi.findAll({ size: 1000 }), sourceReferencesApi.findAll({ size: 1000 }),
+    const assetsQuery = useInfiniteQuery({
+        queryKey: [...mediaQueryKey, 'assets'],
+        initialPageParam: 0,
+        queryFn: ({ pageParam, signal }) => mediaAssetsApi.findAll({ page: pageParam, size: PAGE_SIZE, sort: 'createdAt,desc' }, signal),
+        getNextPageParam: page => page.last ? undefined : page.number + 1,
+    })
+    const metadataQuery = useQuery({
+        queryKey: [...mediaQueryKey, 'metadata'],
+        queryFn: async ({ signal }) => {
+            const [itemPage, entityPage, sourcePage, referencePage, documents] = await Promise.all([
+                archiveItemMediaApi.findAll({ size: 1000 }, signal),
+                mediaEntityLinksApi.findAll({ size: 1000 }, signal),
+                sourcesApi.findAll({ size: 1000 }, signal),
+                sourceReferencesApi.findAll({ size: 1000 }, signal),
+                listAllDocuments(signal),
             ])
-            setAssets(assetPage.content); setItemLinks(itemPage.content); setEntityLinks(entityPage.content); setSources(sourcePage.content); setReferences(referencePage.content)
-        } catch (caught) { setError(apiErrorMessage(caught)) } finally { setLoading(false) }
-    }
+            return {
+                itemLinks: itemPage.content,
+                entityLinks: entityPage.content,
+                sources: sourcePage.content,
+                references: referencePage.content,
+                documents,
+            }
+        },
+    })
+
+    const assets = useMemo(() => approvedLibraryAssets(assetsQuery.data?.pages.flatMap(page => page.content) ?? []), [assetsQuery.data])
+    const documentLinkQueries = useQueries({
+        queries: (assetsQuery.data?.pages ?? []).map(pageResult => {
+            const mediaAssetIds = pageResult.content.map(asset => asset.id)
+            return {
+                queryKey: [...mediaQueryKey, 'document-links', mediaAssetIds],
+                queryFn: ({ signal }: { signal: AbortSignal }) => findDocumentMediaLinks(mediaAssetIds, signal),
+                enabled: mediaAssetIds.length > 0,
+            }
+        }),
+    })
+    const documentLinks = useMemo(() => documentLinkQueries.flatMap(result => result.data ?? []), [documentLinkQueries])
+    const metadata = metadataQuery.data
+    const itemLinks = useMemo(() => metadata?.itemLinks ?? [], [metadata?.itemLinks])
+    const entityLinks = useMemo(() => metadata?.entityLinks ?? [], [metadata?.entityLinks])
+    const sources = useMemo(() => metadata?.sources ?? [], [metadata?.sources])
+    const references = useMemo(() => metadata?.references ?? [], [metadata?.references])
+    const documents = useMemo(() => metadata?.documents ?? [], [metadata?.documents])
+    const filterActive = Boolean(query.trim() || type || usage || source)
+
     useEffect(() => {
-        Promise.all([
-            mediaAssetsApi.findAll({ size: 1000, sort: 'createdAt,desc' }), archiveItemMediaApi.findAll({ size: 1000 }),
-            mediaEntityLinksApi.findAll({ size: 1000 }), sourcesApi.findAll({ size: 1000 }), sourceReferencesApi.findAll({ size: 1000 }),
-        ]).then(([assetPage, itemPage, entityPage, sourcePage, referencePage]) => {
-            setAssets(assetPage.content); setItemLinks(itemPage.content); setEntityLinks(entityPage.content); setSources(sourcePage.content); setReferences(referencePage.content)
-        }).catch(caught => setError(apiErrorMessage(caught)))
-            .finally(() => setLoading(false))
-    }, [])
+        if (filterActive && assetsQuery.hasNextPage && !assetsQuery.isFetchingNextPage) void assetsQuery.fetchNextPage()
+    }, [assetsQuery, filterActive])
+
+    const referenceById = useMemo(() => new Map(references.map(reference => [reference.id, reference])), [references])
+    const sourceById = useMemo(() => new Map(sources.map(sourceValue => [sourceValue.id, sourceValue])), [sources])
+    const documentSourceByAsset = useMemo(() => new Map(documents.flatMap(document =>
+        document.sourceId ? [document.originalMediaAssetId, document.thumbnailMediaAssetId]
+            .filter((id): id is number => id !== null)
+            .map(id => [id, document.sourceId] as const) : [],
+    )), [documents])
+    const documentById = useMemo(() => new Map(documents.map(document => [document.id, document])), [documents])
+    const pageSourceByAsset = useMemo(() => new Map(documentLinks.map(link => {
+        const referenceSourceId = link.sourceReferenceId ? referenceById.get(link.sourceReferenceId)?.sourceId : null
+        return [link.mediaAssetId, referenceSourceId ?? link.documentSourceId] as const
+    })), [documentLinks, referenceById])
+    const sourceIdFor = useCallback((asset: MediaAssetDetails) => {
+        const figureReferenceId = asset.documentFigure?.sourceReferenceId
+        const referenceId = figureReferenceId ?? asset.sourceReferenceId
+        const referenceSourceId = referenceId ? referenceById.get(referenceId)?.sourceId : null
+        return referenceSourceId ?? pageSourceByAsset.get(asset.id) ?? documentSourceByAsset.get(asset.id) ?? null
+    }, [documentSourceByAsset, pageSourceByAsset, referenceById])
+    const sourceFor = useCallback((asset: MediaAssetDetails) => {
+        const sourceId = sourceIdFor(asset)
+        return sourceId ? sourceById.get(sourceId) ?? null : null
+    }, [sourceById, sourceIdFor])
 
     const usageByAsset = useMemo(() => {
         const counts = new Map<number, number>()
         ;[...itemLinks, ...entityLinks].forEach(link => counts.set(link.mediaAssetId, (counts.get(link.mediaAssetId) ?? 0) + 1))
+        documents.forEach(document => {
+            if (document.originalMediaAssetId) counts.set(document.originalMediaAssetId, (counts.get(document.originalMediaAssetId) ?? 0) + 1)
+            if (document.thumbnailMediaAssetId) counts.set(document.thumbnailMediaAssetId, (counts.get(document.thumbnailMediaAssetId) ?? 0) + 1)
+        })
+        documentLinks.forEach(link => counts.set(link.mediaAssetId, (counts.get(link.mediaAssetId) ?? 0) + 1))
+        assets.forEach(asset => { if (asset.documentFigure) counts.set(asset.id, Math.max(1, counts.get(asset.id) ?? 0)) })
         return counts
-    }, [entityLinks, itemLinks])
-    const sourceByReference = useMemo(() => new Map(references.map(reference => [reference.id, sources.find(sourceValue => sourceValue.id === reference.sourceId)])), [references, sources])
-    const usageCount = (assetId: number) => usageByAsset.get(assetId) ?? 0
-    const sourceFor = (asset: MediaAssetDetails) => asset.sourceReferenceId ? sourceByReference.get(asset.sourceReferenceId) : null
+    }, [assets, documentLinks, documents, entityLinks, itemLinks])
+    const usageCount = useCallback((assetId: number) => usageByAsset.get(assetId) ?? 0, [usageByAsset])
     const filtered = useMemo(() => assets.filter(asset => {
-        const count = usageByAsset.get(asset.id) ?? 0
-        const sourceValue = asset.sourceReferenceId ? sourceByReference.get(asset.sourceReferenceId) : null
+        const count = usageCount(asset.id)
+        const sourceValue = sourceFor(asset)
         const text = [asset.fileName, asset.description, sourceValue?.title].join(' ').toLocaleLowerCase()
-        return (!query.trim() || text.includes(query.trim().toLocaleLowerCase())) && (!type || asset.mediaType === type)
-            && (!usage || (usage === 'used' ? count > 0 : count === 0)) && (!source || sourceValue?.id === Number(source))
-    }), [assets, query, source, sourceByReference, type, usage, usageByAsset])
-    const referenceLabel = (reference: SourceReferenceDetails) => { const sourceValue = sources.find(value => value.id === reference.sourceId); return [sourceValue?.title, reference.pageFrom ? `${t('curator.fields.page')} ${reference.pageFrom}` : null].filter(Boolean).join(' · ') }
+        return (!query.trim() || text.includes(query.trim().toLocaleLowerCase()))
+            && (!type || asset.mediaType === type)
+            && (!usage || (usage === 'used' ? count > 0 : count === 0))
+            && (!source || sourceIdFor(asset) === Number(source))
+    }), [assets, query, source, sourceFor, sourceIdFor, type, usage, usageCount])
 
-    async function remove() {
-        if (!deleting) return
-        try { await mediaAssetsApi.remove(deleting.id); setDeleting(null); await load() } catch (caught) { setError(apiErrorMessage(caught)); setDeleting(null) }
+    const loadMore = useCallback(() => {
+        if (assetsQuery.hasNextPage && !assetsQuery.isFetchingNextPage) void assetsQuery.fetchNextPage()
+    }, [assetsQuery])
+    const referenceLabel = (reference: SourceReferenceDetails) => {
+        const sourceValue = sourceById.get(reference.sourceId)
+        return [sourceValue?.title, reference.pageFrom ? `${t('curator.fields.page')} ${reference.pageFrom}` : null].filter(Boolean).join(' · ')
     }
 
+    async function remove() {
+        if (!deleting || deletePending) return
+        setDeletePending(true)
+        try {
+            if (deleting.documentFigure) {
+                const figure = (await listPageFigures(deleting.documentFigure.documentPageId))
+                    .find(item => item.id === deleting.documentFigure?.figureId)
+                if (!figure) {
+                    setError(t('curator.mediaLibrary.figureNotFound'))
+                    setDeleting(null)
+                    return
+                }
+                await deletePageFigure(figure.documentPageId, figure.id, figure.version)
+                await queryClient.invalidateQueries({ queryKey: documentQueryKeys.detail(deleting.documentFigure.documentId) })
+            } else {
+                await mediaAssetsApi.remove(deleting.id)
+            }
+            if (selected?.id === deleting.id) setSelected(null)
+            setDeleting(null)
+            await queryClient.invalidateQueries({ queryKey: mediaQueryKey })
+        } catch (caught) {
+            setError(apiErrorMessage(caught)); setDeleting(null)
+        } finally { setDeletePending(false) }
+    }
+
+    const initialLoading = assetsQuery.isPending || metadataQuery.isPending
+    const loadError = assetsQuery.error ?? metadataQuery.error ?? documentLinkQueries.find(result => result.error)?.error
     return <Stack spacing={3}>
         <AdminPageHeader title={t('curator.mediaLibrary.title')} description={t('curator.mediaLibrary.description')} actions={<Button variant="contained" startIcon={<UploadOutlinedIcon />} onClick={() => setUploadOpen(true)}>{t('curator.media.upload')}</Button>} />
         <Paper variant="outlined" sx={{ p: 2 }}><Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'minmax(220px, 1.6fr) repeat(3, minmax(130px, 1fr)) auto' }, gap: 1.5, alignItems: 'center' }}>
             <TextField size="small" fullWidth value={query} onChange={event => setQuery(event.target.value)} placeholder={t('curator.mediaLibrary.search')} slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
-            <FormSelectField name="media-type-filter" size="small" label={t('curator.mediaLibrary.type')} value={type} onChange={event => setType(event.target.value)} options={[{ value: '', label: t('admin.allCategories') }, ...['IMAGE','PDF','SCAN','THUMBNAIL','OTHER'].map(value => ({ value, label: value }))]} />
-            <FormSelectField name="media-usage-filter" size="small" label={t('curator.mediaLibrary.usage')} value={usage} onChange={event => setUsage(event.target.value)} options={[{ value: '', label: t('admin.allCategories') }, ...['used','unused'].map(value => ({ value, label: t(`curator.mediaLibrary.${value}`) }))]} />
+            <FormSelectField name="media-type-filter" size="small" label={t('curator.mediaLibrary.type')} value={type} onChange={event => setType(event.target.value)} options={[{ value: '', label: t('admin.allCategories') }, ...['IMAGE', 'PDF', 'SCAN', 'THUMBNAIL', 'OTHER'].map(value => ({ value, label: apiEnumLabel(t, 'mediaType', value) }))]} />
+            <FormSelectField name="media-usage-filter" size="small" label={t('curator.mediaLibrary.usage')} value={usage} onChange={event => setUsage(event.target.value)} options={[{ value: '', label: t('admin.allCategories') }, ...['used', 'unused'].map(value => ({ value, label: t(`curator.mediaLibrary.${value}`) }))]} />
             <FormSelectField name="media-source-filter" size="small" label={t('curator.fields.source')} value={source} onChange={event => setSource(event.target.value)} options={[{ value: '', label: t('admin.allCategories') }, ...sources.map(value => ({ value: String(value.id), label: value.title }))]} />
-            <ToggleButtonGroup exclusive size="small" value={view} onChange={(_, next) => next && setView(next)}><ToggleButton value="grid"><AppsOutlinedIcon /></ToggleButton><ToggleButton value="list"><ListOutlinedIcon /></ToggleButton></ToggleButtonGroup>
+            <ToggleButtonGroup exclusive size="small" value={view} onChange={(_, next) => next && setView(next)}><ToggleButton value="grid" aria-label={t('curator.mediaLibrary.gridView')}><AppsOutlinedIcon /></ToggleButton><ToggleButton value="list" aria-label={t('curator.mediaLibrary.listView')}><ListOutlinedIcon /></ToggleButton></ToggleButtonGroup>
         </Box></Paper>
-        {loading && <LinearProgress />}{error && <Alert severity="error">{error}</Alert>}
-        {!loading && filtered.length === 0 && <Paper variant="outlined" sx={{ p: 5, textAlign: 'center' }}><Typography color="text.secondary">{t('curator.mediaLibrary.empty')}</Typography></Paper>}
-        <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', xl: 'repeat(5, 1fr)' } : '1fr', gap: 1.5 }}>
-            {filtered.map(asset => { const count = usageCount(asset.id); const sourceValue = sourceFor(asset); return <Paper key={asset.id} variant="outlined" sx={{ overflow: 'hidden', display: view === 'list' ? 'flex' : 'block', minWidth: 0 }}>
-                <Box onClick={() => setSelected(asset)} sx={{ width: view === 'list' ? 160 : '100%', aspectRatio: view === 'list' ? '16/9' : '4/3', bgcolor: 'background.default', display: 'grid', placeItems: 'center', cursor: 'pointer', overflow: 'hidden' }}>
-                    {asset.mediaType === 'IMAGE' || asset.mediaType === 'THUMBNAIL' || asset.mediaType === 'SCAN' ? <MediaThumbnail asset={asset} /> : <PictureAsPdfOutlinedIcon color="action" sx={{ fontSize: 46 }} />}
-                </Box>
-                <Stack sx={{ p: 1.5, minWidth: 0, flex: 1 }} spacing={.75}><Typography sx={{ fontWeight: 700 }} noWrap>{asset.fileName ?? t('curator.media.unnamed')}</Typography><Typography variant="body2" color="text.secondary" noWrap>{asset.description ?? sourceValue?.title ?? t('curator.mediaLibrary.noDescription')}</Typography><Stack direction="row" sx={{ gap: .75, alignItems: 'center' }}><Chip size="small" label={asset.mediaType} /><Chip size="small" variant="outlined" label={t('curator.mediaLibrary.usageCount', { count })} /></Stack><Stack direction="row" sx={{ justifyContent: 'flex-end' }}><Button size="small" onClick={() => setSelected(asset)}>{t('curator.actions.details')}</Button><Tooltip title={count ? t('curator.mediaLibrary.inUseWarning') : t('admin.delete')}><span><Button size="small" color="error" disabled={count > 0} onClick={() => setDeleting(asset)}><DeleteOutlineIcon fontSize="small" /></Button></span></Tooltip></Stack></Stack>
-            </Paper> })}
+        {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+        {loadError && <Alert severity="error">{apiErrorMessage(loadError)}</Alert>}
+        {!initialLoading && !assetsQuery.isFetchingNextPage && filtered.length === 0 && <Paper variant="outlined" sx={{ p: 5, textAlign: 'center' }}><Typography color="text.secondary">{t('curator.mediaLibrary.empty')}</Typography></Paper>}
+        <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
+            {initialLoading && Array.from({ length: 8 }, (_, index) => <MediaCardSkeleton key={index} view={view} />)}
+            {filtered.map(asset => <MediaCard key={asset.id} asset={asset} view={view} sourceTitle={sourceFor(asset)?.title ?? null} documentTitle={asset.documentFigure ? documentById.get(asset.documentFigure.documentId)?.title ?? null : null} usageCount={usageCount(asset.id)} language={i18n.resolvedLanguage ?? 'bg'} onOpen={() => setSelected(asset)} onDelete={() => setDeleting(asset)} />)}
+            {assetsQuery.isFetchingNextPage && Array.from({ length: filterActive ? 4 : 8 }, (_, index) => <MediaCardSkeleton key={`next-${index}`} view={view} />)}
         </Box>
-        <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sourceReferenceLabel={referenceLabel} onClose={() => setUploadOpen(false)} onUploaded={asset => { setAssets(current => [asset, ...current]); setUploadOpen(false) }} />
-        <AdminModal open={Boolean(selected)} onClose={() => setSelected(null)} maxWidth="md" title={selected?.fileName ?? t('curator.media.unnamed')}>
-            {selected && <Stack spacing={2}>{selected.mediaType === 'PDF' ? <Box sx={{ minHeight: 220, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', display: 'grid', placeItems: 'center' }}><Stack spacing={1.5} sx={{ alignItems: 'center' }}><PictureAsPdfOutlinedIcon color="action" sx={{ fontSize: 58 }} /><Button variant="contained" startIcon={<VisibilityOutlinedIcon />} onClick={() => setPdfPreview(selected)}>{t('pdfViewer.preview')}</Button></Stack></Box> : <Box component="img" src={`/api/media/${selected.id}/content`} alt={selected.fileName ?? ''} sx={{ maxWidth: '100%', maxHeight: 560, objectFit: 'contain', alignSelf: 'center' }} />}<Typography>{selected.description}</Typography><Alert severity={usageCount(selected.id) ? 'info' : 'warning'}>{usageCount(selected.id) ? t('curator.mediaLibrary.usageCount', { count: usageCount(selected.id) }) : t('curator.mediaLibrary.unusedWarning')}</Alert>{itemLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{t('curator.mediaLibrary.archiveUsage', { id: link.archiveItemId })}</Typography>)}{entityLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{link.description ?? link.entityType}</Typography>)}<Alert icon={<WarningAmberOutlinedIcon />} severity="info">{t('curator.mediaLibrary.replaceUnavailable')}</Alert></Stack>}
+        <InfiniteScrollTrigger enabled={!filterActive && Boolean(assetsQuery.hasNextPage)} loading={false} onLoadMore={loadMore} />
+        <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sourceReferenceLabel={referenceLabel} onClose={() => setUploadOpen(false)} onUploaded={() => { setUploadOpen(false); void queryClient.invalidateQueries({ queryKey: mediaQueryKey }) }} />
+        <AdminModal open={Boolean(selected)} onClose={() => setSelected(null)} maxWidth="md" title={selected?.fileName ?? t('curator.media.unnamed')} actions={selected && <><Button color="error" startIcon={<DeleteOutlineIcon />} disabled={!canDeleteMediaAsset(selected, usageCount(selected.id))} onClick={() => setDeleting(selected)}>{selected.documentFigure ? t('curator.mediaLibrary.deleteFigure') : t('admin.delete')}</Button><Button onClick={() => setSelected(null)}>{t('curator.actions.close')}</Button></>}>
+            {selected && <Stack spacing={2}>{selected.mediaType === 'PDF' ? <Box sx={{ minHeight: 220, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', display: 'grid', placeItems: 'center' }}><Stack spacing={1.5} sx={{ alignItems: 'center' }}><PictureAsPdfOutlinedIcon color="action" sx={{ fontSize: 58 }} /><Button variant="contained" startIcon={<VisibilityOutlinedIcon />} onClick={() => setPdfPreview(selected)}>{t('pdfViewer.preview')}</Button></Stack></Box> : <PreviewableImage src={`/api/media/${selected.id}/content`} alt={selected.documentFigure?.caption ?? selected.fileName ?? t('curator.media.unnamed')} caption={selected.documentFigure?.caption ?? selected.description} buttonSx={{ maxWidth: '100%', alignSelf: 'center' }} imageSx={{ maxWidth: '100%', maxHeight: 560, objectFit: 'contain' }} />}
+                {selected.documentFigure && <Paper variant="outlined" sx={{ p: 2 }}><Stack spacing={1}><Chip size="small" color="success" label={t('curator.mediaFigures.badge')} sx={{ alignSelf: 'flex-start' }} /><Typography variant="h6" sx={{ fontWeight: 800 }}>{selected.documentFigure.caption || t('documents.figures.captionMissing')}</Typography><Typography color="text.secondary">{t('curator.mediaFigures.documentContext', { document: documentById.get(selected.documentFigure.documentId)?.title ?? `#${selected.documentFigure.documentId}`, page: selected.documentFigure.pageSequence })}</Typography>{selected.documentFigure.printedFigureNumber && <Typography variant="body2">{selected.documentFigure.printedFigureNumber}</Typography>}{selected.documentFigure.sourceReferenceId && <Typography variant="body2">{t('curator.mediaFigures.citation')}: {referenceById.has(selected.documentFigure.sourceReferenceId) ? referenceLabel(referenceById.get(selected.documentFigure.sourceReferenceId)!) : `#${selected.documentFigure.sourceReferenceId}`}</Typography>}<Button component={Link} to={`/management/documents/${selected.documentFigure.documentId}?tab=figures&pageId=${selected.documentFigure.documentPageId}&figureId=${selected.documentFigure.figureId}`} startIcon={<LinkOutlinedIcon />} sx={{ alignSelf: 'flex-start' }}>{t('curator.mediaFigures.openSource')}</Button></Stack></Paper>}
+                <MediaOntologyLinksEditor mediaAssetId={selected.id} canEdit={canEditOntologyLinks} />
+                {!selected.documentFigure && <Typography>{selected.description}</Typography>}<Alert severity={usageCount(selected.id) ? 'info' : 'warning'}>{usageCount(selected.id) ? t('curator.mediaLibrary.usageCount', { count: usageCount(selected.id) }) : t('curator.mediaLibrary.unusedWarning')}</Alert>{itemLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{t('curator.mediaLibrary.archiveUsage', { id: link.archiveItemId })}</Typography>)}{documentLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Button key={link.documentPageMediaId} component={Link} to={`/management/documents/${link.documentId}?tab=pages`} variant="text" sx={{ alignSelf: 'flex-start' }}>{t('curator.mediaLibrary.documentPageUsage', { documentId: link.documentId, pageId: link.documentPageId })}</Button>)}{entityLinks.filter(link => link.mediaAssetId === selected.id).map(link => <Typography key={link.id} variant="body2">{link.description ?? link.entityType}</Typography>)}{!selected.documentFigure && <Alert icon={<WarningAmberOutlinedIcon />} severity="info">{t('curator.mediaLibrary.replaceUnavailable')}</Alert>}</Stack>}
         </AdminModal>
         {pdfPreview && <PdfViewerDialog open source={apiUrl(`/api/media/${pdfPreview.id}/content`)} title={pdfPreview.fileName ?? t('curator.media.unnamed')} downloadName={pdfPreview.fileName ?? undefined} onClose={() => setPdfPreview(null)} />}
-        <ConfirmDialog open={Boolean(deleting)} title={t('admin.confirmDelete')} onCancel={() => setDeleting(null)} onConfirm={remove}>
-            {t('admin.confirmDeleteText', { name: deleting?.fileName })}
-        </ConfirmDialog>
+        <ConfirmDialog open={Boolean(deleting)} title={deleting?.documentFigure ? t('curator.mediaLibrary.deleteFigureTitle') : t('admin.confirmDelete')} confirmLabel={t('admin.delete')} pending={deletePending} onCancel={() => setDeleting(null)} onConfirm={remove}>{deleting?.documentFigure ? t('curator.mediaLibrary.deleteFigureText', { name: deleting.documentFigure.caption ?? deleting.fileName }) : t('admin.confirmDeleteText', { name: deleting?.fileName })}</ConfirmDialog>
     </Stack>
 }
+
+type MediaCardProps = {
+    asset: MediaAssetDetails
+    view: 'grid' | 'list'
+    sourceTitle: string | null
+    documentTitle: string | null
+    usageCount: number
+    language: string
+    onOpen: () => void
+    onDelete: () => void
+}
+
+function MediaCard({ asset, view, sourceTitle, documentTitle, usageCount, language, onOpen, onDelete }: MediaCardProps) {
+    const { t } = useTranslation()
+    return <Paper variant="outlined" sx={{ overflow: 'hidden', display: view === 'list' ? 'flex' : 'block', minWidth: 0, transition: 'box-shadow 150ms', '&:hover': { boxShadow: 2 } }}>
+        <Box onClick={onOpen} sx={{ width: view === 'list' ? 190 : '100%', aspectRatio: '16/10', bgcolor: 'grey.100', display: 'grid', placeItems: 'center', cursor: 'pointer', overflow: 'hidden', flexShrink: 0 }}>
+            {asset.mediaType === 'IMAGE' || asset.mediaType === 'THUMBNAIL' || asset.mediaType === 'SCAN' ? <MediaThumbnail asset={asset} /> : <PictureAsPdfOutlinedIcon color="action" sx={{ fontSize: 50 }} />}
+        </Box>
+        <Stack sx={{ p: 2, minWidth: 0, flex: 1 }} spacing={1}>
+            <Typography sx={{ fontWeight: 700 }} noWrap title={asset.documentFigure?.caption ?? asset.fileName ?? undefined}>{asset.documentFigure?.caption ?? asset.fileName ?? t('curator.media.unnamed')}</Typography>
+            <Typography variant="body2" color="text.secondary" noWrap>{asset.documentFigure ? t('curator.mediaFigures.documentContext', { document: documentTitle ?? `#${asset.documentFigure.documentId}`, page: asset.documentFigure.pageSequence }) : sourceTitle ?? asset.description ?? t('curator.mediaLibrary.noDescription')}</Typography>
+            <Typography variant="caption" color="text.secondary">{formatBytes(asset.sizeBytes, language)}{asset.width && asset.height ? ` · ${asset.width} × ${asset.height}` : ''}</Typography>
+            <Stack direction="row" sx={{ gap: .75, alignItems: 'center', flexWrap: 'wrap' }}>{asset.documentFigure && <Chip size="small" color="success" label={t('curator.mediaFigures.badge')} />}<Chip size="small" label={apiEnumLabel(t, 'mediaType', asset.mediaType)} /><Chip size="small" variant="outlined" label={t('curator.mediaLibrary.usageCount', { count: usageCount })} /></Stack>
+            <Stack direction="row" sx={{ justifyContent: 'flex-end', mt: 'auto' }}><Button size="small" onClick={onOpen}>{t('curator.actions.details')}</Button><Tooltip title={asset.documentFigure ? t('curator.mediaLibrary.deleteFigure') : usageCount ? t('curator.mediaLibrary.inUseWarning') : t('admin.delete')}><span><Button size="small" color="error" disabled={!canDeleteMediaAsset(asset, usageCount)} onClick={onDelete} aria-label={asset.documentFigure ? t('curator.mediaLibrary.deleteFigure') : t('admin.delete')}><DeleteOutlineIcon fontSize="small" /></Button></span></Tooltip></Stack>
+        </Stack>
+    </Paper>
+}
+
+function MediaCardSkeleton({ view }: { view: 'grid' | 'list' }) {
+    return <Paper variant="outlined" sx={{ overflow: 'hidden', display: view === 'list' ? 'flex' : 'block' }}>
+        <Skeleton variant="rectangular" animation="wave" sx={{ width: view === 'list' ? 190 : '100%', aspectRatio: '16/10', flexShrink: 0 }} />
+        <Stack spacing={1} sx={{ p: 2, flex: 1 }}><Skeleton width="72%" /><Skeleton width="48%" /><Skeleton width="35%" /><Stack direction="row" spacing={1}><Skeleton variant="rounded" width={78} height={24} /><Skeleton variant="rounded" width={70} height={24} /></Stack></Stack>
+    </Paper>
+}
+
 function MediaThumbnail({ asset }: { asset: MediaAssetDetails }) {
     const [failed, setFailed] = useState(false)
-    return failed
-        ? <ImageNotSupportedOutlinedIcon color="action" sx={{ fontSize: 46 }} />
-        : <Box component="img" src={`/api/media/${asset.id}/content`} alt="" onError={() => setFailed(true)} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    const [loaded, setLoaded] = useState(false)
+    if (failed) return <ImageNotSupportedOutlinedIcon color="action" sx={{ fontSize: 46 }} />
+    return <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+        {!loaded && <Skeleton variant="rectangular" animation="wave" sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />}
+        <Box component="img" loading="lazy" src={`/api/media/${asset.id}/content`} alt="" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} sx={{ width: '100%', height: '100%', objectFit: 'cover', opacity: loaded ? 1 : 0 }} />
+    </Box>
+}
+
+function formatBytes(value: number | null, language: string) {
+    if (value == null) return '—'
+    return new Intl.NumberFormat(language, { style: 'unit', unit: value >= 1_000_000 ? 'megabyte' : 'kilobyte', unitDisplay: 'short', maximumFractionDigits: 1 }).format(value / (value >= 1_000_000 ? 1_000_000 : 1_000))
+}
+
+export function approvedLibraryAssets(assets: MediaAssetDetails[]) {
+    return assets.filter(asset => !asset.documentFigure || asset.documentFigure.reviewState === 'APPROVED')
+}
+
+export function canDeleteMediaAsset(asset: MediaAssetDetails, usageCount: number) {
+    return Boolean(asset.documentFigure) || usageCount === 0
 }

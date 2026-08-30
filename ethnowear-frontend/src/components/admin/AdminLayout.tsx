@@ -27,7 +27,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminAuth } from '../../app/adminAuth'
-import { administratorRoles, hasAnyRole, managementRoles, reviewRoles, type RoleName } from '../../app/permissions'
+import { administratorRoles, hasAnyRole, managementRoles, processingReadRoles, reviewRoles, type RoleName } from '../../app/permissions'
+import { ManagementEventsProvider } from '../../app/ManagementEventsProvider'
 
 const drawerWidth = 248
 type NavigationItem = {
@@ -38,28 +39,28 @@ type NavigationItem = {
 }
 
 const ontologyItems: NavigationItem[] = [
-    { path: '/admin/ornaments', key: 'ornaments', icon: CategoryOutlinedIcon, roles: managementRoles },
-    { path: '/admin/techniques', key: 'techniques', icon: DesignServicesOutlinedIcon, roles: managementRoles },
-    { path: '/admin/motifs', key: 'motifs', icon: HubOutlinedIcon, roles: managementRoles },
-    { path: '/admin/regions', key: 'regions', icon: MapOutlinedIcon, roles: managementRoles },
-    { path: '/admin/regional-embroideries', key: 'regionalEmbroideries', icon: TextureOutlinedIcon, roles: managementRoles },
+    { path: '/management/ornaments', key: 'ornaments', icon: CategoryOutlinedIcon, roles: managementRoles },
+    { path: '/management/techniques', key: 'techniques', icon: DesignServicesOutlinedIcon, roles: managementRoles },
+    { path: '/management/motifs', key: 'motifs', icon: HubOutlinedIcon, roles: managementRoles },
+    { path: '/management/regions', key: 'regions', icon: MapOutlinedIcon, roles: managementRoles },
+    { path: '/management/regional-embroideries', key: 'regionalEmbroideries', icon: TextureOutlinedIcon, roles: managementRoles },
 ]
 
 const primaryItems: NavigationItem[] = [
-    { path: '/admin/archive', key: 'archive', icon: Inventory2OutlinedIcon, roles: managementRoles },
-    { path: '/admin/documents', key: 'documents', icon: FolderCopyOutlinedIcon, roles: managementRoles },
-    { path: '/admin/media', key: 'media', icon: CollectionsOutlinedIcon, roles: managementRoles },
-    { path: '/admin/processing', key: 'processing', icon: PendingActionsOutlinedIcon, roles: reviewRoles },
+    { path: '/management/archive', key: 'archive', icon: Inventory2OutlinedIcon, roles: managementRoles },
+    { path: '/management/documents', key: 'documents', icon: FolderCopyOutlinedIcon, roles: managementRoles },
+    { path: '/management/media', key: 'media', icon: CollectionsOutlinedIcon, roles: managementRoles },
+    { path: '/management/processing', key: 'processing', icon: PendingActionsOutlinedIcon, roles: processingReadRoles },
 ]
 const archiveItems: NavigationItem[] = [
-    { path: '/admin/advanced/archive-items', key: 'archiveitems', icon: Inventory2OutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/sources', key: 'sources', icon: MenuBookOutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/source-references', key: 'sourcereferences', icon: BookmarkBorderOutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/archive-item-features', key: 'archiveitemfeatures', icon: FactCheckOutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/media-assets', key: 'mediaassets', icon: PermMediaOutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/archive-item-media', key: 'archiveitemmedia', icon: LinkOutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/media-feature-annotations', key: 'mediafeatureannotations', icon: CropFreeOutlinedIcon, roles: reviewRoles },
-    { path: '/admin/advanced/knowledge-chunks', key: 'knowledgechunks', icon: ArticleOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/archive-items', key: 'archiveitems', icon: Inventory2OutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/sources', key: 'sources', icon: MenuBookOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/source-references', key: 'sourcereferences', icon: BookmarkBorderOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/archive-item-features', key: 'archiveitemfeatures', icon: FactCheckOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/media-assets', key: 'mediaassets', icon: PermMediaOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/archive-item-media', key: 'archiveitemmedia', icon: LinkOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/media-feature-annotations', key: 'mediafeatureannotations', icon: CropFreeOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/knowledge-chunks', key: 'knowledgechunks', icon: ArticleOutlinedIcon, roles: reviewRoles },
 ]
 
 function AdminLayout() {
@@ -148,7 +149,7 @@ function AdminLayout() {
                 })}
                 </List></Collapse>
                 {admin && hasAnyRole(admin.roles, administratorRoles) && (
-                    <ListItemButton component={NavLink} to="/admin/users" onClick={() => setOpen(false)}
+                    <ListItemButton component={NavLink} to="/management/users" onClick={() => setOpen(false)}
                         sx={{ mt: .5, borderRadius: 1, borderLeft: 3, borderColor: 'transparent', '&.active': { color: 'primary.main', bgcolor: '#F4E9EB', borderLeftColor: 'primary.main' } }}>
                         <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}><PeopleAltOutlinedIcon fontSize="small" /></ListItemIcon>
                         <ListItemText primary={t('curator.navigation.users')} />
@@ -159,7 +160,7 @@ function AdminLayout() {
     )
 
     return (
-        <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 68px)' }}>
+        <ManagementEventsProvider><Box sx={{ display: 'flex', minHeight: 'calc(100vh - 68px)' }}>
             {desktop ? (
                 <Box component="aside" sx={{ width: drawerWidth, flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
                     {navigation}
@@ -177,7 +178,7 @@ function AdminLayout() {
             <Box component="main" sx={{ minWidth: 0, flex: 1, px: { xs: 2, sm: 3, lg: 5 }, py: { xs: 3, md: 4 } }}>
                 <Outlet />
             </Box>
-        </Box>
+        </Box></ManagementEventsProvider>
     )
 }
 

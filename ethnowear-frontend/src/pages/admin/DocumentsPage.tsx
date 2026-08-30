@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Alert, Box, Button, Collapse, FormControl, IconButton, InputAdornment, InputLabel, LinearProgress, MenuItem, Paper, Select, Skeleton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, TextField, Tooltip, Typography } from '@mui/material'
+import { Alert, Box, Button, Collapse, FormControl, IconButton, InputAdornment, InputLabel, LinearProgress, MenuItem, Paper, Select, Skeleton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField, Tooltip, Typography } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
@@ -13,6 +13,7 @@ import { apiErrorMessage } from '../../api/http'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import DocumentStatusChip from '../../components/admin/document/DocumentStatusChip'
 import DocumentUploadDialog from '../../components/admin/document/DocumentUploadDialog'
+import SortableTableCell from '../../components/admin/table/SortableTableCell'
 import { documentTypes, indexingStates, processingStates, provenanceStatuses, provenanceTrustStates, reviewStates } from '../../components/admin/document/documentOptions'
 import useDebouncedValue from '../../hooks/useDebouncedValue'
 import type { DocumentQuery, DocumentSummary } from '../../types/document'
@@ -89,33 +90,30 @@ export default function DocumentsPage() {
                 <FilterSelect label={t('documents.filter.language')} value={params.get('language') ?? ''} onChange={value => updateParam('language', value)} options={[{ value: 'bg', label: 'Български' }, { value: 'en', label: 'English' }]} />
                 <FilterSelect label={t('documents.filter.source')} value={params.get('source') ?? ''} onChange={value => updateParam('source', value)} options={sources.map(source => ({ value: String(source.id), label: source.title }))} />
             </Box></Collapse>
-            {documentsQuery.isFetching && !documentsQuery.isPending && <LinearProgress />}
+            {documentsQuery.isPending && <LinearProgress />}
             <TableContainer><Table size="small" aria-label={t('documents.title')}><TableHead><TableRow>
-                <SortableHeader active={sortProperty === 'title'} direction={sortDirection} onClick={() => changeSort('title')}>{t('documents.columns.title')}</SortableHeader>
+                <SortableTableCell active={sortProperty === 'title'} direction={sortDirection} onClick={() => changeSort('title')}>{t('documents.columns.title')}</SortableTableCell>
                 <TableCell>{t('documents.columns.source')}</TableCell>
-                <SortableHeader active={sortProperty === 'language'} direction={sortDirection} onClick={() => changeSort('language')}>{t('documents.columns.language')}</SortableHeader>
+                <SortableTableCell active={sortProperty === 'language'} direction={sortDirection} onClick={() => changeSort('language')}>{t('documents.columns.language')}</SortableTableCell>
                 <TableCell align="right">{t('documents.columns.pages')}</TableCell>
-                <SortableHeader active={sortProperty === 'processingState'} direction={sortDirection} onClick={() => changeSort('processingState')}>{t('documents.columns.processing')}</SortableHeader>
-                <SortableHeader active={sortProperty === 'reviewState'} direction={sortDirection} onClick={() => changeSort('reviewState')}>{t('documents.columns.review')}</SortableHeader>
+                <SortableTableCell active={sortProperty === 'processingState'} direction={sortDirection} onClick={() => changeSort('processingState')}>{t('documents.columns.processing')}</SortableTableCell>
+                <SortableTableCell active={sortProperty === 'reviewState'} direction={sortDirection} onClick={() => changeSort('reviewState')}>{t('documents.columns.review')}</SortableTableCell>
                 <TableCell>{t('documents.columns.trust')}</TableCell>
-                <SortableHeader active={sortProperty === 'indexingState'} direction={sortDirection} onClick={() => changeSort('indexingState')}>{t('documents.columns.indexing')}</SortableHeader>
-                <SortableHeader active={sortProperty === 'updatedAt'} direction={sortDirection} onClick={() => changeSort('updatedAt')}>{t('documents.columns.updated')}</SortableHeader>
+                <SortableTableCell active={sortProperty === 'indexingState'} direction={sortDirection} onClick={() => changeSort('indexingState')}>{t('documents.columns.indexing')}</SortableTableCell>
+                <SortableTableCell active={sortProperty === 'updatedAt'} direction={sortDirection} onClick={() => changeSort('updatedAt')}>{t('documents.columns.updated')}</SortableTableCell>
                 <TableCell align="right">{t('documents.columns.actions')}</TableCell>
             </TableRow></TableHead><TableBody>
-                {documentsQuery.isPending ? Array.from({ length: 8 }, (_, index) => <DocumentSkeletonRow key={index} />) : documentsQuery.data?.content.length === 0 ? <TableRow><TableCell colSpan={10} align="center" sx={{ py: 8, color: 'text.secondary' }}>{t('documents.noResults')}</TableCell></TableRow> : documentsQuery.data?.content.map(document => <DocumentRow key={document.id} document={document} language={i18n.resolvedLanguage ?? 'bg'} onOpen={() => navigate(`/admin/documents/${document.id}`)} />)}
+                {documentsQuery.isPending ? Array.from({ length: 8 }, (_, index) => <DocumentSkeletonRow key={index} />) : documentsQuery.data?.content.length === 0 ? <TableRow><TableCell colSpan={10} align="center" sx={{ py: 8, color: 'text.secondary' }}>{t('documents.noResults')}</TableCell></TableRow> : documentsQuery.data?.content.map(document => <DocumentRow key={document.id} document={document} language={i18n.resolvedLanguage ?? 'bg'} onOpen={() => navigate(`/management/documents/${document.id}`)} />)}
             </TableBody></Table></TableContainer>
             <TablePagination component="div" count={documentsQuery.data?.totalElements ?? 0} page={page} rowsPerPage={size} rowsPerPageOptions={pageSizes} onPageChange={(_, value) => updateParam('page', String(value))} onRowsPerPageChange={event => updateParam('size', event.target.value)} />
         </Paper>
-        <DocumentUploadDialog open={uploadOpen} sources={sources} references={referencesQuery.data?.content ?? []} onClose={() => setUploadOpen(false)} onSourceCreated={() => { void queryClient.invalidateQueries({ queryKey: ['admin', 'sources'] }) }} onUploaded={(result, kind, queued) => { setUploadOpen(false); void queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }); setNotice(t(kind === 'pdf' ? 'documents.uploadDialog.pdfQueued' : queued ? 'documents.uploadDialog.captureQueued' : 'documents.uploadDialog.captureSaved')); navigate(`/admin/documents/${result.documentId}`) }} />
+        <DocumentUploadDialog open={uploadOpen} sources={sources} references={referencesQuery.data?.content ?? []} onClose={() => setUploadOpen(false)} onSourceCreated={() => { void queryClient.invalidateQueries({ queryKey: ['admin', 'sources'] }) }} onUploaded={(result, kind, queued) => { setUploadOpen(false); void queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }); setNotice(t(kind === 'pdf' ? 'documents.uploadDialog.pdfQueued' : queued ? 'documents.uploadDialog.captureQueued' : 'documents.uploadDialog.captureSaved')); navigate(`/management/documents/${result.documentId}`) }} />
     </Stack>
 }
 
 function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (value?: string) => void }) {
     const { t } = useTranslation()
     return <FormControl size="small" fullWidth><InputLabel>{label}</InputLabel><Select label={label} value={value} onChange={event => onChange(event.target.value || undefined)}><MenuItem value=""><em>{t('documents.filter.all')}</em></MenuItem>{options.map(option => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}</Select></FormControl>
-}
-function SortableHeader({ active, direction, onClick, children }: { active: boolean; direction: 'asc' | 'desc'; onClick: () => void; children: React.ReactNode }) {
-    return <TableCell sortDirection={active ? direction : false}><TableSortLabel active={active} direction={active ? direction : 'asc'} onClick={onClick}>{children}</TableSortLabel></TableCell>
 }
 function DocumentRow({ document, language, onOpen }: { document: DocumentSummary; language: string; onOpen: () => void }) {
     const { t } = useTranslation()

@@ -14,5 +14,6 @@ export const ArchiveManagerPage = lazy(() => import('../pages/admin/ArchiveManag
 export const MediaLibraryPage = lazy(() => import('../pages/admin/MediaLibraryPage'))
 export const DocumentsPage = lazy(() => import('../pages/admin/DocumentsPage'))
 export const DocumentDetailPage = lazy(() => import('../pages/admin/DocumentDetailPage'))
+export const DocumentPageDetailPage = lazy(() => import('../pages/admin/DocumentPageDetailPage'))
 export const ProcessingStatusPage = lazy(() => import('../pages/admin/ProcessingStatusPage'))
 export const ArchiveEditRedirect = lazy(() => import('../pages/admin/ArchiveEditRedirect'))

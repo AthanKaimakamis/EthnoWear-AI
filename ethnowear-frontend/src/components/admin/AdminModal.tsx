@@ -13,9 +13,11 @@ type Props = {
     description?: ReactNode
     children: ReactNode
     actions?: ReactNode
+    headerActions?: ReactNode
     onClose: () => void
     closeDisabled?: boolean
     maxWidth?: DialogProps['maxWidth']
+    fullScreen?: boolean
     blurBackdrop?: boolean
 }
 
@@ -25,9 +27,11 @@ export default function AdminModal({
     description,
     children,
     actions,
+    headerActions,
     onClose,
     closeDisabled = false,
     maxWidth = 'md',
+    fullScreen = false,
     blurBackdrop = false,
 }: Props) {
     const { t } = useTranslation()
@@ -37,6 +41,7 @@ export default function AdminModal({
             open={open}
             onClose={closeDisabled ? undefined : onClose}
             fullWidth
+            fullScreen={fullScreen}
             maxWidth={maxWidth}
             scroll="paper"
             slotProps={{ backdrop: { sx: blurBackdrop ? { backdropFilter: 'blur(7px)' } : undefined } }}
@@ -48,23 +53,26 @@ export default function AdminModal({
                             {title}
                         </Typography>
                         {description && (
-                            <Typography color="text.secondary" variant="body2" sx={{ mt: .5 }}>
+                            <Typography component="div" color="text.secondary" variant="body2" sx={{ mt: .5 }}>
                                 {description}
                             </Typography>
                         )}
                     </Box>
-                    <Tooltip title={t('curator.actions.close')}>
-                        <span>
-                            <IconButton
-                                aria-label={t('curator.actions.close')}
-                                disabled={closeDisabled}
-                                edge="end"
-                                onClick={onClose}
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                        </span>
-                    </Tooltip>
+                    <Stack direction="row" spacing={.5} sx={{ alignItems: 'center', flexShrink: 0 }}>
+                        {headerActions}
+                        <Tooltip title={t('curator.actions.close')}>
+                            <span>
+                                <IconButton
+                                    aria-label={t('curator.actions.close')}
+                                    disabled={closeDisabled}
+                                    edge="end"
+                                    onClick={onClose}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    </Stack>
                 </Stack>
             </DialogTitle>
             <DialogContent dividers sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.default' }}>

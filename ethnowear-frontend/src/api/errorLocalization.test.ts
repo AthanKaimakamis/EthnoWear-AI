@@ -28,6 +28,10 @@ describe('API error localization', () => {
             'Потребителско име е задължително.',
             'Имейл трябва да съдържа валиден имейл адрес.',
         ])
+        expect(apiErrorMessage(new ApiError('Validation failed', 400, {
+            message: 'Validation failed',
+            fields: { username: 'must not be blank', email: 'must be a well-formed email address' },
+        }))).toContain('Имейл трябва да съдържа валиден имейл адрес.')
     })
 
     it('renders ontology references without exposing the raw response objects', async () => {
@@ -60,5 +64,41 @@ describe('API error localization', () => {
             code: 'USER_USERNAME_EXISTS',
             message: 'A message that may change',
         }))).toBe('Потребителското име вече се използва.')
+    })
+
+    it('localizes stable processing-job error codes', async () => {
+        await i18n.changeLanguage('bg')
+
+        expect(apiErrorMessage(new ApiError('conflict', 409, {
+            code: 'PROCESSING_JOB_INVALID_TRANSITION',
+            message: 'Backend wording may change',
+        }))).toBe('Това действие не е възможно при текущото състояние на задачата.')
+
+        expect(apiErrorMessage(new ApiError('conflict', 409, {
+            code: 'VISION_JOB_ALREADY_ACTIVE',
+            message: 'Raw backend conflict details',
+        }))).toBe('За този OCR резултат вече се изпълнява ръчно визуално сравнение.')
+    })
+
+    it('localizes document deletion safeguards without exposing backend details', async () => {
+        await i18n.changeLanguage('bg')
+
+        expect(apiErrorMessage(new ApiError('service unavailable', 503, {
+            code: 'DOCUMENT_VECTOR_CLEANUP_UNAVAILABLE',
+            message: 'Raw Qdrant failure details',
+        }))).toBe('Документът не може да бъде изтрит, защото данните му в търсачката не могат да бъдат почистени безопасно. Опитайте отново по-късно.')
+    })
+
+    it('renders chunk-generation blockers instead of a generic 422 error', async () => {
+        await i18n.changeLanguage('bg')
+
+        expect(apiErrorMessages(new ApiError('unprocessable', 422, {
+            code: 'CHUNK_GENERATION_INELIGIBLE',
+            message: 'Document has no eligible approved pages for chunk generation',
+            blockers: [{ documentPageId: 42, code: 'PROVENANCE_INELIGIBLE', message: 'raw details' }],
+        }))).toEqual([
+            'Страницата още не отговаря на изискванията за създаване на текстови фрагменти.',
+            'Произходът на страницата не позволява използването й.',
+        ])
     })
 })

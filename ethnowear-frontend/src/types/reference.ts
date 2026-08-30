@@ -10,6 +10,8 @@ export type ReferenceResource = {
     altLabelsByLanguage?: Partial<Record<Language, string[]>>
     comments?: Partial<Record<Language, string>>
     imageUrl?: string | null
+    evidenceCount?: number
+    representativeMediaAssetId?: number | null
 }
 
 export type ReferenceData = {
