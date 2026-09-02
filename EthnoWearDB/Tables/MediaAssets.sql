@@ -22,6 +22,9 @@ CREATE TABLE [ethnowear].[MediaAssets]
     [Checksum] NVARCHAR(128) NULL,
     [ThumbnailPath] NVARCHAR(1000) NULL,
     [Description] NVARCHAR(2000) NULL,
+    [RightsStatus] NVARCHAR(30) NOT NULL CONSTRAINT [DF_MediaAssets_RightsStatus] DEFAULT N'UNKNOWN',
+    [License] NVARCHAR(500) NULL,
+    [PublicDisplayAllowed] BIT NOT NULL CONSTRAINT [DF_MediaAssets_PublicDisplayAllowed] DEFAULT (0),
 
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_MediaAssets_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_MediaAssets_UpdatedAt] DEFAULT SYSUTCDATETIME(),
@@ -125,7 +128,18 @@ CREATE TABLE [ethnowear].[MediaAssets]
                 AND [ThumbnailPath] NOT LIKE N'%/.'
                 AND [ThumbnailPath] NOT LIKE N'%/..'
             )
-        )
+        ),
+
+    CONSTRAINT [CK_MediaAssets_RightsStatus]
+        CHECK ([RightsStatus] IN (N'UNKNOWN', N'PUBLIC_DOMAIN', N'LICENSED', N'RESTRICTED')),
+
+    CONSTRAINT [CK_MediaAssets_License]
+        CHECK ([RightsStatus] <> N'LICENSED'
+            OR ([License] IS NOT NULL AND LEN(LTRIM(RTRIM([License]))) > 0)),
+
+    CONSTRAINT [CK_MediaAssets_PublicDisplay]
+        CHECK ([PublicDisplayAllowed] = 0
+            OR [RightsStatus] IN (N'PUBLIC_DOMAIN', N'LICENSED'))
 );
 
 GO

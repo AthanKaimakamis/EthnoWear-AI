@@ -5,3 +5,6 @@
 :r .\Migrations\ExtendVisionAssessmentContract.sql
 :r .\Migrations\AddActionableVisionIssues.sql
 :r .\Migrations\AddDocumentPageFigures.sql
+:r .\Migrations\AddMediaRightsClearance.sql
+:r .\Migrations\AddArchiveItemRegionalMotif.sql
+:r .\Migrations\AddManagementUserSoftDelete.sql

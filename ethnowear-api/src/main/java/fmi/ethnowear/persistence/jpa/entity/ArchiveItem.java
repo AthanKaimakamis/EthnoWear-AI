@@ -82,4 +82,10 @@ public class ArchiveItem extends UpdatableEntity {
 
     @Column(name = "OntologyRegionalEmbroideryLocalName")
     private String ontologyRegionalEmbroideryLocalName;
+
+    @Column(name = "OntologyRegionalMotifIri")
+    private String ontologyRegionalMotifIri;
+
+    @Column(name = "OntologyRegionalMotifLocalName")
+    private String ontologyRegionalMotifLocalName;
 }

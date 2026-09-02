@@ -43,6 +43,21 @@ spring:
       max-request-size: ${ETHNOWEAR_MEDIA_MAX_REQUEST_SIZE:26MB}
 
 ethnowear:
+  conversation:
+    sse-heartbeat-interval: ${ETHNOWEAR_CONVERSATION_SSE_HEARTBEAT_INTERVAL:20s}
+    security:
+      maximum-turns-per-minute: ${ETHNOWEAR_CONVERSATION_MAXIMUM_TURNS_PER_MINUTE:10}
+      maximum-tracked-owners: ${ETHNOWEAR_CONVERSATION_MAXIMUM_TRACKED_OWNERS:10000}
+    generation:
+      enabled: ${ETHNOWEAR_CONVERSATION_GENERATION_ENABLED:true}
+      ollama-base-url: ${ETHNOWEAR_OLLAMA_BASE_URL:http://localhost:11434}
+      model: ${ETHNOWEAR_CHAT_MODEL:qwen3:8b}
+      timeout: ${ETHNOWEAR_CONVERSATION_GENERATION_TIMEOUT:60s}
+      maximum-evidence-characters: ${ETHNOWEAR_CONVERSATION_MAXIMUM_EVIDENCE_CHARACTERS:30000}
+      maximum-answer-characters: ${ETHNOWEAR_CONVERSATION_MAXIMUM_ANSWER_CHARACTERS:4000}
+      maximum-citations: ${ETHNOWEAR_CONVERSATION_MAXIMUM_CITATIONS:20}
+      maximum-history-turns: ${ETHNOWEAR_CONVERSATION_MAXIMUM_HISTORY_TURNS:6}
+      maximum-history-characters: ${ETHNOWEAR_CONVERSATION_MAXIMUM_HISTORY_CHARACTERS:12000}
   document:
     chunking:
       enabled: ${ETHNOWEAR_CHUNKING_ENABLED:true}
@@ -80,6 +95,12 @@ ethnowear:
       maximum-execution-time: ${ETHNOWEAR_MEDIA_CLEANUP_MAXIMUM_EXECUTION_TIME:30m}
 
   security:
+    public-auth:
+      enabled: ${ETHNOWEAR_PUBLIC_AUTH_ENABLED:false}
+      google-client-id: ${ETHNOWEAR_GOOGLE_CLIENT_ID:}
+      secure-cookies: ${ETHNOWEAR_PUBLIC_AUTH_SECURE_COOKIES:true}
+      session-ttl: ${ETHNOWEAR_PUBLIC_SESSION_TTL:7d}
+      allowed-origins: ${ETHNOWEAR_PUBLIC_AUTH_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
     jwt:
       secret: ${ETHNOWEAR_JWT_SECRET}
       issuer: ${ETHNOWEAR_JWT_ISSUER:ethnowear-api}
@@ -106,10 +127,11 @@ ethnowear:
     candidate-multiplier: 3
     maximum-candidate-count: 30
     maximum-question-characters: 1000
-    embedding-timeout: 15s
-    qdrant-timeout: 10s
+    minimum-similarity: ${ETHNOWEAR_RETRIEVAL_MINIMUM_SIMILARITY:0.42}
+    embedding-timeout: ${ETHNOWEAR_RETRIEVAL_EMBEDDING_TIMEOUT:60s}
+    qdrant-timeout: ${ETHNOWEAR_RETRIEVAL_QDRANT_TIMEOUT:10s}
     client:
-      ollama-base-url: ${ETHNOWEAR_RETRIEVAL_OLLAMA_BASE_URL:http://localhost:11434}
+      ollama-base-url: ${ETHNOWEAR_OLLAMA_BASE_URL:http://localhost:11434}
       qdrant-url: ${ETHNOWEAR_QDRANT_URL:http://localhost:6333}
       qdrant-collection: ${ETHNOWEAR_QDRANT_COLLECTION:ethnowear_chunks_bge_m3_v1}
 

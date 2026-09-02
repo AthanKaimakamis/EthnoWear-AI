@@ -67,7 +67,7 @@ class ArchiveItemServicesTest {
                 new ArchiveItemUsageChecker(null, null)
         );
 
-        ArchiveItemDetails details = service.create(itemInput(ArchiveType.EMBROIDERY_SAMPLE));
+        ArchiveItemDetails details = service.create(itemInput(ArchiveType.PHOTO_REFERENCE));
 
         assertEquals(3L, details.sourceReferenceId());
         assertEquals("Test archive item", details.titleEn());
@@ -222,7 +222,7 @@ class ArchiveItemServicesTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = FeatureType.class, names = { "REGION", "REGIONAL_EMBROIDERY" })
+    @EnumSource(value = FeatureType.class, names = { "REGION", "REGIONAL_EMBROIDERY", "REGIONAL_MOTIF" })
     void rejectsPrimaryClassificationAsArchiveItemFeature(FeatureType featureType) {
         ArchiveItemFeatureService service = new ArchiveItemFeatureService(
                 rejecting(ArchiveItemFeatureRepository.class),
@@ -249,7 +249,7 @@ class ArchiveItemServicesTest {
         );
 
         assertEquals(
-                "Region and regional embroidery must be assigned directly to the archive item",
+                "Region, regional embroidery and regional motif must be assigned directly to the archive item",
                 exception.getMessage()
         );
     }

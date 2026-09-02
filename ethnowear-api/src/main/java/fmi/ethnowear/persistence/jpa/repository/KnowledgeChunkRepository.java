@@ -34,6 +34,8 @@ public interface KnowledgeChunkRepository extends JpaRepository<KnowledgeChunk, 
 
     List<KnowledgeChunk> findByOntologyLocalName(String ontologyLocalName);
 
+    boolean existsByOntologyIriIn(Collection<String> ontologyIris);
+
     List<KnowledgeChunk> findByOntologyLocalNameAndLanguage(
             String ontologyLocalName,
             String language

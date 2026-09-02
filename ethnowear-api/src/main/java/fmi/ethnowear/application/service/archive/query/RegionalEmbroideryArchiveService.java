@@ -41,7 +41,7 @@ public class RegionalEmbroideryArchiveService {
         Pageable previewPageable = PageRequest.of(0, previewSize, Sort.by(Sort.Direction.DESC, "id"));
 
         List<RegionalEmbroideryArchiveSectionDetails> sections = ontologyReader
-                .list(FeatureType.REGIONAL_EMBROIDERY, language)
+                .listSummaries(FeatureType.REGIONAL_EMBROIDERY, language)
                 .stream()
                 .sorted(Comparator.comparing(entity -> normalize(entity.label())))
                 .map(entity -> toSection(entity, previewPageable))

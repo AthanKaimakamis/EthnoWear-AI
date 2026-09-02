@@ -26,7 +26,7 @@ public class PasswordChangeService {
         if (command == null)
             throw new IllegalArgumentException("Password change command is required");
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         String currentHash = user.getPasswordHash();

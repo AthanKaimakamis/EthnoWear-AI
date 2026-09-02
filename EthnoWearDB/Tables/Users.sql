@@ -12,6 +12,8 @@ CREATE TABLE [ethnowear].[Users]
     [TokenVersion] INT NOT NULL CONSTRAINT [DF_Users_TokenVersion] DEFAULT (0),
     [LastLoginAt] DATETIME2(7) NULL,
     [CreatedByUserId] BIGINT NULL,
+    [DeletedAt] DATETIME2(7) NULL,
+    [DeletedByUserId] BIGINT NULL,
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_Users_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_Users_UpdatedAt] DEFAULT SYSUTCDATETIME(),
     [RowVersion] ROWVERSION NOT NULL,
@@ -20,6 +22,10 @@ CREATE TABLE [ethnowear].[Users]
 
     CONSTRAINT [FK_Users_CreatedByUser]
         FOREIGN KEY ([CreatedByUserId])
+        REFERENCES [ethnowear].[Users] ([Id]),
+
+    CONSTRAINT [FK_Users_DeletedByUser]
+        FOREIGN KEY ([DeletedByUserId])
         REFERENCES [ethnowear].[Users] ([Id]),
 
     CONSTRAINT [CK_Users_Username]
@@ -61,6 +67,12 @@ CREATE TABLE [ethnowear].[Users]
                 AND [MustChangePassword] = 0
                 AND [TemporaryPasswordExpiresAt] IS NULL
             )
+        ),
+
+    CONSTRAINT [CK_Users_Deletion]
+        CHECK (
+            ([DeletedAt] IS NULL AND [DeletedByUserId] IS NULL)
+            OR ([DeletedAt] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Enabled] = 0)
         )
 );
 
@@ -74,6 +86,12 @@ GO
 CREATE INDEX [IX_Users_CreatedByUserId]
 ON [ethnowear].[Users] ([CreatedByUserId])
 WHERE [CreatedByUserId] IS NOT NULL;
+
+GO
+
+CREATE INDEX [IX_Users_DeletedByUserId]
+ON [ethnowear].[Users] ([DeletedByUserId])
+WHERE [DeletedByUserId] IS NOT NULL;
 
 GO
 

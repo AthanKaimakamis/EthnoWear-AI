@@ -59,4 +59,11 @@ public class ReferenceController {
     public List<ReferenceItemDto> getRegionalEmbroideryTypes(@RequestParam(defaultValue = "bg") String language) {
         return referenceService.getRegionalEmbroideryTypes(language);
     }
+
+    @GetMapping("/regional-motif-types")
+    public List<ReferenceItemDto> getRegionalMotifTypes(
+            @RequestParam(defaultValue = "bg") String language
+    ) {
+        return referenceService.getRegionalMotifTypes(language);
+    }
 }

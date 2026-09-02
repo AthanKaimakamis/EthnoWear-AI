@@ -2,7 +2,8 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
-from qdrant_client.models import Distance, VectorParams
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.models import Distance, PointStruct, VectorParams
 
 from ethnowear_indexer.api.models import IndexingContentResponse
 from ethnowear_indexer.config import IndexerSettings
@@ -87,7 +88,7 @@ async def test_ensure_collection_rejects_wrong_dimensions() -> None:
 
 
 @pytest.mark.asyncio
-async def test_upsert_uses_stable_chunk_id_and_metadata() -> None:
+async def test_upsert_uses_stable_chunk_id_and_minimal_payload() -> None:
     client = AsyncMock()
 
     point_id = await QdrantVectorStore(settings(), client).upsert(
@@ -101,9 +102,51 @@ async def test_upsert_uses_stable_chunk_id_and_metadata() -> None:
     point = arguments["points"][0]
     assert point.id == 99
     assert point.vector == [0.1, 0.2, 0.3]
-    assert point.payload["content"] == "Одобрен текст."
-    assert point.payload["contentHash"] == "a" * 64
-    assert point.payload["transcriptionApprovalState"] == "APPROVED"
+    assert point.payload == {
+        "knowledgeChunkId": 99,
+        "contentHash": "a" * 64,
+    }
+    assert "Одобрен текст." not in str(point.payload)
+
+
+@pytest.mark.asyncio
+async def test_upsert_replaces_legacy_payload_instead_of_merging_it() -> None:
+    client = AsyncQdrantClient(":memory:")
+    store = QdrantVectorStore(settings(), client)
+    await store.ensure_collection(3)
+    await client.upsert(
+        collection_name="chunks",
+        wait=True,
+        points=[
+            PointStruct(
+                id=99,
+                vector=[0.3, 0.2, 0.1],
+                payload={
+                    "knowledgeChunkId": 99,
+                    "contentHash": "b" * 64,
+                    "content": "Legacy copyrighted text",
+                    "language": "bg",
+                    "transcriptionApprovalState": "APPROVED",
+                },
+            )
+        ],
+    )
+
+    await store.upsert(context(), [0.1, 0.2, 0.3], 3)
+
+    points = await client.retrieve(
+        collection_name="chunks",
+        ids=[99],
+        with_payload=True,
+        with_vectors=True,
+    )
+    assert len(points) == 1
+    assert points[0].payload == {
+        "knowledgeChunkId": 99,
+        "contentHash": "a" * 64,
+    }
+    assert points[0].vector == pytest.approx([0.26726124, 0.53452248, 0.80178373])
+    await client.close()
 
 
 @pytest.mark.asyncio

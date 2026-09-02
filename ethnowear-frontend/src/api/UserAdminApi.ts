@@ -44,3 +44,7 @@ export function unlockUser(userId: number) {
 export function resetUserPassword(userId: number) {
     return apiRequest<TemporaryPassword>(`/api/admin/users/${userId}/reset-password`, { method: 'POST' })
 }
+
+export function deleteUser(userId: number) {
+    return apiRequest<void>(`/api/admin/users/${userId}`, { method: 'DELETE' })
+}

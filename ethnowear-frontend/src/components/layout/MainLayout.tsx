@@ -1,3 +1,5 @@
+import { QuickChat } from '../chat/ChatExperience'
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import { useState } from 'react'
 import {
     AppBar,
@@ -30,9 +32,11 @@ import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminAuth } from '../../app/adminAuth'
 import AdminLoginDialog from '../admin/AdminLoginDialog'
+import PublicAccount from '../public/PublicAccount'
+import { usePublicAuth } from '../../app/publicAuthStore'
 
 type NavItem = {
-    translationKey: 'nav.archive' | 'nav.management'
+    translationKey: 'nav.archive' | 'nav.management' | 'chatDesign:nav'
     path: string
     icon: typeof ArchiveOutlinedIcon
 }
@@ -43,9 +47,12 @@ function MainLayout() {
     const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false)
     const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null)
     const [loginOpen, setLoginOpen] = useState(false)
+    const [loginTab, setLoginTab] = useState<'google' | 'management'>('google')
+    const { profile: publicProfile } = usePublicAuth()
     const { admin, authenticated, logout } = useAdminAuth()
     const navigate = useNavigate()
     const navItems: NavItem[] = [
+        { translationKey: 'chatDesign:nav', path: '/chat', icon: ChatBubbleOutlineIcon },
         { translationKey: 'nav.archive', path: '/archive', icon: ArchiveOutlinedIcon },
         ...(authenticated && !admin?.passwordChangeRequired
             ? [{ translationKey: 'nav.management' as const, path: '/management', icon: ManageAccountsOutlinedIcon }]
@@ -65,7 +72,7 @@ function MainLayout() {
     return (
         <Box
             sx={{
-                minHeight: '100vh',
+                minHeight: '100dvh',
                 bgcolor: 'background.default',
             }}
         >
@@ -202,6 +209,7 @@ function MainLayout() {
                         </Select>
                     </FormControl>
 
+                    <PublicAccount onManagerLogin={authenticated ? undefined : () => { setLoginTab('management'); setLoginOpen(true) }} />
                     {authenticated && admin ? (
                         <>
                             <Button
@@ -245,7 +253,7 @@ function MainLayout() {
                             </Menu>
                         </>
                     ) : (
-                        <Button onClick={() => setLoginOpen(true)} color="inherit" startIcon={<LoginOutlinedIcon />} sx={{ fontWeight: 700 }}>
+                        !publicProfile && <Button onClick={() => { setLoginTab('google'); setLoginOpen(true) }} color="inherit" startIcon={<LoginOutlinedIcon />} sx={{ fontWeight: 700 }}>
                             {t('nav.login')}
                         </Button>
                     )}
@@ -360,9 +368,9 @@ function MainLayout() {
                             <ListItemText primary={admin.username} secondary={t('admin.session.signOut')} />
                         </ListItemButton>
                     ) : (
-                        <ListItemButton onClick={() => { setMobileNavigationOpen(false); setLoginOpen(true) }} sx={{ borderRadius: 1 }}>
+                        <ListItemButton onClick={() => { setMobileNavigationOpen(false); setLoginTab(publicProfile ? 'management' : 'google'); setLoginOpen(true) }} sx={{ borderRadius: 1 }}>
                             <ListItemIcon><LoginOutlinedIcon /></ListItemIcon>
-                            <ListItemText primary={t('nav.login')} />
+                            <ListItemText primary={t(publicProfile ? 'publicAuth:managerLogin' : 'nav.login')} />
                         </ListItemButton>
                     )}
                 </List>
@@ -371,7 +379,7 @@ function MainLayout() {
             <Box
                 component="main"
                 sx={{
-                    minHeight: 'calc(100vh - 72px)',
+                    minHeight: 'calc(100dvh - 72px)',
                     backgroundColor: 'background.default',
                     backgroundImage: `
                         linear-gradient(rgba(90, 98, 90, 0.055) 1px, transparent 1px),
@@ -381,8 +389,9 @@ function MainLayout() {
                 }}
             >
                 <Outlet />
+                <QuickChat />
             </Box>
-            <AdminLoginDialog open={loginOpen && !authenticated} onClose={() => setLoginOpen(false)} onSuccess={() => setLoginOpen(false)} />
+            {loginOpen && <AdminLoginDialog publicLogin initialTab={loginTab} open={!authenticated} onClose={() => setLoginOpen(false)} onSuccess={() => setLoginOpen(false)} />}
         </Box>
     )
 }

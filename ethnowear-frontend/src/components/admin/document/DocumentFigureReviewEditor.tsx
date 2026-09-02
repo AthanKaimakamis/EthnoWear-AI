@@ -14,6 +14,7 @@ import {
 } from '../../../api/DocumentAdminApi'
 import { sourceReferencesApi, sourcesApi } from '../../../api/ArchiveAdminApi'
 import { apiErrorMessage } from '../../../api/http'
+import { useAdminAuth } from '../../../app/adminAuth'
 import type { SourceDetails, SourceReferenceDetails } from '../../../types/archive'
 import type { DocumentPageFigure, FigureReviewState } from '../../../types/document'
 import ConfirmDialog from '../ConfirmDialog'
@@ -23,21 +24,26 @@ type ReviewDecision = 'approve' | 'reject'
 
 type Props = {
     figure: DocumentPageFigure
+    suggestedSourceReferenceId?: number | null
     canEdit: boolean
     canReview: boolean
     onChanged: (figure: DocumentPageFigure) => void
     onConflict: () => void
 }
 
-export default function DocumentFigureReviewEditor({ figure, canEdit, canReview, onChanged, onConflict }: Props) {
+export default function DocumentFigureReviewEditor({ figure, suggestedSourceReferenceId = null, canEdit, canReview, onChanged, onConflict }: Props) {
     const { t } = useTranslation()
+    const { admin } = useAdminAuth()
     const [caption, setCaption] = useState(figure.correctedCaptionText ?? '')
     const [printedNumber, setPrintedNumber] = useState(figure.printedFigureNumber ?? '')
-    const [sourceReferenceId, setSourceReferenceId] = useState(figure.sourceReferenceId ? String(figure.sourceReferenceId) : '')
+    const [sourceReferenceId, setSourceReferenceId] = useState(String(figure.sourceReferenceId ?? suggestedSourceReferenceId ?? ''))
     const [pending, setPending] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [reviewDecision, setReviewDecision] = useState<ReviewDecision | null>(null)
-    const [reviewReason, setReviewReason] = useState('')
+    const auditReason = t('documents.sourceReference.reviewAuditReason', {
+        username: admin?.username ?? 'unknown',
+        role: admin?.roles.map(role => t(`auth.roles.${role}`)).join(', ') ?? 'unknown',
+    })
     const referencesQuery = useQuery({
         queryKey: ['admin', 'source-references', 'figure-review'],
         queryFn: ({ signal }) => Promise.all([sourceReferencesApi.findAll({ size: 1000 }, signal), sourcesApi.findAll({ size: 1000 }, signal)]),
@@ -47,11 +53,10 @@ export default function DocumentFigureReviewEditor({ figure, canEdit, canReview,
     useEffect(() => {
         setCaption(figure.correctedCaptionText ?? '')
         setPrintedNumber(figure.printedFigureNumber ?? '')
-        setSourceReferenceId(figure.sourceReferenceId ? String(figure.sourceReferenceId) : '')
+        setSourceReferenceId(String(figure.sourceReferenceId ?? suggestedSourceReferenceId ?? ''))
         setError(null)
         setReviewDecision(null)
-        setReviewReason('')
-    }, [figure.id, figure.version])
+    }, [figure.id, figure.version, suggestedSourceReferenceId])
 
     const references = referencesQuery.data?.[0].content ?? []
     const sources = referencesQuery.data?.[1].content ?? []
@@ -60,7 +65,13 @@ export default function DocumentFigureReviewEditor({ figure, canEdit, canReview,
         || printedNumber !== (figure.printedFigureNumber ?? '')
         || sourceReferenceId !== (figure.sourceReferenceId ? String(figure.sourceReferenceId) : '')
     const effectiveCaption = caption.trim() || figure.rawCaptionText?.trim() || ''
-    const approvalReady = Boolean(effectiveCaption && sourceReferenceId && figure.reviewState !== 'OUTDATED' && !dirty)
+    const approvalReady = Boolean(
+        effectiveCaption
+        && sourceReferenceId
+        && figure.reviewState !== 'OUTDATED'
+        && figure.reviewState !== 'APPROVED'
+        && !dirty,
+    )
 
     async function save() {
         if (!canEdit || pending) return
@@ -82,16 +93,15 @@ export default function DocumentFigureReviewEditor({ figure, canEdit, canReview,
     }
 
     async function review() {
-        if (!reviewDecision || !reviewReason.trim() || pending) return
+        if (!reviewDecision || pending) return
         setPending(true)
         setError(null)
         try {
             const updated = reviewDecision === 'approve'
-                ? await approvePageFigure(figure.documentPageId, figure.id, figure.version, reviewReason.trim())
-                : await rejectPageFigure(figure.documentPageId, figure.id, figure.version, reviewReason.trim())
+                ? await approvePageFigure(figure.documentPageId, figure.id, figure.version, auditReason)
+                : await rejectPageFigure(figure.documentPageId, figure.id, figure.version, auditReason)
             onChanged(updated)
             setReviewDecision(null)
-            setReviewReason('')
         } catch (caught) {
             if (hasStatus(caught, 409)) onConflict()
             setError(figureError(caught, t('documents.figures.reviewFailed'), t('documents.figures.concurrencyConflict')))
@@ -124,8 +134,9 @@ export default function DocumentFigureReviewEditor({ figure, canEdit, canReview,
                             {references.map(reference => <MenuItem key={reference.id} value={String(reference.id)}>{referenceLabel(reference, sourceById.get(reference.sourceId))}</MenuItem>)}
                         </Select>
                     </FormControl>
+                    {figure.sourceReferenceId === null && sourceReferenceId && <Typography variant="body2" color="text.secondary">{t('documents.sourceReference.inheritedForFigure')}</Typography>}
                     {referencesQuery.isError && <Alert severity="error">{apiErrorMessage(referencesQuery.error, t('documents.figures.referencesFailed'))}</Alert>}
-                    {figure.reviewedBy && <Typography variant="body2" color="text.secondary">{t('documents.figures.reviewedBy', { reviewer: figure.reviewedBy, reason: figure.reviewReason ?? '—' })}</Typography>}
+                    {figure.reviewedBy && <Typography variant="body2" color="text.secondary">{t('documents.figures.reviewedByOnly', { reviewer: figure.reviewedBy })}</Typography>}
                     {!approvalReady && canReview && !dirty && figure.reviewState !== 'OUTDATED' && <Typography variant="body2" color="warning.main">{t('documents.figures.approvalRequirements')}</Typography>}
                 </Stack>
             </Box>
@@ -136,11 +147,8 @@ export default function DocumentFigureReviewEditor({ figure, canEdit, canReview,
             </Stack>
             <MediaOntologyLinksEditor mediaAssetId={figure.mediaAssetId} canEdit={canEdit && figure.reviewState !== 'OUTDATED'} />
         </Stack>
-        <ConfirmDialog open={reviewDecision !== null} title={t(`documents.figures.${reviewDecision === 'approve' ? 'approveTitle' : 'rejectTitle'}`)} confirmLabel={t(`documents.figures.${reviewDecision === 'approve' ? 'approve' : 'reject'}`)} confirmColor={reviewDecision === 'approve' ? 'primary' : 'error'} pending={pending} confirmDisabled={!reviewReason.trim()} onCancel={() => { setReviewDecision(null); setReviewReason('') }} onConfirm={() => void review()}>
-            <Stack spacing={2}>
-                <Typography>{t(`documents.figures.${reviewDecision === 'approve' ? 'approveDescription' : 'rejectDescription'}`)}</Typography>
-                <TextField autoFocus required multiline minRows={3} label={t('documents.figures.reviewReason')} value={reviewReason} onChange={event => setReviewReason(event.target.value.slice(0, 500))} />
-            </Stack>
+        <ConfirmDialog open={reviewDecision !== null} title={t(`documents.figures.${reviewDecision === 'approve' ? 'approveTitle' : 'rejectTitle'}`)} confirmLabel={t(`documents.figures.${reviewDecision === 'approve' ? 'approve' : 'reject'}`)} confirmColor={reviewDecision === 'approve' ? 'primary' : 'error'} pending={pending} onCancel={() => setReviewDecision(null)} onConfirm={() => void review()}>
+            <Typography>{t(`documents.figures.${reviewDecision === 'approve' ? 'approveDescription' : 'rejectDescription'}`)}</Typography>
         </ConfirmDialog>
     </>
 }

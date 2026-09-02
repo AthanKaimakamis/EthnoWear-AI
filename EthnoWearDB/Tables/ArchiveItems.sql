@@ -28,6 +28,8 @@ CREATE TABLE [ethnowear].[ArchiveItems]
     [OntologyRegionLocalName] NVARCHAR(200) NULL,
     [OntologyRegionalEmbroideryIri] NVARCHAR(1000) NULL,
     [OntologyRegionalEmbroideryLocalName] NVARCHAR(200) NULL,
+    [OntologyRegionalMotifIri] NVARCHAR(1000) NULL,
+    [OntologyRegionalMotifLocalName] NVARCHAR(200) NULL,
 
     [CreatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_ArchiveItems_CreatedAt] DEFAULT SYSUTCDATETIME(),
     [UpdatedAt] DATETIME2(7) NOT NULL CONSTRAINT [DF_ArchiveItems_UpdatedAt] DEFAULT SYSUTCDATETIME(),
@@ -62,7 +64,19 @@ CREATE TABLE [ethnowear].[ArchiveItems]
             N'IN_REVIEW',
             N'PUBLISHED',
             N'ARCHIVED'
-        ))
+        )),
+
+    CONSTRAINT [CK_ArchiveItems_RegionIdentity]
+        CHECK (([OntologyRegionIri] IS NULL AND [OntologyRegionLocalName] IS NULL)
+            OR ([OntologyRegionIri] IS NOT NULL AND [OntologyRegionLocalName] IS NOT NULL)),
+
+    CONSTRAINT [CK_ArchiveItems_RegionalEmbroideryIdentity]
+        CHECK (([OntologyRegionalEmbroideryIri] IS NULL AND [OntologyRegionalEmbroideryLocalName] IS NULL)
+            OR ([OntologyRegionalEmbroideryIri] IS NOT NULL AND [OntologyRegionalEmbroideryLocalName] IS NOT NULL)),
+
+    CONSTRAINT [CK_ArchiveItems_RegionalMotifIdentity]
+        CHECK (([OntologyRegionalMotifIri] IS NULL AND [OntologyRegionalMotifLocalName] IS NULL)
+            OR ([OntologyRegionalMotifIri] IS NOT NULL AND [OntologyRegionalMotifLocalName] IS NOT NULL))
 );
 
 GO
@@ -79,6 +93,11 @@ GO
 
 CREATE INDEX [IX_ArchiveItems_OntologyRegionalEmbroideryLocalName]
 ON [ethnowear].[ArchiveItems] ([OntologyRegionalEmbroideryLocalName]);
+
+GO
+
+CREATE INDEX [IX_ArchiveItems_OntologyRegionalMotifLocalName]
+ON [ethnowear].[ArchiveItems] ([OntologyRegionalMotifLocalName]);
 
 GO
 

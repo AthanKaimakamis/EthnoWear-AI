@@ -82,7 +82,7 @@ class RegionalEmbroideryArchiveServiceTest {
         }
 
         @Override
-        public List<EntityOntologyDetails> list(FeatureType entityType, String languageTag) {
+        public List<EntityOntologyDetails> listSummaries(FeatureType entityType, String languageTag) {
             assertEquals(FeatureType.REGIONAL_EMBROIDERY, entityType);
             return entities;
         }

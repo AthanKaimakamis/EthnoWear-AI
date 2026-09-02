@@ -4,6 +4,7 @@ import {
     Select, Stack, Switch, TextField, Typography,
 } from '@mui/material'
 import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ArchiveAdminRecord, ArchiveAdminWriteDto } from '../../types/archiveAdmin'
 import AdminModal from './AdminModal'
@@ -32,6 +33,10 @@ export type ArchiveField = {
     step?: number
     rows?: number
     helperText?: string
+    defaultValue?: ArchiveFormValue
+    requiredWhen?: (values: ArchiveFormValues) => boolean
+    disabledWhen?: (values: ArchiveFormValues) => boolean
+    visibleWhen?: (values: ArchiveFormValues) => boolean
 }
 
 type Props = {
@@ -43,12 +48,14 @@ type Props = {
     error: string | null
     onClose: () => void
     onSubmit: (input: ArchiveAdminWriteDto) => void
+    warnings?: (values: ArchiveFormValues) => string[]
+    intro?: ReactNode
 }
 
 function initialValues(fields: ArchiveField[], record: ArchiveAdminRecord | null): ArchiveFormValues {
     const source = record ? record as unknown as Record<string, unknown> : {}
     return Object.fromEntries(fields.map(field => {
-        const value = source[field.name]
+        const value = source[field.name] ?? field.defaultValue
         if (field.kind === 'boolean') return [field.name, Boolean(value)]
         return [field.name, value === null || value === undefined ? '' : String(value)]
     }))
@@ -69,7 +76,7 @@ function toPayload(fields: ArchiveField[], values: ArchiveFormValues): ArchiveAd
     return payload as ArchiveAdminWriteDto
 }
 
-function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClose, onSubmit }: Props) {
+function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClose, onSubmit, warnings, intro }: Props) {
     const { t } = useTranslation()
     const [values, setValues] = useState<ArchiveFormValues>(() => initialValues(fields, record))
     const formId = 'archive-record-form'
@@ -80,6 +87,7 @@ function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClo
         setValues(current => {
             const next = { ...current, [field.name]: value }
             field.clearFields?.forEach(name => { next[name] = '' })
+            if (field.name === 'rightsStatus' && (value === 'UNKNOWN' || value === 'RESTRICTED')) next.publicDisplayAllowed = false
             if (field.pairedIriField) {
                 const options = typeof field.options === 'function' ? field.options(next) : field.options ?? []
                 next[field.pairedIriField] = options.find(option => option.value === value)?.iri ?? ''
@@ -88,9 +96,16 @@ function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClo
         })
     }
 
+    const invalid = fields.some(field => {
+        const required = field.required || field.requiredWhen?.(values)
+        const value = values[field.name]
+        return Boolean(required && (value === '' || (typeof value === 'string' && !value.trim())))
+    })
+    const activeWarnings = warnings?.(values) ?? []
+
     function submit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault()
-        onSubmit(toPayload(fields, values))
+        if (!invalid) onSubmit(toPayload(fields, values))
     }
 
     return (
@@ -103,7 +118,7 @@ function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClo
             actions={
                 <>
                     <Button onClick={onClose} disabled={saving}>{t('admin.cancel')}</Button>
-                    <Button type="submit" form={formId} variant="contained" disabled={saving}>
+                    <Button type="submit" form={formId} variant="contained" disabled={saving || invalid}>
                         {saving ? t('forms.saving') : t('forms.save')}
                     </Button>
                 </>
@@ -112,22 +127,27 @@ function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClo
             <Box component="form" id={formId} onSubmit={submit}>
                     <Stack spacing={3}>
                         {error && <Alert severity="error">{error}</Alert>}
+                        {activeWarnings.map(message => <Alert key={message} severity="warning">{message}</Alert>)}
+                        {intro}
                         {sections.map(section => (
                             <Stack key={section} spacing={2}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary' }}>{section}</Typography>
                                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
                                     {fields.filter(field => field.section === section).map(field => {
                                         const value = values[field.name] ?? ''
+                                        if (field.visibleWhen && !field.visibleWhen(values)) return null
+                                        const required = field.required || field.requiredWhen?.(values)
+                                        const disabled = saving || field.disabledWhen?.(values)
                                         const options = typeof field.options === 'function' ? field.options(values) : field.options ?? []
                                         if (field.kind === 'hidden') return null
                                         if (field.kind === 'boolean') {
                                             return <FormControl key={field.name} sx={{ justifyContent: 'center' }}>
-                                                <FormControlLabel control={<Switch checked={Boolean(value)} onChange={event => change(field, event.target.checked)} />} label={field.label} />
+                                                <FormControlLabel control={<Switch checked={Boolean(value)} disabled={disabled} onChange={event => change(field, event.target.checked)} />} label={field.label} />
                                                 {field.helperText && <FormHelperText>{field.helperText}</FormHelperText>}
                                             </FormControl>
                                         }
                                         if (field.kind === 'select') {
-                                            return <FormControl key={field.name} required={field.required} fullWidth>
+                                            return <FormControl key={field.name} required={required} disabled={disabled} fullWidth>
                                                 <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
                                                 <Select labelId={`${field.name}-label`} label={field.label} value={String(value)} onChange={event => change(field, event.target.value)}>
                                                     {field.nullable && <MenuItem value=""><em>{t('admin.archive.none')}</em></MenuItem>}
@@ -137,7 +157,7 @@ function ArchiveRecordDialog({ open, title, fields, record, saving, error, onClo
                                             </FormControl>
                                         }
                                         return <TextField key={field.name} name={field.name} label={field.label}
-                                            required={field.required} value={String(value)}
+                                            required={required} disabled={disabled} value={String(value)}
                                             type={field.kind === 'number' ? 'number' : field.kind === 'date' ? 'date' : field.kind === 'url' ? 'url' : 'text'}
                                             multiline={field.kind === 'textarea'} minRows={field.rows ?? (field.kind === 'textarea' ? 3 : undefined)}
                                             helperText={field.helperText} onChange={event => change(field, event.target.value)}

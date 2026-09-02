@@ -10,6 +10,7 @@ export type OntologyFeatureType =
     | 'TECHNIQUE'
     | 'MOTIF'
     | 'REGION'
+    | 'REGIONAL_MOTIF'
     | 'REGIONAL_EMBROIDERY'
 
 export type FilterCombinationMode = 'AND' | 'OR'

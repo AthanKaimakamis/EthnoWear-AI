@@ -2,8 +2,9 @@ import type { OntologyFeatureType } from '../types/catalogue'
 
 const routeSegmentByType: Record<OntologyFeatureType, string> = {
     REGIONAL_EMBROIDERY: 'embroideries',
+    REGIONAL_MOTIF: 'motifs',
     REGION: 'regions',
-    MOTIF: 'motifs',
+    MOTIF: 'motif-concepts',
     ORNAMENT: 'ornaments',
     TECHNIQUE: 'techniques',
     COLOR: 'colors',

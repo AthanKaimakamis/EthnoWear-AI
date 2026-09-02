@@ -12,6 +12,16 @@ import java.util.Map;
 @RestControllerAdvice(basePackages = "fmi.ethnowear.api.controller.ontology")
 public class OntologyAdminExceptionHandler extends BaseExceptionHandler {
 
+    @ExceptionHandler(OntologyVersionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> versionNotFound(@NonNull OntologyVersionNotFoundException ex) {
+        return error(HttpStatus.NOT_FOUND, "ONTOLOGY_VERSION_NOT_FOUND", ex.getMessage());
+    }
+
+    @ExceptionHandler(OntologyVersionRestoreException.class)
+    public ResponseEntity<Map<String, Object>> versionRestore(@NonNull OntologyVersionRestoreException ex) {
+        return error(HttpStatus.CONFLICT, "ONTOLOGY_VERSION_RESTORE_FAILED", ex.getMessage());
+    }
+
     @ExceptionHandler(OntologyEntityException.class)
     public ResponseEntity<Map<String, Object>> ontologyEntity(@NonNull OntologyEntityException ex) {
         HttpStatus status = switch (ex.getReason()) {
@@ -19,6 +29,9 @@ public class OntologyAdminExceptionHandler extends BaseExceptionHandler {
             case NOT_FOUND -> HttpStatus.NOT_FOUND;
             case ALREADY_EXISTS, IN_USE -> HttpStatus.CONFLICT;
         };
+
+        if (ex.getReason() == OntologyEntityException.Reason.ALREADY_EXISTS)
+            return error(status, "ONTOLOGY_RESOURCE_CONFLICT", ex.getMessage());
 
         if (ex.getReferences().isEmpty())
             return error(status, ex.getMessage());

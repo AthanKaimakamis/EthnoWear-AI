@@ -4,6 +4,7 @@ import fmi.ethnowear.domain.model.ontology.OntologyEntityKind;
 import fmi.ethnowear.application.port.ontology.admin.OntologyEntityAdminPort;
 import fmi.ethnowear.application.dto.ontology.admin.OntologyEntityCommand;
 import fmi.ethnowear.application.dto.ontology.admin.OntologyEntityDetails;
+import fmi.ethnowear.application.dto.ontology.admin.RegionDerivedTypeSynchronizationDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,18 +22,18 @@ public class OntologyEntityController {
         this.service = service;
     }
 
-    @GetMapping("/{entityType:regions|motifs|regional-embroideries}")
+    @GetMapping("/{entityType:regions|motifs|regional-embroideries|regional-motifs}")
     public List<OntologyEntityDetails> list(@PathVariable("entityType") String entityType) {
         return service.list(kind(entityType));
     }
 
-    @GetMapping("/{entityType:regions|motifs|regional-embroideries}/{localName}")
+    @GetMapping("/{entityType:regions|motifs|regional-embroideries|regional-motifs}/{localName}")
     public OntologyEntityDetails get(@PathVariable("entityType") String entityType,
                                      @PathVariable("localName") String localName) {
         return service.get(kind(entityType), localName);
     }
 
-    @PostMapping("/{entityType:regions|motifs|regional-embroideries}")
+    @PostMapping("/{entityType:regions|motifs|regional-embroideries|regional-motifs}")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<OntologyEntityDetails> create(@PathVariable("entityType") String entityType,
                                                         @RequestBody OntologyEntityCommand command) {
@@ -40,18 +41,23 @@ public class OntologyEntityController {
         return created(result, result.localName());
     }
 
-    @PutMapping("/{entityType:regions|motifs|regional-embroideries}/{localName}")
+    @PutMapping("/{entityType:regions|motifs|regional-embroideries|regional-motifs}/{localName}")
     public OntologyEntityDetails update(@PathVariable("entityType") String entityType,
                                         @PathVariable("localName") String localName,
                                         @RequestBody OntologyEntityCommand command) {
         return service.update(kind(entityType), localName, command);
     }
 
-    @DeleteMapping("/{entityType:regions|motifs|regional-embroideries}/{localName}")
+    @DeleteMapping("/{entityType:regions|motifs|regional-embroideries|regional-motifs}/{localName}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("entityType") String entityType,
                        @PathVariable("localName") String localName) {
         service.delete(kind(entityType), localName);
+    }
+
+    @PostMapping("/regions/synchronize-derived-types")
+    public RegionDerivedTypeSynchronizationDetails synchronizeRegionDerivedTypes() {
+        return service.synchronizeRegionDerivedTypes();
     }
 
     private OntologyEntityKind kind(String entityType) {
@@ -59,6 +65,7 @@ public class OntologyEntityController {
             case "regions" -> OntologyEntityKind.REGION;
             case "motifs" -> OntologyEntityKind.MOTIF;
             case "regional-embroideries" -> OntologyEntityKind.REGIONAL_EMBROIDERY;
+            case "regional-motifs" -> OntologyEntityKind.REGIONAL_MOTIF;
             default -> throw new IllegalArgumentException("Unsupported entity type: " + entityType);
         };
     }

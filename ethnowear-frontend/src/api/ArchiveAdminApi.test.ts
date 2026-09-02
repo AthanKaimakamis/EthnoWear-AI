@@ -5,10 +5,14 @@ import {
     getPublicationReadiness,
     runPublicationCommand,
     updateFullArchiveEntry,
+    mediaAssetsApi,
+    getAdminMediaContent,
 } from './ArchiveAdminApi'
 import type { ArchiveEntryWriteDto } from '../types/archive'
+import { clearAdminSession, setAdminSession } from '../app/adminAuthStore'
 
 afterEach(() => {
+    clearAdminSession()
     vi.unstubAllGlobals()
 })
 
@@ -72,6 +76,37 @@ describe('archive publication API', () => {
         }))
     })
 
+    it('patches media rights metadata after upload', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 7, rightsStatus: 'LICENSED' }))
+        vi.stubGlobal('fetch', fetchMock)
+
+        await mediaAssetsApi.update(7, { sourceReferenceId: 1, description: 'Description', rightsStatus: 'LICENSED', license: 'CC BY-SA 4.0', publicDisplayAllowed: true } as never)
+
+        expect(fetchMock).toHaveBeenCalledWith('/api/admin/media-assets/7', expect.objectContaining({
+            method: 'PATCH',
+            body: JSON.stringify({ sourceReferenceId: 1, description: 'Description', rightsStatus: 'LICENSED', license: 'CC BY-SA 4.0', publicDisplayAllowed: true }),
+        }))
+    })
+
+    it('loads private media through the protected admin content endpoint', async () => {
+        setAdminSession({
+            accessToken: 'signed-token',
+            tokenType: 'Bearer',
+            expiresAt: '2099-01-01T00:00:00Z',
+            username: 'editor',
+        })
+        const fetchMock = vi.fn().mockResolvedValue(new Response('private-content', {
+            headers: { 'Content-Type': 'image/jpeg' },
+        }))
+        vi.stubGlobal('fetch', fetchMock)
+
+        await expect(getAdminMediaContent(17)).resolves.toBeInstanceOf(Blob)
+
+        const [, request] = fetchMock.mock.calls[0]
+        expect(fetchMock.mock.calls[0][0]).toBe('/api/admin/media-assets/17/content')
+        expect(new Headers(request.headers).get('Authorization')).toBe('Bearer signed-token')
+    })
+
     it('loads backend publication readiness', async () => {
         const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ archiveItemId: 42, publicationStatus: 'DRAFT', ready: true, checks: [] }))
         vi.stubGlobal('fetch', fetchMock)
@@ -116,6 +151,8 @@ const entry: ArchiveEntryWriteDto = {
         ontologyRegionLocalName: null,
         ontologyRegionalEmbroideryIri: null,
         ontologyRegionalEmbroideryLocalName: null,
+        ontologyRegionalMotifIri: null,
+        ontologyRegionalMotifLocalName: null,
     },
     features: [{
         featureType: 'ORNAMENT',

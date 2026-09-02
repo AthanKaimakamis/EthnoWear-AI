@@ -6,16 +6,18 @@ import {
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PasswordOutlinedIcon from '@mui/icons-material/PasswordOutlined'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ToggleOffOutlinedIcon from '@mui/icons-material/ToggleOffOutlined'
 import ToggleOnOutlinedIcon from '@mui/icons-material/ToggleOnOutlined'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-    assignUserRole, createUser, disableUser, enableUser, getUser, getUsers,
+    assignUserRole, createUser, deleteUser, disableUser, enableUser, getUser, getUsers,
     removeUserRole, resetUserPassword, unlockUser, updateUserProfile,
 } from '../../api/UserAdminApi'
 import { apiErrorMessage } from '../../api/http'
+import { useAdminAuth } from '../../app/adminAuth'
 import type { RoleName } from '../../app/permissions'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
@@ -25,10 +27,12 @@ import type { PageResponse, TemporaryPassword, UserCreateCommand, UserDetails, U
 
 const emptyPage: PageResponse<UserSummary> = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 20 }
 
-type PendingAction = 'status' | 'unlock' | 'reset' | 'save' | null
+type PendingAction = 'status' | 'unlock' | 'reset' | 'delete' | 'save' | null
+type ConfirmedAction = 'enable' | 'disable' | 'unlock' | 'reset' | 'delete'
 
 export default function UserManagementPage() {
     const { t } = useTranslation()
+    const { admin } = useAdminAuth()
     const [result, setResult] = useState(emptyPage)
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(0)
@@ -39,7 +43,7 @@ export default function UserManagementPage() {
     const [editing, setEditing] = useState<UserDetails | null>(null)
     const [loadingUserId, setLoadingUserId] = useState<number | null>(null)
     const [pending, setPending] = useState<PendingAction>(null)
-    const [confirmation, setConfirmation] = useState<{ user: { id: number; username: string }; action: 'enable' | 'disable' | 'unlock' | 'reset' } | null>(null)
+    const [confirmation, setConfirmation] = useState<{ user: { id: number; username: string }; action: ConfirmedAction } | null>(null)
     const [credentials, setCredentials] = useState<TemporaryPassword | null>(null)
 
     const load = useCallback((signal?: AbortSignal) => {
@@ -95,7 +99,7 @@ export default function UserManagementPage() {
     async function runConfirmedAction() {
         if (!confirmation) return
         const { user, action } = confirmation
-        setPending(action === 'reset' ? 'reset' : action === 'unlock' ? 'unlock' : 'status')
+        setPending(action === 'reset' ? 'reset' : action === 'unlock' ? 'unlock' : action === 'delete' ? 'delete' : 'status')
         setError(null)
         try {
             if (action === 'reset') setCredentials(await resetUserPassword(user.id))
@@ -104,9 +108,11 @@ export default function UserManagementPage() {
                 if (editing?.id === user.id) setEditing(updated)
             }
             else if (action === 'enable') await enableUser(user.id)
-            else await disableUser(user.id)
+            else if (action === 'disable') await disableUser(user.id)
+            else await deleteUser(user.id)
             setConfirmation(null)
-            await load()
+            if (action === 'delete' && result.content.length === 1 && page > 0) setPage(page - 1)
+            else await load()
         } catch (cause) {
             setError(apiErrorMessage(cause, t('users.errors.action')))
             setConfirmation(null)
@@ -151,6 +157,7 @@ export default function UserManagementPage() {
                                                 <Tooltip title={t('admin.edit')}><span><IconButton size="small" disabled={loadingUserId === user.id} onClick={() => void openUser(user.id)}><EditOutlinedIcon fontSize="small" /></IconButton></span></Tooltip>
                                                 <Tooltip title={t(user.enabled ? 'users.actions.disable' : 'users.actions.enable')}><IconButton size="small" onClick={() => setConfirmation({ user, action: user.enabled ? 'disable' : 'enable' })}>{user.enabled ? <ToggleOffOutlinedIcon fontSize="small" /> : <ToggleOnOutlinedIcon fontSize="small" />}</IconButton></Tooltip>
                                                 <Tooltip title={t('users.actions.resetPassword')}><IconButton size="small" color="warning" onClick={() => setConfirmation({ user, action: 'reset' })}><PasswordOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+                                                <Tooltip title={user.id === admin?.id ? t('users.actions.deleteSelfDisabled') : t('users.actions.delete')}><span><IconButton size="small" color="error" disabled={user.id === admin?.id} onClick={() => setConfirmation({ user, action: 'delete' })}><DeleteOutlineIcon fontSize="small" /></IconButton></span></Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     ))}

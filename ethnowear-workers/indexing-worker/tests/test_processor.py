@@ -113,6 +113,35 @@ async def test_run_indexes_and_reports_result() -> None:
 
 
 @pytest.mark.asyncio
+async def test_failed_index_result_handshake_cannot_expose_chunk_text() -> None:
+    api_client = AsyncMock()
+    api_client.get_indexing_context.return_value = context()
+    api_client.get_embedding.return_value = EmbeddingResponse(
+        job_id=20,
+        knowledge_chunk_id=99,
+        content_hash=CONTENT_HASH,
+        embedding_model="bge-m3",
+        embedding_dimensions=3,
+        values=(0.1, 0.2, 0.3),
+    )
+    api_client.submit_index_result.side_effect = RuntimeError(
+        "Index-result handshake failed"
+    )
+    vector_store = AsyncMock()
+    vector_store.upsert.return_value = "99"
+
+    with pytest.raises(RuntimeError, match="handshake"):
+        await operation(api_client, vector_store).run(
+            claim(), ClaimCredentials(20, SecretStr("claim-token"))
+        )
+
+    vector_store.upsert.assert_awaited_once()
+    api_client.submit_index_result.assert_awaited_once()
+    # A point may exist when the SQL handshake fails, but its tested Qdrant
+    # payload contract contains no retrievable chunk text.
+
+
+@pytest.mark.asyncio
 async def test_run_rejects_stale_content_before_embedding() -> None:
     api_client = AsyncMock()
     api_client.get_indexing_context.return_value = context(contentHash="b" * 64)

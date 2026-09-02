@@ -39,8 +39,10 @@ beforeEach(() => {
     apiMocks.referencesFindAll.mockResolvedValue({ content: [] })
     apiMocks.assetsFindAll.mockResolvedValue({ content: [] })
     apiMocks.getFullReference.mockResolvedValue({
-        regions: [], regionGroups: [], regionalEmbroideryTypes: [],
-        techniques: [], ornaments: [], motifs: [], colors: [],
+        regions: [], regionGroups: [], regionalMotifTypes: [], regionalEmbroideryTypes: [],
+        techniques: [], techniqueTypes: [], ornaments: [], ornamentTypes: [], motifs: [], colors: [],
+        regionsByRegionGroup: {}, regionByRegionalEmbroidery: {}, regionByRegionalMotif: {},
+        ornamentsByRegion: {}, techniquesByRegion: {}, ornamentsByType: {}, techniquesByType: {},
     })
 })
 
@@ -59,6 +61,8 @@ describe('ArchiveEditorPage', () => {
         const title = await screen.findByRole('textbox', { name: /Bulgarian title/i })
         await user.clear(title)
         await user.type(title, 'Unsaved curator title')
+        await user.click(screen.getByRole('combobox', { name: /Record type/i }))
+        await user.click(await screen.findByRole('option', { name: /Text reference/i }))
         await user.click(screen.getByRole('tab', { name: 'Source and citation' }))
         await user.click(screen.getByRole('combobox', { name: /Source and exact citation/i }))
         await user.click(await screen.findByRole('option', { name: /Test source/i }))

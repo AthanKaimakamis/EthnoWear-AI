@@ -26,7 +26,7 @@ public class CurrentUserService {
     public CurrentUserDetails getCurrentUser(Long userId) {
         requireId(userId, "User");
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         UserInfo info = userInfoRepository.findByUserId(userId)

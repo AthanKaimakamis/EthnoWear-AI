@@ -2,11 +2,13 @@ package fmi.ethnowear.api.controller.archive;
 
 import fmi.ethnowear.application.dto.archive.query.ArchiveItemDetailDetails;
 import fmi.ethnowear.application.dto.archive.query.RegionalEmbroideryArchiveOverviewDetails;
+import fmi.ethnowear.application.dto.archive.query.RegionalMotifArchiveOverviewDetails;
 import fmi.ethnowear.application.service.archive.media.delivery.MediaDelivery;
 import fmi.ethnowear.application.service.archive.media.delivery.MediaDeliveryService;
 import fmi.ethnowear.application.service.archive.query.ArchiveItemDetailService;
 import fmi.ethnowear.application.service.archive.query.RegionalEmbroideryArchiveService;
-import lombok.RequiredArgsConstructor;
+import fmi.ethnowear.application.service.archive.query.RegionalMotifArchiveService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.jspecify.annotations.NonNull;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -21,12 +23,33 @@ import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @RestController
 @RequestMapping("/api/archive")
-@RequiredArgsConstructor
 public class PublicArchiveController {
 
     private final RegionalEmbroideryArchiveService regionalEmbroideryService;
+    private final RegionalMotifArchiveService regionalMotifService;
     private final ArchiveItemDetailService detailService;
     private final MediaDeliveryService mediaDeliveryService;
+
+    @Autowired
+    public PublicArchiveController(
+            RegionalEmbroideryArchiveService regionalEmbroideryService,
+            RegionalMotifArchiveService regionalMotifService,
+            ArchiveItemDetailService detailService,
+            MediaDeliveryService mediaDeliveryService
+    ) {
+        this.regionalEmbroideryService = regionalEmbroideryService;
+        this.regionalMotifService = regionalMotifService;
+        this.detailService = detailService;
+        this.mediaDeliveryService = mediaDeliveryService;
+    }
+
+    PublicArchiveController(
+            RegionalEmbroideryArchiveService regionalEmbroideryService,
+            ArchiveItemDetailService detailService,
+            MediaDeliveryService mediaDeliveryService
+    ) {
+        this(regionalEmbroideryService, null, detailService, mediaDeliveryService);
+    }
 
     @GetMapping("/regional-embroideries")
     public RegionalEmbroideryArchiveOverviewDetails findRegionalEmbroideries(
@@ -34,6 +57,14 @@ public class PublicArchiveController {
             @RequestParam(defaultValue = "4") int previewSize
     ) {
         return regionalEmbroideryService.findOverview(language, previewSize);
+    }
+
+    @GetMapping("/regional-motifs")
+    public RegionalMotifArchiveOverviewDetails findRegionalMotifs(
+            @RequestParam(defaultValue = "bg") String language,
+            @RequestParam(defaultValue = "4") int previewSize
+    ) {
+        return regionalMotifService.findOverview(language, previewSize);
     }
 
     @GetMapping("/items/{id}")

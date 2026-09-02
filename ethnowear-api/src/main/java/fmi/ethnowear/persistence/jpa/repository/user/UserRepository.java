@@ -12,7 +12,9 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByNormalizedUsername(String normalizedUsername);
+    Optional<User> findByNormalizedUsernameAndDeletedAtIsNull(String normalizedUsername);
+
+    Optional<User> findByIdAndDeletedAtIsNull(Long id);
 
     boolean existsByNormalizedUsername(String normalizedUsername);
 
@@ -20,11 +22,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT user
             FROM User user
             LEFT JOIN UserInfo info ON info.user = user
-            WHERE :search IS NULL
-               OR LOWER(user.username) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(info.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(info.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(info.email) LIKE LOWER(CONCAT('%', :search, '%'))
+            WHERE user.deletedAt IS NULL
+              AND (
+                   :search IS NULL
+                   OR LOWER(user.username) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(info.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(info.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(info.email) LIKE LOWER(CONCAT('%', :search, '%'))
+              )
             """)
     Page<User> search(
             @Param("search") String search,
@@ -36,6 +41,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT user
             FROM User user
             WHERE user.enabled = true
+              AND user.deletedAt IS NULL
               AND EXISTS (
                   SELECT assignment.id
                   FROM UserRole assignment
@@ -51,6 +57,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
         SELECT user
         FROM User user
         WHERE user.normalizedUsername = :normalizedUsername
+          AND user.deletedAt IS NULL
         """)
     Optional<User> findForAuthenticationUpdate(
             @Param("normalizedUsername") String normalizedUsername

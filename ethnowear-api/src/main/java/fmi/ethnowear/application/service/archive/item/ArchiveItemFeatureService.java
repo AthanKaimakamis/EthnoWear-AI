@@ -129,7 +129,9 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
             throw new IllegalArgumentException("Feature type is required");
 
         if (!ALLOWED_FEATURE_TYPES.contains(input.featureType()))
-            throw new IllegalArgumentException("Region and regional embroidery must be assigned directly to the archive item");
+            throw new IllegalArgumentException(
+                    "Region, regional embroidery and regional motif must be assigned directly to the archive item"
+            );
 
         OntologyIdentity identity = new OntologyIdentity(
                 input.ontologyIri(),

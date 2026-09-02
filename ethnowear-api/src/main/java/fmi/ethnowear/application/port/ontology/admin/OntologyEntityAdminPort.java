@@ -2,6 +2,7 @@ package fmi.ethnowear.application.port.ontology.admin;
 
 import fmi.ethnowear.application.dto.ontology.admin.OntologyEntityCommand;
 import fmi.ethnowear.application.dto.ontology.admin.OntologyEntityDetails;
+import fmi.ethnowear.application.dto.ontology.admin.RegionDerivedTypeSynchronizationDetails;
 import fmi.ethnowear.domain.model.ontology.OntologyEntityKind;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface OntologyEntityAdminPort {
     );
 
     void delete(OntologyEntityKind kind, String localName);
+
+    RegionDerivedTypeSynchronizationDetails synchronizeRegionDerivedTypes();
 }

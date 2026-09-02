@@ -2,6 +2,7 @@ import { apiRequest, apiUrl } from './http'
 import type {
     ArchiveItemDetailDetails,
     RegionalEmbroideryArchiveOverviewDetails,
+    RegionalMotifArchiveOverviewDetails,
 } from '../types/archive'
 import type { Language } from '../types/reference'
 
@@ -12,6 +13,17 @@ export function getRegionalEmbroideryArchive(
 ) {
     return apiRequest<RegionalEmbroideryArchiveOverviewDetails>(
         '/api/archive/regional-embroideries',
+        { query: { language, previewSize }, signal },
+    )
+}
+
+export function getRegionalMotifArchive(
+    language: Language = 'bg',
+    previewSize = 4,
+    signal?: AbortSignal,
+) {
+    return apiRequest<RegionalMotifArchiveOverviewDetails>(
+        '/api/archive/regional-motifs',
         { query: { language, previewSize }, signal },
     )
 }

@@ -59,10 +59,9 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
     @Override
     @Transactional
     public ArchiveItemDetails update(Long id, ArchiveItemWriteDto input) {
-        validate(input);
-
         ArchiveItem item = requireItem(id);
         workflowGuard.requireDraft(item);
+        validate(input);
         apply(item, input);
 
         return archiveItemMapper.toDetails(archiveItemRepository.save(item));
@@ -110,7 +109,29 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
         if(input.trustedLevel() == null)
             throw new IllegalArgumentException("Trusted level is required");
 
+        switch(input.archiveType()) {
+            case ORNAMENT_EXAMPLE, MOTIF_EXAMPLE, TECHNIQUE_EXAMPLE, EMBROIDERY_SAMPLE ->
+                    requireRegion(input);
+            default -> {
+            }
+        }
+
+        if(input.archiveType() == fmi.ethnowear.domain.model.archive.ArchiveType.MOTIF_EXAMPLE
+                && (isBlank(input.ontologyRegionalMotifIri())
+                || isBlank(input.ontologyRegionalMotifLocalName())))
+            throw new IllegalArgumentException("Regional motif is required for a motif example");
+
+        if(input.archiveType() == fmi.ethnowear.domain.model.archive.ArchiveType.EMBROIDERY_SAMPLE
+                && (isBlank(input.ontologyRegionalEmbroideryIri())
+                || isBlank(input.ontologyRegionalEmbroideryLocalName())))
+            throw new IllegalArgumentException("Regional embroidery is required for an embroidery sample");
+
         ontologyValidator.validateClassifications(input);
+    }
+
+    private void requireRegion(@NonNull ArchiveItemWriteDto input) {
+        if(isBlank(input.ontologyRegionIri()) || isBlank(input.ontologyRegionLocalName()))
+            throw new IllegalArgumentException("Region is required for this archive item type");
     }
 
 }

@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { getEntityDetails, searchCatalogue } from './CatalogueApi'
-import { getArchiveItemDetails, getRegionalEmbroideryArchive } from './PublicArchiveApi'
+import { getArchiveItemDetails, getRegionalEmbroideryArchive, getRegionalMotifArchive } from './PublicArchiveApi'
 import { getFullReference } from './ReferenceApi'
 import { publicQueryKeys } from '../app/queryClient'
 import type { PageRequest } from '../types/api'
@@ -56,6 +56,14 @@ export function regionalEmbroideryArchiveQueryOptions(language: Language, previe
     return queryOptions({
         queryKey: [...publicQueryKeys.archive, 'regional-embroideries', language, previewSize] as const,
         queryFn: ({ signal }) => getRegionalEmbroideryArchive(language, previewSize, signal),
+        staleTime: publicDataStaleTime,
+    })
+}
+
+export function regionalMotifArchiveQueryOptions(language: Language, previewSize = 4) {
+    return queryOptions({
+        queryKey: [...publicQueryKeys.archive, 'regional-motifs', language, previewSize] as const,
+        queryFn: ({ signal }) => getRegionalMotifArchive(language, previewSize, signal),
         staleTime: publicDataStaleTime,
     })
 }

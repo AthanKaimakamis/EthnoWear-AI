@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-    Alert, Avatar, Box, Button, Checkbox, FormControlLabel, InputAdornment,
+    Alert, Box, Button, Checkbox, FormControlLabel, InputAdornment,
     LinearProgress, Pagination, Paper, Stack, TextField,
     Tooltip, Typography,
 } from '@mui/material'
@@ -8,7 +8,6 @@ import AddIcon from '@mui/icons-material/Add'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import SearchIcon from '@mui/icons-material/Search'
-import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
 import {
@@ -33,6 +32,7 @@ import FormSelectField from '../../components/forms/FormSelectField'
 import { invalidatePublicQueries } from '../../app/queryClient'
 import { useAdminAuth } from '../../app/adminAuth'
 import { apiErrorMessage } from '../../api/http'
+import AdminMediaThumbnail from '../../components/admin/media/AdminMediaThumbnail'
 
 type Filters = {
     archiveType: string
@@ -61,6 +61,7 @@ export default function ArchiveManagerPage() {
     const [assets, setAssets] = useState<MediaAssetDetails[]>([])
     const [regions, setRegions] = useState<ReferenceResource[]>([])
     const [embroideries, setEmbroideries] = useState<ReferenceResource[]>([])
+    const [regionalMotifs, setRegionalMotifs] = useState<ReferenceResource[]>([])
     const [query, setQuery] = useState('')
     const [filters, setFilters] = useState(initialFilters)
     const [page, setPage] = useState(1)
@@ -87,13 +88,13 @@ export default function ArchiveManagerPage() {
             getFullReference(i18n.resolvedLanguage === 'en' ? 'en' : 'bg'),
         ]).then(([itemPage, sourcePage, referencePage, mediaPage, assetPage, reference]) => {
             setItems(itemPage.content); setSources(sourcePage.content); setReferences(referencePage.content)
-            setMedia(mediaPage.content); setAssets(assetPage.content); setRegions(reference.regions); setEmbroideries(reference.regionalEmbroideryTypes)
+            setMedia(mediaPage.content); setAssets(assetPage.content); setRegions(reference.regions); setEmbroideries(reference.regionalEmbroideryTypes); setRegionalMotifs(reference.regionalMotifTypes)
         }).catch(caught => { if (!(caught instanceof DOMException && caught.name === 'AbortError')) setError(apiErrorMessage(caught)) })
             .finally(() => setLoading(false))
         return () => controller.abort()
     }, [i18n.resolvedLanguage, reloadKey])
 
-    const labels = useMemo(() => new Map([...regions, ...embroideries].map(resource => [resource.localName, resource.label])), [regions, embroideries])
+    const labels = useMemo(() => new Map([...regions, ...embroideries, ...regionalMotifs].map(resource => [resource.localName, resource.label])), [regions, embroideries, regionalMotifs])
     const sourceByReference = useMemo(() => new Map(references.map(reference => [reference.id, sources.find(source => source.id === reference.sourceId)])), [references, sources])
     const mediaByItem = useMemo(() => {
         const result = new Map<number, ArchiveItemMediaDetails[]>()
@@ -190,14 +191,14 @@ export default function ArchiveManagerPage() {
                             onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setPreviewItemId(item.id) } }}
                             sx={{ p: 1.5, cursor: 'pointer', transition: 'border-color 120ms, background-color 120ms', '&:hover': { borderColor: 'primary.main', bgcolor: '#FCF8F8' }, '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 } }}>
                             <Stack direction="row" sx={{ gap: 2, alignItems: 'center' }}>
-                                <Avatar variant="rounded" src={asset ? `/api/media/${asset.id}/content` : undefined} sx={{ width: 84, height: 68, bgcolor: 'background.default' }}><ImageNotSupportedOutlinedIcon /></Avatar>
+                                <AdminMediaThumbnail mediaAssetId={asset?.id} alt={asset?.fileName ?? ''} sx={{ width: 84, height: 68, borderRadius: 1, flexShrink: 0 }} />
                                 <Box sx={{ minWidth: 0, flex: 1 }}>
                                     <Stack direction="row" sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                                         <Typography sx={{ fontWeight: 700 }}>{title(item)}</Typography>
                                         <ArchiveStatusChip value={item.publicationStatus} />
                                         <TrustedLevelChip value={item.trustedLevel} />
                                     </Stack>
-                                    <Typography variant="body2" color="text.secondary" noWrap>{t(`archiveDetails.types.${item.archiveType as ArchiveType}`)} · {labels.get(item.ontologyRegionalEmbroideryLocalName ?? '') ?? labels.get(item.ontologyRegionLocalName ?? '') ?? t('curator.archive.unclassified')}</Typography>
+                                    <Typography variant="body2" color="text.secondary" noWrap>{t(`archiveDetails.types.${item.archiveType as ArchiveType}`)} · {labels.get(item.ontologyRegionalMotifLocalName ?? '') ?? labels.get(item.ontologyRegionalEmbroideryLocalName ?? '') ?? labels.get(item.ontologyRegionLocalName ?? '') ?? t('curator.archive.unclassified')}</Typography>
                                     <Typography variant="caption" color="text.secondary">{source?.title ?? t('curator.archive.noSource')} · {new Date(item.updatedAt).toLocaleDateString(i18n.resolvedLanguage)}</Typography>
                                 </Box>
                                 <Stack direction="row" sx={{ alignItems: 'center', gap: .5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>

@@ -1,7 +1,9 @@
 package fmi.ethnowear.persistence.jpa.entity;
 
 import fmi.ethnowear.domain.model.archive.SourceType;
+import fmi.ethnowear.domain.model.rights.RightsStatus;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -47,5 +49,51 @@ public class Source extends UpdatableEntity {
 
     @Column(name = "IsTrusted", nullable = false)
     private boolean trusted;
+
+    @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "RightsStatus", nullable = false, length = 30)
+    private RightsStatus rightsStatus = RightsStatus.UNKNOWN;
+
+    @Setter(AccessLevel.NONE)
+    @Column(name = "License", length = 500)
+    private String license;
+
+    @Setter(AccessLevel.NONE)
+    @Column(name = "PublicDisplayAllowed", nullable = false)
+    private boolean publicDisplayAllowed;
+
+    public void updateRights(
+            RightsStatus rightsStatus,
+            String license,
+            boolean publicDisplayAllowed
+    ) {
+        RightsStatus normalizedStatus = rightsStatus == null
+                ? RightsStatus.UNKNOWN
+                : rightsStatus;
+        String normalizedLicense = normalizeLicense(license);
+
+        if (normalizedStatus.requiresLicense() && normalizedLicense == null)
+            throw new IllegalArgumentException("License is required for licensed content");
+
+        if (publicDisplayAllowed && !normalizedStatus.permitsPublicDisplay())
+            throw new IllegalArgumentException("Rights status does not permit public display");
+
+        this.rightsStatus = normalizedStatus;
+        this.license = normalizedLicense;
+        this.publicDisplayAllowed = publicDisplayAllowed;
+    }
+
+    private String normalizeLicense(String value) {
+        if (value == null || value.isBlank())
+            return null;
+
+        String normalized = value.trim();
+
+        if (normalized.length() > 500)
+            throw new IllegalArgumentException("License cannot exceed 500 characters");
+
+        return normalized;
+    }
 
 }

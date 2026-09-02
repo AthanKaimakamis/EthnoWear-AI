@@ -58,7 +58,7 @@ export type ArchiveAdminApi = {
 
 export function archiveAdminApi<W, D extends ArchiveAdminRecord>(api: CrudApi<W, D>): ArchiveAdminApi {
     return {
-        findAll: signal => api.findAll({ size: 1000, sort: 'id,asc' }, signal),
+        findAll: signal => api.findAll({ size: 100, sort: 'id,asc' }, signal),
         create: input => api.create(input as W),
         update: (id, input) => api.update(id, input as W),
         remove: api.remove,

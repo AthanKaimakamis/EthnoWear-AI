@@ -2,6 +2,7 @@ package fmi.ethnowear.application.service.user;
 
 import fmi.ethnowear.application.dto.user.*;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
+import fmi.ethnowear.application.exception.UserDeletionConflictException;
 import fmi.ethnowear.domain.model.user.RoleName;
 import fmi.ethnowear.persistence.jpa.entity.user.*;
 import fmi.ethnowear.persistence.jpa.repository.user.*;
@@ -213,10 +214,33 @@ public class UserManagementService {
         return new TemporaryPasswordDetails(generated.plaintext(), expiresAt);
     }
 
+    @Transactional
+    public void delete(Long userId, Long deletedByUserId) {
+        User user = requireUser(userId);
+        User deletedBy = requireUser(deletedByUserId);
+
+        if (Objects.equals(user.getId(), deletedBy.getId()))
+            throw new UserDeletionConflictException(
+                    "USER_SELF_DELETE_FORBIDDEN",
+                    "Administrators cannot delete their own account"
+            );
+
+        if (user.isEnabled()
+                && userRoleRepository.existsByUser_IdAndRole_Name(userId, RoleName.ADMINISTRATOR)
+                && userRepository.lockEnabledAdministrators().size() <= 1)
+            throw new UserDeletionConflictException(
+                    "FINAL_ADMINISTRATOR_DELETE_FORBIDDEN",
+                    "The final enabled administrator cannot be deleted"
+            );
+
+        user.softDelete(deletedBy, now());
+        userRepository.saveAndFlush(user);
+    }
+
     private @NonNull User requireUser(Long userId) {
         requireId(userId, "User");
 
-        return userRepository.findById(userId)
+        return userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
     }
 

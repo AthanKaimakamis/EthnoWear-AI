@@ -54,7 +54,6 @@ function ArchiveLayout() {
             }, { page: 0, size: 500, sort: 'label,asc' }))
             return
         }
-
         void queryClient.prefetchQuery(catalogueQueryOptions({
             entityType: kind,
             language,

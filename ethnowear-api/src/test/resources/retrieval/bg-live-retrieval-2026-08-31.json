@@ -1,0 +1,514 @@
+{
+  "auditedAt": "2026-08-31T09:38:18.015589+00:00",
+  "verification": {
+    "totalRequests": 20,
+    "successfulRequests": 20,
+    "returnedPassagesCheckedAgainstSql": 100,
+    "exactTextAndCitationsMatchSql": true,
+    "internalFieldsAbsent": true,
+    "currentApprovedIndexedChunksOnly": true
+  },
+  "citations": [
+    {
+      "chunkId": 10260,
+      "documentId": 40011,
+      "pageId": 40250,
+      "pdfPageIndex": 0,
+      "printedPageNumber": "111",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10261,
+      "documentId": 40011,
+      "pageId": 40251,
+      "pdfPageIndex": 1,
+      "printedPageNumber": "112",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10262,
+      "documentId": 40011,
+      "pageId": 40252,
+      "pdfPageIndex": 2,
+      "printedPageNumber": "113",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10263,
+      "documentId": 40011,
+      "pageId": 40253,
+      "pdfPageIndex": 3,
+      "printedPageNumber": "114",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10264,
+      "documentId": 40011,
+      "pageId": 40254,
+      "pdfPageIndex": 4,
+      "printedPageNumber": "115",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10265,
+      "documentId": 40011,
+      "pageId": 40255,
+      "pdfPageIndex": 5,
+      "printedPageNumber": "116",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10266,
+      "documentId": 40011,
+      "pageId": 40255,
+      "pdfPageIndex": 5,
+      "printedPageNumber": "116",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10267,
+      "documentId": 40011,
+      "pageId": 40256,
+      "pdfPageIndex": 6,
+      "printedPageNumber": "117",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10268,
+      "documentId": 40011,
+      "pageId": 40256,
+      "pdfPageIndex": 6,
+      "printedPageNumber": "117",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10269,
+      "documentId": 40011,
+      "pageId": 40257,
+      "pdfPageIndex": 7,
+      "printedPageNumber": "118",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    },
+    {
+      "chunkId": 10270,
+      "documentId": 40011,
+      "pageId": 40258,
+      "pdfPageIndex": 8,
+      "printedPageNumber": "119",
+      "sourceId": 2,
+      "sourceReferenceId": 3
+    }
+  ],
+  "runs": [
+    {
+      "caseId": "BG-01",
+      "question": "От какво се състой една елховска шевица?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10270,
+        10261,
+        10264,
+        10262
+      ],
+      "similarities": [
+        0.42087716,
+        0.4198662,
+        0.4158224,
+        0.40624738,
+        0.4011256
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-01",
+      "question": "От какво се състои една елховска шевица?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10270,
+        10265,
+        10264,
+        10261,
+        10267
+      ],
+      "similarities": [
+        0.43718714,
+        0.42348242,
+        0.42248005,
+        0.41874504,
+        0.40886927
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-01",
+      "question": "Кои елементи са характерни за елховската шевица?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10270,
+        10265,
+        10261,
+        10267,
+        10263
+      ],
+      "similarities": [
+        0.43307552,
+        0.417249,
+        0.41397592,
+        0.41041094,
+        0.39763653
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-02",
+      "question": "Кой орнаменти се използват в елховско?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10261,
+        10265,
+        10262,
+        10263,
+        10260
+      ],
+      "similarities": [
+        0.46319914,
+        0.4603708,
+        0.44796488,
+        0.44183788,
+        0.4277972
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-02",
+      "question": "Кои орнаменти се използват в Елховско?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10261,
+        10263,
+        10265,
+        10262,
+        10260
+      ],
+      "similarities": [
+        0.47516814,
+        0.46189874,
+        0.46130207,
+        0.45743632,
+        0.43976337
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-02",
+      "question": "Кои орнаменти са свързани с Елховския регион?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10261,
+        10263,
+        10262,
+        10260,
+        10270
+      ],
+      "similarities": [
+        0.5156956,
+        0.4878835,
+        0.4793666,
+        0.46213537,
+        0.45080316
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-03",
+      "question": "Какви техники се използват в елхоско?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10269,
+        10262,
+        10260,
+        10265,
+        10268
+      ],
+      "similarities": [
+        0.35143453,
+        0.34183133,
+        0.33566967,
+        0.32941198,
+        0.32783437
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-03",
+      "question": "Какви техники се използват в Елховско?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10269,
+        10261,
+        10263,
+        10262,
+        10260
+      ],
+      "similarities": [
+        0.3785089,
+        0.37288237,
+        0.37272972,
+        0.37205774,
+        0.365246
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-03",
+      "question": "Кои бодове са свързани с Елховския регион?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10261,
+        10263,
+        10260,
+        10269,
+        10266
+      ],
+      "similarities": [
+        0.36841714,
+        0.3517802,
+        0.33206302,
+        0.32676166,
+        0.3242054
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-04",
+      "question": "Покажи ми снимки на орнаменти от дедеагаш.",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10262,
+        10261,
+        10260,
+        10270
+      ],
+      "similarities": [
+        0.46665242,
+        0.46225953,
+        0.4607646,
+        0.45028782,
+        0.4309185
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-04",
+      "question": "Покажи ми снимки на орнаменти от Дедеагач.",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10262,
+        10265,
+        10261,
+        10270,
+        10260
+      ],
+      "similarities": [
+        0.46514434,
+        0.46250215,
+        0.46003646,
+        0.44359714,
+        0.43999797
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-04",
+      "question": "Има ли архивни изображения на дедеагачки орнаменти?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10262,
+        10261,
+        10263,
+        10268,
+        10265
+      ],
+      "similarities": [
+        0.46763322,
+        0.45190102,
+        0.4397629,
+        0.43201828,
+        0.4179998
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-05",
+      "question": "Какво е синджир бод?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10268,
+        10265,
+        10266,
+        10261,
+        10267
+      ],
+      "similarities": [
+        0.27988043,
+        0.27245378,
+        0.25367105,
+        0.23220691,
+        0.22169106
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-05",
+      "question": "Какво е синджирен бод?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10270,
+        10268,
+        10263,
+        10261
+      ],
+      "similarities": [
+        0.30584335,
+        0.28324753,
+        0.2830956,
+        0.26070085,
+        0.25944927
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-05",
+      "question": "Какво представлява обикновеният синджирен бод?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10270,
+        10268,
+        10263,
+        10267
+      ],
+      "similarities": [
+        0.31920424,
+        0.29240584,
+        0.2921134,
+        0.26253587,
+        0.25934404
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-06",
+      "question": "Как се прави кръстат бод?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10266,
+        10268,
+        10263,
+        10269
+      ],
+      "similarities": [
+        0.37698936,
+        0.342853,
+        0.33904964,
+        0.335925,
+        0.3176338
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-06",
+      "question": "Обясни стъпките за изпълнение на кръстат бод.",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10269,
+        10266,
+        10260,
+        10262
+      ],
+      "similarities": [
+        0.38372827,
+        0.36251497,
+        0.3537441,
+        0.345458,
+        0.34519225
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-06",
+      "question": "Как се изпълнява кръстатият бод?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10265,
+        10266,
+        10268,
+        10270,
+        10263
+      ],
+      "similarities": [
+        0.37685183,
+        0.36144868,
+        0.35877094,
+        0.33968228,
+        0.32715678
+      ],
+      "expectedChunkId": null
+    },
+    {
+      "caseId": "BG-C01",
+      "question": "От кой район е престилката на обр. 42?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10260,
+        10262,
+        10261,
+        10263,
+        10265
+      ],
+      "similarities": [
+        0.4457856,
+        0.4274466,
+        0.4133084,
+        0.4057069,
+        0.3927719
+      ],
+      "expectedChunkId": 10262
+    },
+    {
+      "caseId": "BG-C02",
+      "question": "Как се наричат композициите с човешки фигури, оприличавани на хоро?",
+      "httpStatus": 200,
+      "rankedChunkIds": [
+        10270,
+        10265,
+        10260,
+        10261,
+        10263
+      ],
+      "similarities": [
+        0.5179442,
+        0.45599154,
+        0.42370316,
+        0.4031179,
+        0.39473057
+      ],
+      "expectedChunkId": 10270
+    }
+  ]
+}

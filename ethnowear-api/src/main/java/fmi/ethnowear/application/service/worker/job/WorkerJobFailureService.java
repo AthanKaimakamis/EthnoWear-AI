@@ -53,6 +53,7 @@ public class WorkerJobFailureService {
     private final WorkerIndexingService indexingService;
     private final DocumentProcessingStateReconciler processingStateReconciler;
     private final FigureExtractionJobStateService figureJobStateService;
+    private final IndexingFailureClassifier indexingFailureClassifier;
     private final Clock clock;
     private final ManagementEventPublisher managementEvents;
 
@@ -65,6 +66,7 @@ public class WorkerJobFailureService {
         validate(command);
 
         DocumentProcessingJob job = jobLoader.loadForUpdate(jobId);
+        command = indexingFailureClassifier.normalize(job, command);
 
         if (FAILURE_RESULTS.contains(job.getStatus()))
             return existingResult(job, command);

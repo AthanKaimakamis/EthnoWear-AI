@@ -18,6 +18,8 @@ const exactMessageKeys = new Map<string, string>(
 const codeKeys: Record<string, string> = {
     USER_USERNAME_EXISTS: 'usernameExists',
     USER_EMAIL_EXISTS: 'emailExists',
+    USER_SELF_DELETE_FORBIDDEN: 'userSelfDeleteForbidden',
+    FINAL_ADMINISTRATOR_DELETE_FORBIDDEN: 'finalAdministratorDeleteForbidden',
     AUTH_INVALID_CREDENTIALS: 'invalidCredentials',
     AUTH_CURRENT_PASSWORD_INVALID: 'currentPasswordInvalid',
     MEDIA_FILE_TOO_LARGE: 'mediaTooLarge',
@@ -28,6 +30,8 @@ const codeKeys: Record<string, string> = {
     DOCUMENT_DEPENDENCY_CONFLICT: 'documentDependencyConflict',
     DOCUMENT_VECTOR_CLEANUP_UNAVAILABLE: 'documentVectorCleanupUnavailable',
     CHUNK_GENERATION_INELIGIBLE: 'chunkGenerationIneligible',
+    ONTOLOGY_VERSION_NOT_FOUND: 'ontologyVersionNotFound',
+    ONTOLOGY_VERSION_RESTORE_FAILED: 'ontologyVersionRestoreFailed',
 }
 
 type DynamicMatch = {

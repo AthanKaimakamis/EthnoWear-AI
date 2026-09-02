@@ -4,6 +4,7 @@ import fmi.ethnowear.domain.model.archive.MediaType;
 import fmi.ethnowear.domain.model.media.MediaOrigin;
 import fmi.ethnowear.domain.model.media.MediaRetentionPolicy;
 import fmi.ethnowear.domain.model.media.MediaStorageState;
+import fmi.ethnowear.domain.model.rights.RightsStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -83,6 +84,40 @@ public class MediaAsset extends UpdatableEntity {
     @JoinColumn(name = "SourceReferenceId")
     private SourceReference sourceReference;
 
+    @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
+    @Column(name = "RightsStatus", nullable = false, length = 30)
+    private RightsStatus rightsStatus = RightsStatus.UNKNOWN;
+
+    @Setter(AccessLevel.NONE)
+    @Column(name = "License", length = 500)
+    private String license;
+
+    @Setter(AccessLevel.NONE)
+    @Column(name = "PublicDisplayAllowed", nullable = false)
+    private boolean publicDisplayAllowed;
+
+    public void updateRights(
+            RightsStatus rightsStatus,
+            String license,
+            boolean publicDisplayAllowed
+    ) {
+        RightsStatus normalizedStatus = rightsStatus == null
+                ? RightsStatus.UNKNOWN
+                : rightsStatus;
+        String normalizedLicense = normalizeLicense(license);
+
+        if (normalizedStatus.requiresLicense() && normalizedLicense == null)
+            throw new IllegalArgumentException("License is required for licensed content");
+
+        if (publicDisplayAllowed && !normalizedStatus.permitsPublicDisplay())
+            throw new IllegalArgumentException("Rights status does not permit public display");
+
+        this.rightsStatus = normalizedStatus;
+        this.license = normalizedLicense;
+        this.publicDisplayAllowed = publicDisplayAllowed;
+    }
+
     public void classify(
             MediaOrigin origin,
             MediaRetentionPolicy retentionPolicy
@@ -139,5 +174,17 @@ public class MediaAsset extends UpdatableEntity {
                 "Media purge time is required"
         );
         this.purgeReason = normalizedReason;
+    }
+
+    private String normalizeLicense(String value) {
+        if (value == null || value.isBlank())
+            return null;
+
+        String normalized = value.trim();
+
+        if (normalized.length() > 500)
+            throw new IllegalArgumentException("License cannot exceed 500 characters");
+
+        return normalized;
     }
 }

@@ -21,6 +21,11 @@ public class SourceMapper {
         source.setIsbn(input.isbn());
         source.setNotes(input.notes());
         source.setTrusted(input.trusted());
+        source.updateRights(
+                input.rightsStatus(),
+                input.license(),
+                input.publicDisplayAllowed()
+        );
     }
 
     public SourceDetails toDetails(@NonNull Source source) {
@@ -37,6 +42,9 @@ public class SourceMapper {
                 source.getIsbn(),
                 source.getNotes(),
                 source.isTrusted(),
+                source.getRightsStatus(),
+                source.getLicense(),
+                source.isPublicDisplayAllowed(),
                 source.getCreatedAt(),
                 source.getUpdatedAt()
         );

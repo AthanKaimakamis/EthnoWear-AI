@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MediaAssetDetails } from '../../types/archive'
-import { approvedLibraryAssets, canDeleteMediaAsset } from './MediaLibraryPage'
+import { approvedLibraryAssets, canDeleteMediaAsset } from './mediaLibraryModel'
 
 function asset(id: number, reviewState?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'OUTDATED'): MediaAssetDetails {
     return {

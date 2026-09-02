@@ -158,6 +158,11 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     }
 
     @Override
+    public List<OntologyResource> listOrnamentsOfType(String ornamentTypeLocalName) {
+        return individualsOfClass(ornamentTypeLocalName);
+    }
+
+    @Override
     public List<OntologyResource> listGeometricOrnaments() {
         return individualsOfClass(OntologyTerms.Classes.GEOMETRIC_ORNAMENT);
     }
@@ -307,6 +312,54 @@ public class EmbroideryOntology extends JenaOntologyContext implements Embroider
     public Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language) {
         return findRegionalEmbroideryByName(nameOrLocalName, language)
                 .map(type -> toLocalizedResource(type, language));
+    }
+
+    // Regional motif types
+
+    @Override
+    public List<OntologyResource> listRegionalMotifTypes() {
+        return subclassesOf(OntologyTerms.Classes.REGIONAL_MOTIF, true);
+    }
+
+    @Override
+    public List<LocalizedOntologyResource> listLocalizedRegionalMotifTypes(OntologyLanguage language) {
+        return toLocalizedResourceList(listRegionalMotifTypes(), language);
+    }
+
+    @Override
+    public Optional<OntologyResource> findRegionalMotifByName(
+            String nameOrLocalName,
+            OntologyLanguage language
+    ) {
+        return listRegionalMotifTypes().stream()
+                .filter(type -> matchesLabelOrAltLabel(type, nameOrLocalName, language))
+                .findFirst();
+    }
+
+    @Override
+    public Optional<OntologyResource> findRegionForRegionalMotif(String regionalMotifClassName) {
+        return hasValueRestriction(
+                regionalMotifClassName,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_REGION
+        );
+    }
+
+    @Override
+    public Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalMotif(
+            String regionalMotifClassLocalName,
+            OntologyLanguage language
+    ) {
+        return findRegionForRegionalMotif(regionalMotifClassLocalName)
+                .map(region -> toLocalizedResource(region, language));
+    }
+
+    @Override
+    public List<OntologyResource> listRegionalMotifsForRegion(String regionLocalName) {
+        return subclassesWithHasValueRestriction(
+                OntologyTerms.Classes.REGIONAL_MOTIF,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_REGION,
+                regionLocalName
+        );
     }
 
     @Override

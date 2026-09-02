@@ -25,7 +25,7 @@ public class LoginAttemptService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordSuccess(Long userId) {
-        userRepository.findById(userId)
+        userRepository.findByIdAndDeletedAtIsNull(userId)
                 .ifPresent(user -> user.recordSuccessfulLogin(now()));
     }
 

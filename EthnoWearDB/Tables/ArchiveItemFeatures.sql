@@ -32,7 +32,8 @@ CREATE TABLE [ethnowear].[ArchiveItemFeatures]
             N'TECHNIQUE',
             N'MOTIF',
             N'REGION',
-            N'REGIONAL_EMBROIDERY'
+            N'REGIONAL_EMBROIDERY',
+            N'REGIONAL_MOTIF'
         )),
 
     CONSTRAINT [CK_ArchiveItemFeatures_Confidence]

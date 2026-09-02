@@ -51,13 +51,49 @@ describe('DocumentFiguresPanel', () => {
         expect(screen.getByText('Pending review')).toBeInTheDocument()
     })
 
-    it('requires saved caption/source metadata and a review reason before approval', async () => {
+    it('requires saved caption and source metadata before approval', async () => {
         const user = userEvent.setup()
         renderPanel()
         await user.click(await screen.findByRole('button', { name: /Open figure 1/ }))
         expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled()
         await user.click(screen.getByRole('combobox', { name: 'Source reference' }))
         await user.click(await screen.findByRole('option', { name: /Source book/ }))
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+        expect(documentApi.updatePageFigure).toHaveBeenCalledWith(11, 21, 'figure-v1', expect.objectContaining({ sourceReferenceId: 9 }))
+    })
+
+    it('submits the reviewer identity as a hidden approval reason', async () => {
+        const ready = { ...figure, correctedCaptionText: 'Reviewed caption', sourceReferenceId: 9 }
+        vi.mocked(documentApi.listDocumentFigures).mockResolvedValue([{ page, figures: [ready] }])
+        vi.mocked(documentApi.approvePageFigure).mockResolvedValue({ ...ready, reviewState: 'APPROVED', version: 'figure-v2' })
+        const user = userEvent.setup()
+        renderPanel()
+
+        await user.click(await screen.findByRole('button', { name: /Open figure 1/ }))
+        await user.click(screen.getByRole('button', { name: 'Approve' }))
+        expect(screen.queryByRole('textbox', { name: 'Decision reason' })).not.toBeInTheDocument()
+        await user.click(screen.getByRole('button', { name: 'Approve' }))
+
+        await vi.waitFor(() => expect(documentApi.approvePageFigure).toHaveBeenCalledWith(11, 21, 'figure-v1', 'Reviewed by admin - Administrator'))
+    })
+
+    it('keeps approve disabled after the figure is approved', async () => {
+        const approved = { ...figure, correctedCaptionText: 'Reviewed caption', sourceReferenceId: 9, reviewState: 'APPROVED' as const }
+        vi.mocked(documentApi.listDocumentFigures).mockResolvedValue([{ page, figures: [approved] }])
+        const user = userEvent.setup()
+        renderPanel()
+
+        await user.click(await screen.findByRole('button', { name: /Open figure 1/ }))
+        expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled()
+    })
+
+    it('prefills the page citation and requires saving it on the figure', async () => {
+        const user = userEvent.setup()
+        renderPanel()
+        await user.click(await screen.findByRole('button', { name: /Open figure 1/ }))
+
+        expect(screen.getByRole('combobox', { name: 'Source reference' })).toHaveTextContent('Source book')
+        expect(screen.getByText(/page or document reference is suggested/i)).toBeInTheDocument()
         await user.click(screen.getByRole('button', { name: 'Save' }))
         expect(documentApi.updatePageFigure).toHaveBeenCalledWith(11, 21, 'figure-v1', expect.objectContaining({ sourceReferenceId: 9 }))
     })

@@ -43,7 +43,16 @@ export default function SourceCreateDialog({ initialValues, onClose, onCreated }
         setSaving(true)
         setError(null)
         try {
-            onCreated(await sourcesApi.create(form))
+            onCreated(await sourcesApi.create({
+                ...form,
+                title: form.title.trim(),
+                author: normalized(form.author),
+                publisher: normalized(form.publisher),
+                language: normalized(form.language),
+                isbn: normalized(form.isbn),
+                url: normalized(form.url),
+                notes: normalized(form.notes),
+            }))
         } catch (caught) {
             setError(apiErrorMessage(caught, t('documents.uploadDialog.sourceCreateFailed')))
         } finally {
@@ -93,5 +102,9 @@ export default function SourceCreateDialog({ initialValues, onClose, onCreated }
 }
 
 function nullable(value: string) {
-    return value.trim() || null
+    return value === '' ? null : value
+}
+
+function normalized(value: string | null | undefined) {
+    return value?.trim() || null
 }

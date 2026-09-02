@@ -18,6 +18,7 @@ import type { Language } from '../../types/reference'
 type Props = {
     item: ArchiveEvidenceDetails
     language: Language
+    featured?: boolean
 }
 
 function titleFor(item: ArchiveEvidenceDetails, language: Language) {
@@ -35,13 +36,13 @@ function captionFor(item: ArchiveEvidenceDetails, language: Language) {
         ?? media.captionEn
 }
 
-function ArchiveEvidenceCard({ item, language }: Props) {
+function ArchiveEvidenceCard({ item, language, featured = false }: Props) {
     const { t } = useTranslation()
     const title = titleFor(item, language) ?? t('archiveDetails.untitled')
     const caption = captionFor(item, language)
 
     return (
-        <Card sx={{ height: '100%', overflow: 'hidden' }}>
+        <Card sx={{ height: '100%', maxWidth: featured ? 680 : 'none', overflow: 'hidden' }}>
             <CardActionArea
                 component={Link}
                 to={archiveItemPath(item.archiveItemId)}
@@ -53,7 +54,7 @@ function ArchiveEvidenceCard({ item, language }: Props) {
                         ? archiveMediaUrl(item.previewMedia.mediaAssetId)
                         : '/Image-not-found.png'}
                     alt={caption ?? title}
-                    sx={{ height: 180, objectFit: item.previewMedia ? 'cover' : 'contain', bgcolor: '#F1F2F5' }}
+                    sx={{ height: featured ? { xs: 220, md: 300 } : 180, objectFit: item.previewMedia ? 'cover' : 'contain', bgcolor: '#F1F2F5' }}
                 />
 
                 <CardContent sx={{ flexGrow: 1 }}>

@@ -1,14 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Alert, Box, Button, Grid, LinearProgress, Stack, Typography } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { catalogueQueryOptions, regionalEmbroideryArchiveQueryOptions } from '../api/PublicQueryOptions'
 import { conceptPath } from '../app/archiveRoutes'
 import type { Language } from '../types/reference'
 import {
-    emptyEmbroideryFilters,
     type EmbroideryFilterOptions,
     type EmbroideryFilters,
     type FilterCombinationMode,
@@ -18,12 +17,29 @@ import EmbroideryFilterPanel from '../components/embroidery/EmbroideryFilterPane
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
 import ArchiveBrowseLayout from '../components/archive/browse/ArchiveBrowseLayout'
 import { catalogueFacetOptions } from '../components/archive/browse/catalogueFacets'
+import { archiveFilterParams, readListParam, replaceListParam } from '../app/archiveFilterActions'
+
+const embroideryFilterParams = {
+    regionGroupLocalNames: 'regionGroups',
+    regionLocalNames: archiveFilterParams.regions,
+    ornamentTypeLocalNames: 'ornamentTypes',
+    ornamentLocalNames: 'ornaments',
+    techniqueLocalNames: 'techniques',
+} satisfies Record<keyof EmbroideryFilters, string>
 
 function ArchivePage() {
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
-    const [filters, setFilters] = useState<EmbroideryFilters>(emptyEmbroideryFilters)
-    const [combinationMode, setCombinationMode] = useState<FilterCombinationMode>('and')
+    const [searchParams, setSearchParams] = useSearchParams()
+    const filters: EmbroideryFilters = {
+        regionGroupLocalNames: readListParam(searchParams, embroideryFilterParams.regionGroupLocalNames),
+        regionLocalNames: readListParam(searchParams, embroideryFilterParams.regionLocalNames),
+        ornamentTypeLocalNames: readListParam(searchParams, embroideryFilterParams.ornamentTypeLocalNames),
+        ornamentLocalNames: readListParam(searchParams, embroideryFilterParams.ornamentLocalNames),
+        techniqueLocalNames: readListParam(searchParams, embroideryFilterParams.techniqueLocalNames),
+    }
+    const selectedEntities = readListParam(searchParams, archiveFilterParams.entities)
+    const combinationMode: FilterCombinationMode = searchParams.get('mode') === 'or' ? 'or' : 'and'
     const overviewQuery = useQuery(regionalEmbroideryArchiveQueryOptions(language, 4))
     const catalogueOptions = catalogueQueryOptions({
         entityType: 'REGIONAL_EMBROIDERY',
@@ -61,20 +77,48 @@ function ArchivePage() {
 
     const visibleSections = useMemo(() => {
         const matchingLocalNames = new Set(catalogue?.items.map((item) => item.localName) ?? [])
+        const requestedEntities = new Set(selectedEntities)
         return overview?.sections.filter((section) => (
             matchingLocalNames.has(section.regionalEmbroidery.localName)
+            && (requestedEntities.size === 0 || requestedEntities.has(section.regionalEmbroidery.localName))
         )) ?? []
-    }, [catalogue, overview])
+    }, [catalogue, overview, selectedEntities])
 
     const selectedFilterCount =
         filters.regionGroupLocalNames.length +
         filters.regionLocalNames.length +
         filters.ornamentTypeLocalNames.length +
         filters.ornamentLocalNames.length +
-        filters.techniqueLocalNames.length
+        filters.techniqueLocalNames.length +
+        selectedEntities.length
+
+    function updateFilters(nextFilters: EmbroideryFilters) {
+        setSearchParams(current => {
+            const next = new URLSearchParams(current)
+            for (const [field, key] of Object.entries(embroideryFilterParams)) {
+                replaceListParam(next, key, nextFilters[field as keyof EmbroideryFilters])
+            }
+            return next
+        })
+    }
+
+    function updateCombinationMode(mode: FilterCombinationMode) {
+        setSearchParams(current => {
+            const next = new URLSearchParams(current)
+            if (mode === 'or') next.set('mode', mode)
+            else next.delete('mode')
+            return next
+        })
+    }
 
     function clearFilters() {
-        setFilters(emptyEmbroideryFilters)
+        setSearchParams(current => {
+            const next = new URLSearchParams(current)
+            Object.values(embroideryFilterParams).forEach(key => next.delete(key))
+            next.delete(archiveFilterParams.entities)
+            next.delete('mode')
+            return next
+        })
     }
 
     const filterPanel = (
@@ -82,8 +126,8 @@ function ArchivePage() {
             filters={filters}
             options={filterOptions}
             combinationMode={combinationMode}
-            onCombinationModeChange={setCombinationMode}
-            onChange={setFilters}
+            onCombinationModeChange={updateCombinationMode}
+            onChange={updateFilters}
             onClear={clearFilters}
         />
     )

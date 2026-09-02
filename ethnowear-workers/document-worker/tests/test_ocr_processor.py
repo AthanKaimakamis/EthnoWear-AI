@@ -1,5 +1,7 @@
 import asyncio
+from dataclasses import replace
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -13,7 +15,8 @@ from ethnowear_document_worker.api.models import (
     WorkerJobType,
 )
 from ethnowear_document_worker.jobs.ocr_processor import OcrProcessor
-from ethnowear_document_worker.ocr.models import OcrOutput, OcrWord
+from ethnowear_document_worker.ocr.models import OcrOutput, OcrWord, TsvParseDiagnostics
+from ethnowear_document_worker.ocr.tsv import InvalidTsvError
 from test_ocr_job import claim as make_claim
 
 
@@ -304,3 +307,76 @@ def test_ocr_processor_rejects_non_ocr_claim_before_side_effects(
         asyncio.run(processor(api, tmp_path / "jobs").process(job))
 
     assert api.calls == []
+
+
+def test_ocr_processor_logs_safe_tsv_failure_diagnostics(
+    tmp_path: Path,
+    caplog,
+) -> None:
+    secret = "raw-OCR-/private/tmp/secret-page.png"
+
+    class InvalidTsvTesseract(FakeTesseract):
+        async def recognize(self, *args, **kwargs):
+            raise InvalidTsvError(
+                secret,
+                category="no_usable_words",
+                rejected_row_count=4,
+                usable_word_count=0,
+                selected_psm=kwargs.get("psm"),
+            )
+
+    api = FakeApiClient()
+    with caplog.at_level(
+        logging.ERROR,
+        logger="ethnowear_document_worker.jobs.ocr_processor",
+    ):
+        asyncio.run(
+            processor(api, tmp_path / "jobs", InvalidTsvTesseract()).process(
+                make_claim()
+            )
+        )
+
+    assert api.calls == ["download", "fail"]
+    assert api.failure.error_code == "OCR_OUTPUT_INVALID"
+    record = next(record for record in caplog.records if record.message == "ocr_tsv_rejected")
+    assert record.job_id == 12
+    assert record.document_page_id == 21
+    assert record.failure_category == "fallback_exhausted"
+    assert record.rejected_row_count == 4
+    assert record.usable_word_count == 0
+    assert record.selected_psm == 6
+    assert secret not in caplog.text
+    assert "/private/tmp" not in caplog.text
+
+
+def test_ocr_processor_logs_isolated_rejected_rows_without_raw_text(
+    tmp_path: Path,
+    caplog,
+) -> None:
+    diagnostic_output = replace(
+        recognized_output(),
+        tsv_diagnostics=TsvParseDiagnostics(
+        total_row_count=40,
+        rejected_row_count=1,
+        usable_word_count=30,
+            rejection_reasons=(("numeric_value", 1),),
+        ),
+    )
+    api = FakeApiClient()
+
+    with caplog.at_level(
+        logging.WARNING,
+        logger="ethnowear_document_worker.jobs.ocr_processor",
+    ):
+        asyncio.run(
+            processor(api, tmp_path / "jobs", FakeTesseract(diagnostic_output)).process(
+                make_claim()
+            )
+        )
+
+    record = next(record for record in caplog.records if record.message == "ocr_tsv_rows_skipped")
+    assert record.job_id == 12
+    assert record.document_page_id == 21
+    assert record.rejected_row_count == 1
+    assert record.rejection_reasons == {"numeric_value": 1}
+    assert "Българска шевица" not in caplog.text

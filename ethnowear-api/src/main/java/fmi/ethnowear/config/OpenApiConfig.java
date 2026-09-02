@@ -12,6 +12,8 @@ public class OpenApiConfig {
 
     public static final String BEARER_AUTH = "bearerAuth";
     public static final String WORKER_AUTH = "workerAuth";
+    public static final String PUBLIC_SESSION = "publicSession";
+    public static final String PUBLIC_CSRF = "publicCsrf";
 
     @Bean
     public OpenAPI ethnoWearOpenApi() {
@@ -30,7 +32,15 @@ public class OpenApiConfig {
                                 .in(SecurityScheme.In.HEADER)
                                 .name("Authorization")
                                 .description("Internal worker authentication using: Worker <token>")
-                );
+                )
+                .addSecuritySchemes(PUBLIC_SESSION, new SecurityScheme()
+                        .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.COOKIE)
+                        .name("ETHNOWEAR_PUBLIC_SESSION")
+                        .description("HttpOnly public session cookie; never grants management access"))
+                .addSecuritySchemes(PUBLIC_CSRF, new SecurityScheme()
+                        .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.HEADER)
+                        .name("X-PUBLIC-CSRF")
+                        .description("Obtain with GET /api/public/auth/csrf; send with matching cookie"));
 
         return new OpenAPI()
                 .components(components)

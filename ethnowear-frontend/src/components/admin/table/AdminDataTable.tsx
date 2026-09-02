@@ -30,7 +30,7 @@ type Props<T> = {
     toolbarFilters?: ReactNode
     defaultSortKey?: string
     rowsPerPageOptions?: number[]
-    onAdd: () => void
+    onAdd?: () => void
     onEdit: (row: T) => void
     onDelete: (row: T) => void
 }
@@ -99,9 +99,9 @@ export default function AdminDataTable<T>({
                     slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }}
                 />
                 {toolbarFilters}
-                <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd} sx={{ ml: { sm: 'auto' } }}>
+                {onAdd && <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd} sx={{ ml: { sm: 'auto' } }}>
                     {t('admin.add')}
-                </Button>
+                </Button>}
             </Stack>
             <TableContainer>
                 <Table size="small">

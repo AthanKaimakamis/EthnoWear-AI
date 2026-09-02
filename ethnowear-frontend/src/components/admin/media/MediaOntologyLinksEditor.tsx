@@ -18,7 +18,7 @@ import type { Language, ReferenceData, ReferenceResource } from '../../../types/
 import AdminModal from '../AdminModal'
 
 const entityTypes: OntologyFeatureType[] = [
-    'REGIONAL_EMBROIDERY', 'REGION', 'MOTIF', 'ORNAMENT', 'TECHNIQUE', 'COLOR',
+    'REGIONAL_EMBROIDERY', 'REGIONAL_MOTIF', 'REGION', 'MOTIF', 'ORNAMENT', 'TECHNIQUE', 'COLOR',
 ]
 
 type OntologyOption = ReferenceResource & { entityType: OntologyFeatureType }
@@ -182,6 +182,7 @@ function referenceOptions(reference?: ReferenceData): OntologyOption[] {
     if (!reference) return []
     const groups: Array<[OntologyFeatureType, ReferenceResource[]]> = [
         ['REGIONAL_EMBROIDERY', reference.regionalEmbroideryTypes],
+        ['REGIONAL_MOTIF', reference.regionalMotifTypes],
         ['REGION', reference.regions],
         ['MOTIF', reference.motifs],
         ['ORNAMENT', reference.ornaments],

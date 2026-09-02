@@ -44,6 +44,14 @@ class OcrBlock:
 
 
 @dataclass(frozen=True, slots=True)
+class TsvParseDiagnostics:
+    total_row_count: int
+    rejected_row_count: int
+    usable_word_count: int
+    rejection_reasons: tuple[tuple[str, int], ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class OcrAttempt:
     strategy: str
     psm: int
@@ -54,6 +62,7 @@ class OcrAttempt:
     warnings: tuple[str, ...]
     blocks: tuple[OcrBlock, ...]
     words: tuple["OcrWord", ...]
+    tsv_diagnostics: TsvParseDiagnostics | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,3 +123,4 @@ class OcrOutput:
     blocks: tuple[OcrBlock, ...] = ()
     attempts: tuple[OcrAttempt, ...] = ()
     figure_candidates: tuple[FigureCandidate, ...] = ()
+    tsv_diagnostics: TsvParseDiagnostics | None = None

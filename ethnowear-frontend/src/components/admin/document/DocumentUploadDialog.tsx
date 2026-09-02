@@ -12,6 +12,7 @@ import AddIcon from '@mui/icons-material/Add'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import { useTranslation } from 'react-i18next'
 import { uploadPdfDocument, uploadStandaloneCapture } from '../../../api/DocumentAdminApi'
+import { sourceReferencesApi } from '../../../api/ArchiveAdminApi'
 import { ApiError, apiErrorMessage } from '../../../api/http'
 import { getAdminUsername } from '../../../app/adminAuthStore'
 import type { SourceDetails, SourceReferenceDetails } from '../../../types/archive'
@@ -20,6 +21,7 @@ import AdminModal from '../AdminModal'
 import { provenanceStatuses, provenanceTrustStates } from './documentOptions'
 import SourceCreateDialog from './SourceCreateDialog'
 import PdfViewerDialog from '../PdfViewerDialog'
+import { emptySourceReference, findGeneralSourceReference } from './documentSourceReference'
 
 type UploadKind = 'pdf' | 'capture'
 
@@ -93,7 +95,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
             publicationYear: source?.year ? String(source.year) : source ? '' : current.publicationYear,
             language: source?.language ?? (source ? '' : current.language),
         }))
-        setSourceReferenceId('')
+        setSourceReferenceId(source ? String(findGeneralSourceReference(references, source.id)?.id ?? '') : '')
         setOverrideSourceMetadata(false)
         setProvenanceStatus(source ? 'KNOWN_SOURCE' : 'UNKNOWN_SOURCE')
     }
@@ -184,6 +186,14 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
         setProgress(0)
         setError(null)
         try {
+            let effectiveSourceReferenceId = sourceReferenceId ? Number(sourceReferenceId) : null
+            if (metadata.sourceId && effectiveSourceReferenceId === null) {
+                const sourceId = Number(metadata.sourceId)
+                const existing = findGeneralSourceReference(references, sourceId)
+                effectiveSourceReferenceId = existing?.id ?? (await sourceReferencesApi.create(emptySourceReference(sourceId))).id
+                setSourceReferenceId(String(effectiveSourceReferenceId))
+            }
+            bibliographic.defaultSourceReferenceId = effectiveSourceReferenceId
             const result = kind === 'pdf'
                 ? await uploadPdfDocument({
                     metadata: bibliographic,
@@ -195,7 +205,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
                 : await uploadStandaloneCapture({
                     metadata: bibliographic,
                     provenance: {
-                        sourceReferenceId: sourceReferenceId ? Number(sourceReferenceId) : null,
+                        sourceReferenceId: effectiveSourceReferenceId,
                         provenanceStatus,
                         provenanceTrustState: provenanceTrust,
                         note: description.trim() || null,
@@ -291,6 +301,7 @@ export default function DocumentUploadDialog({ open, sources, references, onClos
                             {t('documents.uploadDialog.createSource')}
                         </Button>
                     </Stack>
+                    {metadata.sourceId && <Alert severity="info">{t(sourceReferenceId ? 'documents.sourceReference.selectedForUpload' : 'documents.sourceReference.willCreateOnUpload')}</Alert>}
                     <TextField required fullWidth label={t('documents.uploadDialog.titleField')} value={metadata.title} onChange={event => setMetadata(value => ({ ...value, title: event.target.value }))} />
 
                     <Box>

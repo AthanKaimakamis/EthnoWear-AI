@@ -1,4 +1,4 @@
-import { Alert, Box, Button, IconButton, InputAdornment, Stack, TextField, Tooltip } from '@mui/material'
+import { Alert, Box, Button, IconButton, InputAdornment, Stack, Tab, Tabs, TextField, Tooltip } from '@mui/material'
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
@@ -8,15 +8,18 @@ import { useLocation, useNavigate } from 'react-router'
 import { ApiError } from '../../api/http'
 import { useAdminAuth } from '../../app/adminAuth'
 import AdminModal from './AdminModal'
+import PublicAccount from '../public/PublicAccount'
 
-type Props = { open: boolean; onClose?: () => void; onSuccess?: () => void; redirectAfterLogin?: boolean }
+type Props = { open: boolean; onClose?: () => void; onSuccess?: () => void; redirectAfterLogin?: boolean; publicLogin?: boolean; initialTab?: 'google' | 'management' }
 
-export default function AdminLoginDialog({ open, onClose, onSuccess, redirectAfterLogin = false }: Props) {
+export default function AdminLoginDialog({ open, onClose, onSuccess, redirectAfterLogin = false, publicLogin = false, initialTab }: Props) {
     const { t } = useTranslation()
     const { login } = useAdminAuth()
     const navigate = useNavigate()
     const location = useLocation()
     const [pending, setPending] = useState(false)
+    const [publicPending, setPublicPending] = useState(false)
+    const [tab, setTab] = useState(initialTab ?? (publicLogin ? 'google' : 'management'))
     const [showPassword, setShowPassword] = useState(false)
     const [errorKey, setErrorKey] = useState<string | null>(null)
     const formId = 'admin-login-form'
@@ -40,16 +43,27 @@ export default function AdminLoginDialog({ open, onClose, onSuccess, redirectAft
         } finally { setPending(false) }
     }
 
-    return <AdminModal open={open} onClose={onClose ?? (() => undefined)} closeDisabled={pending || !onClose} maxWidth="xs" blurBackdrop
-        title={t('admin.login.title')} description={t('admin.login.subtitle')}
-        actions={<Button type="submit" form={formId} variant="contained" startIcon={<LoginOutlinedIcon />} disabled={pending}>{pending ? t('admin.login.signingIn') : t('admin.login.submit')}</Button>}>
+    const managementTab = !publicLogin || tab === 'management'
+    return <AdminModal open={open} onClose={onClose ?? (() => undefined)} closeDisabled={pending || publicPending || !onClose} maxWidth="xs" blurBackdrop
+        title={t(publicLogin ? 'nav.login' : 'admin.login.title')} description={publicLogin ? undefined : t('admin.login.subtitle')}
+        actions={managementTab ? <Button type="submit" form={formId} variant="contained" startIcon={<LoginOutlinedIcon />} disabled={pending}>{pending ? t('admin.login.signingIn') : t('admin.login.submit')}</Button>
+            : <Button onClick={onClose} disabled={publicPending}>{t('publicAuth:guest')}</Button>}>
+        {publicLogin && <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="fullWidth" aria-label={t('nav.login')} sx={{ mb: 3 }}>
+            <Tab value="google" label="Google" id="login-google-tab" aria-controls="login-google-panel" disabled={pending || publicPending} />
+            <Tab value="management" label={t('nav.management')} id="login-management-tab" aria-controls="login-management-panel" disabled={pending || publicPending} />
+        </Tabs>}
+        {publicLogin && !managementTab && open && <Box role="tabpanel" id="login-google-panel" aria-labelledby="login-google-tab">
+            <PublicAccount loginPanel onSuccess={onClose} onPendingChange={setPublicPending} />
+        </Box>}
+        <Box hidden={!managementTab} role={publicLogin ? 'tabpanel' : undefined} id="login-management-panel" aria-labelledby={publicLogin ? 'login-management-tab' : undefined}>
         <Box component="form" id={formId} onSubmit={submit}>
             <Stack spacing={2.25}>
                 {errorKey && <Alert severity="error">{t(errorKey)}</Alert>}
-                <TextField name="username" label={t('admin.login.username')} autoComplete="username" required autoFocus />
+                <TextField name="username" label={t('admin.login.username')} autoComplete="username" required autoFocus={!publicLogin} />
                 <TextField name="password" label={t('admin.login.password')} type={showPassword ? 'text' : 'password'} autoComplete="current-password" required
                     slotProps={{ input: { endAdornment: <InputAdornment position="end"><Tooltip title={showPassword ? t('admin.login.hidePassword') : t('admin.login.showPassword')}><IconButton edge="end" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? t('admin.login.hidePassword') : t('admin.login.showPassword')}>{showPassword ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}</IconButton></Tooltip></InputAdornment> } }} />
             </Stack>
+        </Box>
         </Box>
     </AdminModal>
 }

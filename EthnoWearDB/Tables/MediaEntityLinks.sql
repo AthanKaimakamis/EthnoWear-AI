@@ -12,7 +12,7 @@ CREATE TABLE [ethnowear].[MediaEntityLinks]
     CONSTRAINT [FK_MediaEntityLinks_MediaAssets] FOREIGN KEY ([MediaAssetId])
         REFERENCES [ethnowear].[MediaAssets] ([Id]),
     CONSTRAINT [CK_MediaEntityLinks_EntityType] CHECK ([EntityType] IN (
-        N'REGION', N'REGIONAL_EMBROIDERY', N'MOTIF',
+        N'REGION', N'REGIONAL_EMBROIDERY', N'REGIONAL_MOTIF', N'MOTIF',
         N'ORNAMENT', N'TECHNIQUE', N'COLOR'
     )),
     CONSTRAINT [UQ_MediaEntityLinks] UNIQUE ([MediaAssetId], [EntityType], [OntologyIri])

@@ -8,6 +8,7 @@ import fmi.ethnowear.domain.model.ontology.OntologyResource;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static fmi.ethnowear.support.RepositoryTestProxies.proxy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -17,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ArchiveItemOntologyValidatorTest {
 
     private static final String SHOPLUK_IRI = "urn:ethnowear#ShoplukEmbroidery";
+    private static final String REGION_IRI = "urn:ethnowear#ShoplukRegion";
+    private static final String MOTIF_IRI = "urn:ethnowear#ShoplukMotif";
 
     @Test
     void acceptsMatchingRegionalEmbroideryIdentity() {
@@ -54,6 +57,20 @@ class ArchiveItemOntologyValidatorTest {
         );
     }
 
+    @Test
+    void acceptsRegionalMotifBelongingToSelectedRegion() {
+        ArchiveItemOntologyValidator validator = validator();
+
+        assertDoesNotThrow(() -> validator.validateClassifications(
+                new ArchiveItemWriteDto(
+                        1L, null, null, null, "Archive item", null, null,
+                        ArchiveType.MOTIF_EXAMPLE, null, null, null,
+                        TrustedLevel.VERIFIED, REGION_IRI, "ShoplukRegion",
+                        null, null, MOTIF_IRI, "ShoplukMotif"
+                )
+        ));
+    }
+
     private ArchiveItemOntologyValidator validator() {
         EmbroideryOntologyClient ontology = proxy(
                 EmbroideryOntologyClient.class,
@@ -63,6 +80,34 @@ class ArchiveItemOntologyValidatorTest {
                                 SHOPLUK_IRI,
                                 "ShoplukEmbroidery",
                                 "Shopluk embroidery"
+                        ));
+
+                    if (method.getName().equals("listRegions"))
+                        return List.of(new OntologyResource(
+                                REGION_IRI,
+                                "ShoplukRegion",
+                                "Shopluk"
+                        ));
+
+                    if (method.getName().equals("findRegionForRegionalEmbroidery"))
+                        return Optional.of(new OntologyResource(
+                                REGION_IRI,
+                                "ShoplukRegion",
+                                "Shopluk"
+                        ));
+
+                    if (method.getName().equals("listRegionalMotifTypes"))
+                        return List.of(new OntologyResource(
+                                MOTIF_IRI,
+                                "ShoplukMotif",
+                                "Shopluk motif"
+                        ));
+
+                    if (method.getName().equals("findRegionForRegionalMotif"))
+                        return Optional.of(new OntologyResource(
+                                REGION_IRI,
+                                "ShoplukRegion",
+                                "Shopluk"
                         ));
 
                     throw new AssertionError("Unexpected ontology call: " + method.getName());
@@ -86,10 +131,12 @@ class ArchiveItemOntologyValidatorTest {
                 null,
                 null,
                 TrustedLevel.VERIFIED,
-                null,
-                null,
+                REGION_IRI,
+                "ShoplukRegion",
                 embroideryIri,
-                embroideryLocalName
+                embroideryLocalName,
+                null,
+                null
         );
     }
 }

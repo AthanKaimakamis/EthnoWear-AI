@@ -27,7 +27,7 @@ type Props = {
     saving: boolean
     error: string | null
     onClose: () => void
-    onSubmit: (input: OntologyEntityInput) => void
+    onSubmit: (input: OntologyEntityInput, changeReason?: string) => void
 }
 
 function initialForm(entity: OntologyEntity | null): OntologyEntityInput {
@@ -41,6 +41,7 @@ function initialForm(entity: OntologyEntity | null): OntologyEntityInput {
 function OntologyEntityDialog(props: Props) {
     const { t } = useTranslation()
     const [form, setForm] = useState<OntologyEntityInput>(() => initialForm(props.entity))
+    const [changeReason, setChangeReason] = useState('')
     const formId = 'ontology-entity-form'
 
     function set<K extends keyof OntologyEntityInput>(key: K, value: OntologyEntityInput[K]) {
@@ -49,17 +50,17 @@ function OntologyEntityDialog(props: Props) {
 
     function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        props.onSubmit(form)
+        props.onSubmit(form, changeReason.trim() || undefined)
     }
 
     const typeOptions = props.type === 'ornaments'
         ? props.options.ornamentCategories
         : props.options.techniqueCategories
     const showTypes = props.type === 'ornaments' || props.type === 'techniques'
-    const showRegion = props.type === 'motifs'
+    const showRegion = props.type === 'motifs' || props.type === 'regional-motifs'
     const showRegionGroup = props.type === 'regions'
-    const showOrnaments = props.type === 'regions' || props.type === 'motifs'
-    const showTechniques = props.type === 'regions' || props.type === 'motifs'
+    const showOrnaments = props.type === 'regions' || props.type === 'motifs' || props.type === 'regional-motifs'
+    const showTechniques = props.type === 'regions' || props.type === 'motifs' || props.type === 'regional-motifs'
     const showMotifs = false
 
     return (
@@ -131,6 +132,11 @@ function OntologyEntityDialog(props: Props) {
                             </Stack>
                         </FormSection>
                     )}
+                    <FormSection title={t('admin.form.changeReasonSection')}>
+                        <FormTextField name="changeReason" label={t('admin.form.changeReason')} multiline minRows={2}
+                            helperText={t('admin.form.changeReasonHelp')} value={changeReason}
+                            onChange={event => setChangeReason(event.target.value)} />
+                    </FormSection>
                 </Stack>
             </Box>
         </AdminModal>

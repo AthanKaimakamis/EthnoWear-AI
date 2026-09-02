@@ -65,6 +65,7 @@ type Column = {
 type ResourceDefinition = {
     fields: ArchiveField[]
     columns: Column[]
+    warnings?: (values: ArchiveFormValues) => string[]
 }
 
 const emptyLookups: Lookups = {
@@ -75,11 +76,12 @@ const emptyLookups: Lookups = {
 const archiveTypes = [...ARCHIVE_TYPES]
 const trustedLevels = ['VERIFIED', 'LIKELY', 'UNVERIFIED']
 const sourceTypes = ['BOOK', 'SCANNED_BOOK', 'WEBSITE', 'MUSEUM_CATALOG', 'ARTICLE', 'FIELD_NOTE']
-const mediaTypes = ['IMAGE', 'PDF', 'THUMBNAIL', 'SCAN', 'OTHER']
+const rightsStatuses = ['UNKNOWN', 'PUBLIC_DOMAIN', 'LICENSED', 'RESTRICTED']
+const publicRightsStatuses = new Set(['PUBLIC_DOMAIN', 'LICENSED'])
 const mediaRoles = ['PRIMARY', 'DETAIL', 'SOURCE_SCAN', 'THUMBNAIL', 'OTHER']
 const featureTypes = ['ORNAMENT', 'COLOR', 'TECHNIQUE', 'MOTIF']
 const annotationTypes = ['VISIBLE_IN_IMAGE', 'PRIMARY_SUBJECT', 'DETAIL_VIEW', 'CROP_REGION']
-const chunkTypes = ['GENERAL', 'REGION', 'ORNAMENT', 'TECHNIQUE', 'MOTIF', 'COLOR', 'REGIONAL_EMBROIDERY', 'SOURCE_EXCERPT']
+const chunkTypes = ['GENERAL', 'REGION', 'ORNAMENT', 'TECHNIQUE', 'MOTIF', 'COLOR', 'REGIONAL_MOTIF', 'REGIONAL_EMBROIDERY', 'SOURCE_EXCERPT']
 
 function enumOptions(values: string[], group: string, label: (group: string, value: string) => string): ArchiveFieldOption[] {
     return values.map(value => ({ value, label: label(group, value) }))
@@ -114,6 +116,7 @@ function featureOntologyOptions(values: ArchiveFormValues, reference: ReferenceD
                 : values.featureType === 'MOTIF' ? reference?.motifs
                     : values.featureType === 'REGION' ? reference?.regions
                         : values.featureType === 'REGIONAL_EMBROIDERY' ? reference?.regionalEmbroideryTypes
+                            : values.featureType === 'REGIONAL_MOTIF' ? reference?.regionalMotifTypes
                             : []
     return ontologyOptions(resources)
 }
@@ -127,6 +130,7 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
     const details = label('sections.details')
     const links = label('sections.links')
     const technical = label('sections.technical')
+    const rights = label('sections.rights')
     const field = (name: string, section: string, overrides: Partial<ArchiveField> = {}): ArchiveField => ({
         name, label: label(`fields.${name}`), section, nullable: true, ...overrides,
     })
@@ -146,8 +150,11 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
             field('year', identity, { kind: 'number', min: 1 }), field('sourceType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(sourceTypes, 'sourceType', enumLabel) }),
             field('language', details), field('isbn', details), field('url', details, { kind: 'url' }), field('filePath', details),
             field('notes', details, { kind: 'textarea' }), field('trusted', details, { kind: 'boolean', nullable: false }),
+            field('rightsStatus', rights, { kind: 'select', required: true, nullable: false, defaultValue: 'UNKNOWN', options: enumOptions(rightsStatuses, 'rightsStatus', enumLabel) }),
+            field('license', rights, { visibleWhen: values => values.rightsStatus === 'LICENSED', requiredWhen: values => values.rightsStatus === 'LICENSED' }),
+            field('publicDisplayAllowed', rights, { kind: 'boolean', nullable: false, defaultValue: false, disabledWhen: values => values.rightsStatus === 'UNKNOWN' || values.rightsStatus === 'RESTRICTED' }),
         ],
-        columns: [column('title'), column('author'), column('year'), column('sourceType', undefined, 'sourceType'), column('trusted')],
+        columns: [column('title'), column('author'), column('year'), column('rightsStatus', undefined, 'rightsStatus'), column('publicDisplayAllowed')],
     }
     if (resource === 'source-references') return {
         fields: [
@@ -171,6 +178,8 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
             field('ontologyRegionIri', links, { kind: 'hidden' }),
             field('ontologyRegionalEmbroideryLocalName', links, { kind: 'select', options: ontologyOptions(lookups.reference?.regionalEmbroideryTypes), pairedIriField: 'ontologyRegionalEmbroideryIri' }),
             field('ontologyRegionalEmbroideryIri', links, { kind: 'hidden' }),
+            field('ontologyRegionalMotifLocalName', links, { kind: 'select', options: ontologyOptions(lookups.reference?.regionalMotifTypes), pairedIriField: 'ontologyRegionalMotifIri' }),
+            field('ontologyRegionalMotifIri', links, { kind: 'hidden' }),
         ],
         columns: [column('titleBg', record => archiveTitle(record as ArchiveItemDetails)), column('archiveType', undefined, 'archiveType'), column('trustedLevel', undefined, 'trustedLevel'), column('inventoryNumber')],
     }
@@ -189,12 +198,27 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
     if (resource === 'media-assets') return {
         fields: [
             field('sourceReferenceId', links, { kind: 'select', options: sourceReferenceOptions }),
-            field('fileName', identity), field('mediaType', identity, { kind: 'select', required: true, nullable: false, options: enumOptions(mediaTypes, 'mediaType', enumLabel) }),
-            field('mimeType', identity), field('storageUrl', details, { kind: 'url' }), field('filePath', details),
-            field('width', technical, { kind: 'number', min: 1 }), field('height', technical, { kind: 'number', min: 1 }),
-            field('sizeBytes', technical, { kind: 'number', min: 0 }), field('checksum', technical),
+            field('description', details, { kind: 'textarea' }),
+            field('rightsStatus', rights, { kind: 'select', required: true, nullable: false, defaultValue: 'UNKNOWN', options: enumOptions(rightsStatuses, 'rightsStatus', enumLabel) }),
+            field('license', rights, { visibleWhen: values => values.rightsStatus === 'LICENSED', requiredWhen: values => values.rightsStatus === 'LICENSED' }),
+            field('publicDisplayAllowed', rights, { kind: 'boolean', nullable: false, defaultValue: false, disabledWhen: values => values.rightsStatus === 'UNKNOWN' || values.rightsStatus === 'RESTRICTED' }),
         ],
-        columns: [column('fileName'), column('mediaType', undefined, 'mediaType'), column('mimeType'), column('storageUrl')],
+        columns: [column('fileName'), column('mediaType', undefined, 'mediaType'), column('rightsStatus', undefined, 'rightsStatus'), column('publicDisplayAllowed'), column('effectivePublicVisibility', record => {
+            const media = record as MediaAssetDetails
+            const reference = media.sourceReferenceId === null ? undefined : lookups.sourceReferences.find(item => item.id === media.sourceReferenceId)
+            const source = reference && lookups.sources.find(item => item.id === reference.sourceId)
+            const sourceCleared = !reference || Boolean(source?.publicDisplayAllowed && publicRightsStatuses.has(source.rightsStatus ?? 'UNKNOWN'))
+            const figureCleared = !media.documentFigure || media.documentFigure.reviewState === 'APPROVED'
+            const storageAvailable = Boolean(media.storageUrl || media.filePath)
+            return Boolean(media.publicDisplayAllowed && publicRightsStatuses.has(media.rightsStatus ?? 'UNKNOWN') && storageAvailable && sourceCleared && figureCleared)
+        })],
+        warnings: values => {
+            if (!values.publicDisplayAllowed || !values.sourceReferenceId) return []
+            const reference = lookups.sourceReferences.find(item => String(item.id) === String(values.sourceReferenceId))
+            const source = reference && lookups.sources.find(item => item.id === reference.sourceId)
+            const sourceCleared = Boolean(source?.publicDisplayAllowed && publicRightsStatuses.has(source.rightsStatus ?? 'UNKNOWN'))
+            return sourceCleared ? [] : [label('rights.linkedSourceWarning')]
+        },
     }
     if (resource === 'archive-item-media') return {
         fields: [
@@ -231,9 +255,13 @@ function definition(resource: ArchiveAdminResource, lookups: Lookups, label: (ke
 
 function extract<T>(result: PageResponse<T>) { return result.content }
 
-function ArchiveAdminPage() {
+type ArchiveAdminPageProps = {
+    resourceOverride?: ArchiveAdminResource
+}
+
+function ArchiveAdminPage({ resourceOverride }: ArchiveAdminPageProps) {
     const { resource: routeResource } = useParams()
-    const resource = validResources.has(routeResource as ArchiveAdminResource) ? routeResource as ArchiveAdminResource : 'archive-items'
+    const resource = resourceOverride ?? (validResources.has(routeResource as ArchiveAdminResource) ? routeResource as ArchiveAdminResource : 'archive-items')
     const { t, i18n } = useTranslation()
     const [items, setItems] = useState<ArchiveAdminRecord[]>([])
     const [lookups, setLookups] = useState<Lookups>(emptyLookups)
@@ -253,11 +281,32 @@ function ArchiveAdminPage() {
         setLoading(true)
         setError(null)
         try {
+            if (resource === 'sources') {
+                const current = await api.findAll(signal)
+                setItems(current.content)
+                setLookups({ ...emptyLookups, sources: current.content as SourceDetails[] })
+                return
+            }
+            if (resource === 'media-assets') {
+                const [current, sources, references] = await Promise.all([
+                    api.findAll(signal),
+                    sourcesApi.findAll({ size: 100 }, signal),
+                    sourceReferencesApi.findAll({ size: 100 }, signal),
+                ])
+                setItems(current.content)
+                setLookups({
+                    ...emptyLookups,
+                    sources: extract(sources),
+                    sourceReferences: extract(references),
+                    mediaAssets: current.content as MediaAssetDetails[],
+                })
+                return
+            }
             const language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
             const [current, sources, references, archiveItems, features, assets, itemMedia, reference] = await Promise.all([
-                api.findAll(signal), sourcesApi.findAll({ size: 1000 }, signal), sourceReferencesApi.findAll({ size: 1000 }, signal),
-                archiveItemsApi.findAll({ size: 1000 }, signal), archiveItemFeaturesApi.findAll({ size: 1000 }, signal),
-                mediaAssetsApi.findAll({ size: 1000 }, signal), archiveItemMediaApi.findAll({ size: 1000 }, signal), getFullReference(language),
+                api.findAll(signal), sourcesApi.findAll({ size: 100 }, signal), sourceReferencesApi.findAll({ size: 100 }, signal),
+                archiveItemsApi.findAll({ size: 100 }, signal), archiveItemFeaturesApi.findAll({ size: 100 }, signal),
+                mediaAssetsApi.findAll({ size: 100 }, signal), archiveItemMediaApi.findAll({ size: 100 }, signal), getFullReference(language),
             ])
             setItems(current.content)
             setLookups({
@@ -267,7 +316,7 @@ function ArchiveAdminPage() {
         } catch (caught) {
             if (!(caught instanceof DOMException && caught.name === 'AbortError')) setError(apiErrorMessage(caught))
         } finally { setLoading(false) }
-    }, [api, i18n.resolvedLanguage])
+    }, [api, i18n.resolvedLanguage, resource])
 
     useEffect(() => {
         const controller = new AbortController()
@@ -287,11 +336,11 @@ function ArchiveAdminPage() {
             cellSx: { maxWidth: column.key === 'content' ? 360 : 260 },
             render: (item: ArchiveAdminRecord) => {
                 const rawValue = column.value(item)
-                const value = column.enumGroup && rawValue != null ? enumTr(column.enumGroup, String(rawValue)) : String(rawValue ?? '—')
+                const value = typeof rawValue === 'boolean' ? t(rawValue ? 'common.yes' : 'common.no') : column.enumGroup && rawValue != null ? enumTr(column.enumGroup, String(rawValue)) : String(rawValue ?? '—')
                 return <Typography variant="body2" noWrap title={value}>{value}</Typography>
             },
         })),
-    ], [enumTr, resourceDefinition.columns])
+    ], [enumTr, resourceDefinition.columns, t])
 
     async function save(input: ArchiveAdminWriteDto) {
         setSaving(true); setError(null)
@@ -328,14 +377,14 @@ function ArchiveAdminPage() {
                 searchableText={item => Object.values(item).map(value => String(value ?? '')).join(' ')}
                 searchPlaceholder={t('admin.archive.search')}
                 defaultSortKey="id"
-                onAdd={() => { setError(null); setEditing(null) }}
+                onAdd={resource === 'media-assets' ? undefined : () => { setError(null); setEditing(null) }}
                 onEdit={item => { setError(null); setEditing(item) }}
                 onDelete={setDeleting}
             />
             <ArchiveRecordDialog key={`${resource}:${editing === undefined ? 'closed' : editing?.id ?? 'new'}`}
                 open={editing !== undefined} title={editing ? t('admin.archive.editTitle', { resource: title }) : t('admin.archive.addTitle', { resource: title })}
                 fields={resourceDefinition.fields} record={editing ?? null} saving={saving} error={editing !== undefined ? error : null}
-                onClose={() => setEditing(undefined)} onSubmit={save} />
+                onClose={() => setEditing(undefined)} onSubmit={save} warnings={resourceDefinition.warnings} />
             <ConfirmDialog open={Boolean(deleting)} title={t('admin.confirmDelete')} pending={saving}
                 onCancel={() => setDeleting(null)} onConfirm={remove}>
                 {t('admin.confirmDeleteText', { name: `#${deleting?.id}` })}

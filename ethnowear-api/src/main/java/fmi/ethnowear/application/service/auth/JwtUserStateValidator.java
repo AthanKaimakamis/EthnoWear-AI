@@ -34,7 +34,7 @@ public class JwtUserStateValidator implements OAuth2TokenValidator<Jwt> {
         if (userId == null || tokenVersion == null || mustChangePassword == null)
             return failure();
 
-        User user = userRepository.findById(userId.longValue())
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId.longValue())
                 .orElse(null);
 
         if (user == null

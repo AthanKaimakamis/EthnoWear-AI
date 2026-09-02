@@ -47,8 +47,10 @@ public class ReferenceService {
                 getTechniqueTypes(language.tag()),
                 getMotifs(language.tag()),
                 getRegionalEmbroideryTypes(language.tag()),
+                getRegionalMotifTypes(language.tag()),
                 getRegionsByRegionGroup(),
                 getRegionByRegionalEmbroidery(),
+                getRegionByRegionalMotif(),
                 getOrnamentsByRegion(),
                 getTechniquesByRegion(),
                 getOrnamentsByType(),
@@ -75,6 +77,17 @@ public class ReferenceService {
         ontology.listRegionalEmbroideryTypes().forEach(embroidery ->
                 ontology.findRegionForRegionalEmbroidery(embroidery.localName())
                         .ifPresent(region -> result.put(embroidery.localName(), region.localName()))
+        );
+
+        return result;
+    }
+
+    public Map<String, String> getRegionByRegionalMotif() {
+        Map<String, String> result = new LinkedHashMap<>();
+
+        ontology.listRegionalMotifTypes().forEach(motif ->
+                ontology.findRegionForRegionalMotif(motif.localName())
+                        .ifPresent(region -> result.put(motif.localName(), region.localName()))
         );
 
         return result;
@@ -110,9 +123,7 @@ public class ReferenceService {
         Map<String, List<String>> result = new LinkedHashMap<>();
         ontology.listOrnamentTypes().forEach(type -> result.put(
                 type.localName(),
-                localNames(ontology.listOrnaments().stream()
-                        .filter(ornament -> ontology.isOrnamentOfType(ornament.localName(), type.localName()))
-                        .toList())
+                localNames(ontology.listOrnamentsOfType(type.localName()))
         ));
         return result;
     }
@@ -175,6 +186,11 @@ public class ReferenceService {
         return toDtos(language, ontology::listLocalizedRegionalEmbroideryTypes);
     }
 
+    public List<ReferenceItemDto> getRegionalMotifTypes(String languageTag) {
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
+        return toDtos(language, ontology::listLocalizedRegionalMotifTypes);
+    }
+
     @NonNull
     @Unmodifiable
     private List<ReferenceItemDto> toDtos(
@@ -182,8 +198,13 @@ public class ReferenceService {
             @NonNull Function<OntologyLanguage, List<LocalizedOntologyResource>> localizedResources
     ) {
         List<LocalizedOntologyResource> resources = localizedResources.apply(language);
-        Map<String, LocalizedOntologyResource> bgResources = byLocalName(localizedResources.apply(OntologyLanguage.BG));
-        Map<String, LocalizedOntologyResource> enResources = byLocalName(localizedResources.apply(OntologyLanguage.EN));
+        Map<String, LocalizedOntologyResource> requestedResources = byLocalName(resources);
+        Map<String, LocalizedOntologyResource> bgResources = language == OntologyLanguage.BG
+                ? requestedResources
+                : byLocalName(localizedResources.apply(OntologyLanguage.BG));
+        Map<String, LocalizedOntologyResource> enResources = language == OntologyLanguage.EN
+                ? requestedResources
+                : byLocalName(localizedResources.apply(OntologyLanguage.EN));
 
         return resources.stream()
                 .map(resource -> toDto(resource, bgResources.get(resource.localName()), enResources.get(resource.localName())))

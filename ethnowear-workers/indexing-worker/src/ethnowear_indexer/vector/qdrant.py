@@ -61,16 +61,7 @@ class QdrantVectorStore:
                     vector=vector,
                     payload={
                         "knowledgeChunkId": context.knowledge_chunk_id,
-                        "content": context.content,
                         "contentHash": context.content_hash,
-                        "language": context.language,
-                        "chunkType": context.chunk_type.value,
-                        "documentId": context.document_id,
-                        "sourceReferenceId": context.source_reference_id,
-                        "archiveItemId": context.archive_item_id,
-                        "ontologyIri": context.ontology_iri,
-                        "provenanceTrustState": context.provenance_trust_state.value,
-                        "transcriptionApprovalState": context.transcription_approval_state.value,
                     },
                 )
             ]

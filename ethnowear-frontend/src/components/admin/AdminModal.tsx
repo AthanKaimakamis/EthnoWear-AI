@@ -18,6 +18,7 @@ type Props = {
     closeDisabled?: boolean
     maxWidth?: DialogProps['maxWidth']
     fullScreen?: boolean
+    workspace?: boolean
     blurBackdrop?: boolean
 }
 
@@ -32,6 +33,7 @@ export default function AdminModal({
     closeDisabled = false,
     maxWidth = 'md',
     fullScreen = false,
+    workspace = false,
     blurBackdrop = false,
 }: Props) {
     const { t } = useTranslation()
@@ -41,10 +43,30 @@ export default function AdminModal({
             open={open}
             onClose={closeDisabled ? undefined : onClose}
             fullWidth
-            fullScreen={fullScreen}
+            fullScreen={fullScreen && !workspace}
             maxWidth={maxWidth}
             scroll="paper"
-            slotProps={{ backdrop: { sx: blurBackdrop ? { backdropFilter: 'blur(7px)' } : undefined } }}
+            data-workspace-modal={workspace || undefined}
+            sx={workspace ? {
+                '& .MuiDialog-container': {
+                    boxSizing: 'border-box',
+                    alignItems: 'stretch',
+                    pt: { xs: 0, md: '68px' },
+                    pl: { xs: 0, md: '248px' },
+                },
+                '& .MuiDialog-paper': {
+                    width: { xs: '100%', md: 'calc(100% - 24px)' },
+                    height: { xs: '100%', md: 'calc(100% - 24px)' },
+                    maxWidth: 'none',
+                    maxHeight: 'none',
+                    m: { xs: 0, md: '12px' },
+                    borderRadius: { xs: 0, md: 1 },
+                },
+            } : undefined}
+            slotProps={{ backdrop: { sx: {
+                ...(blurBackdrop ? { backdropFilter: 'blur(7px)' } : {}),
+                ...(workspace ? { top: { xs: 0, md: '68px' }, left: { xs: 0, md: '248px' } } : {}),
+            } } }}
         >
             <DialogTitle component="div" sx={{ px: 3, py: 2 }}>
                 <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>

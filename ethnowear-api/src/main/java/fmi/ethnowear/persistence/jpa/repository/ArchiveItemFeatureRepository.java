@@ -29,6 +29,8 @@ public interface ArchiveItemFeatureRepository extends JpaRepository<ArchiveItemF
             Long archiveItemId
     );
 
+    boolean existsByOntologyIriIn(Collection<String> ontologyIris);
+
     List<ArchiveItemFeature> findByFeatureType(
             FeatureType featureType
     );

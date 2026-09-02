@@ -42,6 +42,7 @@ import type {
 import type { OntologyFeatureType } from '../../types/catalogue'
 import type { ReferenceResource } from '../../types/reference'
 import { invalidatePublicQueries } from '../../app/queryClient'
+import { validateArchiveClassification } from '../../app/regionalMotifs'
 
 const emptyItem: ArchiveItemWriteDto = {
     sourceReferenceId: 0,
@@ -60,6 +61,8 @@ const emptyItem: ArchiveItemWriteDto = {
     ontologyRegionLocalName: null,
     ontologyRegionalEmbroideryIri: null,
     ontologyRegionalEmbroideryLocalName: null,
+    ontologyRegionalMotifIri: null,
+    ontologyRegionalMotifLocalName: null,
 }
 
 const emptyFeatures: FeatureSelections = {
@@ -190,7 +193,26 @@ export default function ArchiveEditorPage({
         setReadinessErrors([])
     }
     const setField = <K extends keyof ArchiveItemWriteDto>(key: K, value: ArchiveItemWriteDto[K]) => {
-        setItem(current => ({ ...current, [key]: value }))
+        setItem(current => {
+            const next = { ...current, [key]: value }
+            if (key === 'archiveType') {
+                if (value !== 'EMBROIDERY_SAMPLE') {
+                    next.ontologyRegionalEmbroideryIri = null
+                    next.ontologyRegionalEmbroideryLocalName = null
+                }
+                if (value !== 'MOTIF_EXAMPLE') {
+                    next.ontologyRegionalMotifIri = null
+                    next.ontologyRegionalMotifLocalName = null
+                }
+            }
+            if (key === 'ontologyRegionLocalName') {
+                next.ontologyRegionalEmbroideryIri = null
+                next.ontologyRegionalEmbroideryLocalName = null
+                next.ontologyRegionalMotifIri = null
+                next.ontologyRegionalMotifLocalName = null
+            }
+            return next
+        })
         markDirty()
     }
 
@@ -241,6 +263,12 @@ export default function ArchiveEditorPage({
         if (!item.sourceReferenceId) {
             setTab(3)
             setErrorMessages([t('curator.validation.source')])
+            return
+        }
+        const classificationError = validateArchiveClassification(item, referenceData)
+        if (classificationError) {
+            setTab(1)
+            setErrorMessages([t(classificationError)])
             return
         }
         setSaving(true)
@@ -372,7 +400,7 @@ export default function ArchiveEditorPage({
                     {tab === 5 && reviewContent}
                 </Box>
             </Paper>
-            <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sourceReferenceLabel={sourceReferenceLabel} onClose={() => setUploadOpen(false)} onUploaded={addAsset} />
+            <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sources={sources} sourceReferenceLabel={sourceReferenceLabel} onClose={() => setUploadOpen(false)} onUploaded={asset => { addAsset(asset); setUploadOpen(true) }} />
             <MediaLibraryDialog open={libraryOpen} assets={assets} used={new Set(media.map(link => link.asset.id))} onClose={() => setLibraryOpen(false)} onSelect={addAsset} />
             {previewOpen && itemId && <ArchiveItemPreviewDialog itemId={itemId} onClose={() => setPreviewOpen(false)} onEdit={() => setPreviewOpen(false)} />}
             {sourceCreateOpen && (

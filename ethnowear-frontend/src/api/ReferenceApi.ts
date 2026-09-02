@@ -48,3 +48,9 @@ export function getRegionalEmbroideryTypes(language: Language = 'bg') {
         query: { language }
     })
 }
+
+export function getRegionalMotifTypes(language: Language = 'bg') {
+    return apiRequest<ReferenceResource[]>('/api/reference/regional-motif-types', {
+        query: { language }
+    })
+}

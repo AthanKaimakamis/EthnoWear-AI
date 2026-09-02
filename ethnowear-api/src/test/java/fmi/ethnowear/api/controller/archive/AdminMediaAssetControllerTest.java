@@ -6,7 +6,10 @@ import fmi.ethnowear.api.exception.ArchiveApiExceptionHandler;
 import fmi.ethnowear.application.dto.archive.media.MediaAssetDetails;
 import fmi.ethnowear.application.dto.archive.media.MediaAssetMetadataWriteDto;
 import fmi.ethnowear.application.service.archive.media.asset.MediaAssetService;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDelivery;
+import fmi.ethnowear.application.service.archive.media.delivery.MediaDeliveryService;
 import fmi.ethnowear.domain.model.archive.MediaType;
+import org.springframework.core.io.ByteArrayResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -14,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -25,13 +29,15 @@ class AdminMediaAssetControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private StubMediaAssetService mediaAssetService;
+    private StubMediaDeliveryService mediaDeliveryService;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         mediaAssetService = new StubMediaAssetService();
+        mediaDeliveryService = new StubMediaDeliveryService();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new AdminMediaAssetController(mediaAssetService, null, null))
+                .standaloneSetup(new AdminMediaAssetController(mediaAssetService, null, null, mediaDeliveryService))
                 .setControllerAdvice(new ArchiveApiExceptionHandler())
                 .build();
     }
@@ -79,6 +85,23 @@ class AdminMediaAssetControllerTest {
         assertEquals(27L, mediaAssetService.deletedId);
     }
 
+    @Test
+    void deliversNonPublicMediaThroughProtectedAdminRoute() throws Exception {
+        mediaDeliveryService.delivery = new MediaDelivery.Local(
+                new ByteArrayResource("content".getBytes()),
+                "image/jpeg",
+                "private.jpg",
+                7
+        );
+
+        mockMvc.perform(get("/api/admin/media-assets/31/content"))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertEquals("image/jpeg", result.getResponse().getContentType()))
+                .andExpect(result -> assertEquals("content", result.getResponse().getContentAsString()));
+
+        assertEquals(31L, mediaDeliveryService.requestedId);
+    }
+
     private MediaAssetDetails details(Long id, Long sourceReferenceId, String description) {
         return new MediaAssetDetails(
                 id,
@@ -121,6 +144,22 @@ class AdminMediaAssetControllerTest {
         @Override
         public void delete(Long id) {
             deletedId = id;
+        }
+    }
+
+    private static final class StubMediaDeliveryService extends MediaDeliveryService {
+
+        private MediaDelivery delivery;
+        private Long requestedId;
+
+        private StubMediaDeliveryService() {
+            super(null, null);
+        }
+
+        @Override
+        public MediaDelivery findById(Long id) {
+            requestedId = id;
+            return delivery;
         }
     }
 }

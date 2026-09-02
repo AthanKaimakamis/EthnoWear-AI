@@ -1,6 +1,7 @@
 package fmi.ethnowear.application.service.catalogue;
 
 import fmi.ethnowear.application.dto.catalogue.ConceptEvidenceSummaryDetails;
+import fmi.ethnowear.application.service.archive.media.asset.PublicRepresentativeMediaService;
 import fmi.ethnowear.domain.model.archive.MediaRole;
 import fmi.ethnowear.domain.model.archive.MediaType;
 import fmi.ethnowear.domain.model.ontology.FeatureType;
@@ -63,7 +64,7 @@ class ConceptCardEvidenceServiceTest {
         ConceptCardEvidenceService service = new ConceptCardEvidenceService(
                 itemRepository,
                 featureRepository,
-                mediaRepository
+                new PublicRepresentativeMediaService(mediaRepository)
         );
 
         Map<String, ConceptEvidenceSummaryDetails> result = service.summarize(

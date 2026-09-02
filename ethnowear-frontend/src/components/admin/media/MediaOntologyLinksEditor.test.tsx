@@ -21,12 +21,12 @@ vi.mock('../../../api/ReferenceApi', async importOriginal => ({
 
 const reference: ReferenceData = {
     language: 'en',
-    regions: [], regionGroups: [], colors: [], techniques: [], techniqueTypes: [], motifs: [], regionalEmbroideryTypes: [], ornamentTypes: [],
+    regions: [], regionGroups: [], colors: [], techniques: [], techniqueTypes: [], motifs: [], regionalMotifTypes: [], regionalEmbroideryTypes: [], ornamentTypes: [],
     ornaments: [
         { iri: 'https://example.test/Flower', localName: 'Flower', label: 'Flower' },
         { iri: 'https://example.test/Cross', localName: 'Cross', label: 'Cross' },
     ],
-    regionsByRegionGroup: {}, regionByRegionalEmbroidery: {}, ornamentsByRegion: {}, techniquesByRegion: {}, ornamentsByType: {}, techniquesByType: {},
+    regionsByRegionGroup: {}, regionByRegionalEmbroidery: {}, regionByRegionalMotif: {}, ornamentsByRegion: {}, techniquesByRegion: {}, ornamentsByType: {}, techniquesByType: {},
 }
 
 function renderEditor() {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Box, Button, Checkbox, Divider, FormControl, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Skeleton, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Tabs, TextField, Tooltip, Typography } from '@mui/material'
+import { Alert, Box, Button, Checkbox, CircularProgress, Divider, FormControl, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Skeleton, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Tabs, TextField, Tooltip, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
@@ -11,7 +11,7 @@ import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { deleteDocument, documentQueryKeys, getDocument, getDocumentPageWorkflow, listProcessingJobs, listDocumentPages, processingQueryKeys, retireDocumentPage, retryProcessingJob, retryProcessingJobs, uploadDocumentThumbnail } from '../../api/DocumentAdminApi'
-import { apiErrorMessage, apiUrl } from '../../api/http'
+import { apiErrorMessage } from '../../api/http'
 import { apiEnumLabel } from '../../app/apiEnumLabels'
 import { useAdminAuth } from '../../app/adminAuth'
 import { administratorRoles, hasAnyRole, processingMutationRoles } from '../../app/permissions'
@@ -30,7 +30,10 @@ import { canManuallyRetryJob, isAutomaticRetryPending } from '../../components/a
 import DocumentChunkManagement from '../../components/admin/document/DocumentChunkManagement'
 import DocumentCleanupPanel from '../../components/admin/document/DocumentCleanupPanel'
 import DocumentFiguresPanel from '../../components/admin/document/DocumentFiguresPanel'
+import DocumentDefaultSourceReferenceEditor from '../../components/admin/document/DocumentDefaultSourceReferenceEditor'
 import type { DocumentJobType, DocumentPageSummary, DocumentProcessingJob, DocumentProgress, DocumentSummary, ProcessingJobResult, ProcessingJobSummary } from '../../types/document'
+import AdminMediaThumbnail from '../../components/admin/media/AdminMediaThumbnail'
+import { useAdminMediaContent } from '../../components/admin/media/useAdminMediaContent'
 
 type DetailTab = 'overview' | 'pages' | 'figures' | 'jobs' | 'metadata' | 'workflow' | 'chunks' | 'indexing' | 'cleanup'
 const pageSorts = ['pageSequence', 'printedPageSort', 'processingState', 'reviewState', 'currentQualityScore'] as const
@@ -179,7 +182,7 @@ export default function DocumentDetailPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
                 <Box sx={{ width: 112, height: 144, flexShrink: 0, bgcolor: 'grey.100', border: '1px solid', borderColor: 'divider', display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
                     {summary.thumbnailMediaAssetId
-                        ? <Box component="img" src={apiUrl(`/api/media/${summary.thumbnailMediaAssetId}/content`)} alt={t('documents.detail.thumbnail')} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <AdminMediaThumbnail mediaAssetId={summary.thumbnailMediaAssetId} alt={t('documents.detail.thumbnail')} sx={{ width: '100%', height: '100%' }} />
                         : <ImageOutlinedIcon color="disabled" sx={{ fontSize: 42 }} />}
                 </Box>
                 <Box sx={{ flex: 1 }}>
@@ -224,13 +227,13 @@ export default function DocumentDetailPage() {
             <TablePagination component="div" count={pagesQuery.data?.totalElements ?? 0} page={pagesTable.page} rowsPerPage={pagesTable.size} rowsPerPageOptions={[20, 50, 100]} onPageChange={(_, value) => setPagesTable(current => ({ ...current, page: value }))} onRowsPerPageChange={event => setPagesTable(current => ({ ...current, page: 0, size: Number(event.target.value) }))} />
         </Paper>}
         {tab === 'jobs' && <JobTable jobs={(jobsQuery.data?.content ?? []).map(processingSummaryRow)} loading={jobsQuery.isPending} onRetried={refreshJobs} jobType={jobsTable.jobType} onJobTypeChange={value => setJobsTable(current => ({ ...current, page: 0, jobType: value }))} sortProperty={jobsTable.sort} sortDirection={jobsTable.direction} onSortChange={changeJobSort} pagination={{ count: jobsQuery.data?.totalElements ?? 0, page: jobsTable.page, size: jobsTable.size, onPageChange: value => setJobsTable(current => ({ ...current, page: value })), onSizeChange: value => setJobsTable(current => ({ ...current, page: 0, size: value })) }} />}
-        {tab === 'metadata' && <Paper variant="outlined" sx={{ p: 3 }}><MetadataLine label={t('documents.uploadDialog.titleField')} value={summary.title} /><MetadataLine label={t('documents.uploadDialog.author')} value={summary.author} /><MetadataLine label={t('documents.uploadDialog.publisher')} value={summary.publisher} /><MetadataLine label={t('documents.uploadDialog.year')} value={summary.publicationYear} /><MetadataLine label={t('documents.uploadDialog.language')} value={summary.language?.toUpperCase()} /><Divider sx={{ my: 2 }} /><Typography variant="h6" sx={{ fontWeight: 700 }}>{t('documents.detail.source')}</Typography>{detail.source ? <Stack sx={{ mt: 1 }}><Typography sx={{ fontWeight: 700 }}>{detail.source.title}</Typography><Typography color="text.secondary">{[detail.source.author, detail.source.publisher, detail.source.publicationYear].filter(Boolean).join(' · ')}</Typography></Stack> : <Typography color="text.secondary">{t('documents.detail.noSource')}</Typography>}</Paper>}
+        {tab === 'metadata' && <Paper variant="outlined" sx={{ p: 3 }}><MetadataLine label={t('documents.uploadDialog.titleField')} value={summary.title} /><MetadataLine label={t('documents.uploadDialog.author')} value={summary.author} /><MetadataLine label={t('documents.uploadDialog.publisher')} value={summary.publisher} /><MetadataLine label={t('documents.uploadDialog.year')} value={summary.publicationYear} /><MetadataLine label={t('documents.uploadDialog.language')} value={summary.language?.toUpperCase()} /><Divider sx={{ my: 2 }} /><Typography variant="h6" sx={{ fontWeight: 700 }}>{t('documents.detail.source')}</Typography>{detail.source ? <Stack sx={{ mt: 1 }}><Typography sx={{ fontWeight: 700 }}>{detail.source.title}</Typography><Typography color="text.secondary">{[detail.source.author, detail.source.publisher, detail.source.publicationYear].filter(Boolean).join(' · ')}</Typography></Stack> : <Typography color="text.secondary">{t('documents.detail.noSource')}</Typography>}<Divider sx={{ my: 2 }} /><DocumentDefaultSourceReferenceEditor summary={summary} canEdit={canManageProcessing} /></Paper>}
         {tab === 'workflow' && <WorkflowOverview summary={summary} />}
-        {tab === 'figures' && <DocumentFiguresPanel documentId={documentId} />}
+        {tab === 'figures' && <DocumentFiguresPanel documentId={documentId} defaultSourceReferenceId={summary.defaultSourceReferenceId} />}
         {tab === 'chunks' && <DocumentChunkManagement documentId={documentId} onOpenPage={setReviewPageId} />}
         {tab === 'indexing' && <Paper variant="outlined" sx={{ p: 3 }}><Stack spacing={2}><DocumentStatusChip kind="indexing" value={detail.indexingStatus.documentState} /><Typography variant="h6">{t('documents.detail.chunks', { count: detail.indexingStatus.totalChunks })}</Typography><Alert severity="info">{t('documents.detail.indexingLimited')}</Alert>{Object.entries(detail.indexingStatus.chunkCounts).map(([state, count]) => <MetadataLine key={state} label={apiEnumLabel(t, 'indexingState', state)} value={count} />)}</Stack></Paper>}
         {tab === 'cleanup' && <DocumentCleanupPanel documentId={documentId} canManage={canManageProcessing} />}
-        {summary.originalMediaAssetId && pdfPreviewOpen && <PdfViewerDialog open source={apiUrl(`/api/media/${summary.originalMediaAssetId}/content`)} title={summary.title} onClose={() => setPdfPreviewOpen(false)} />}
+        {summary.originalMediaAssetId && <ProtectedDocumentPdfViewer open={pdfPreviewOpen} mediaAssetId={summary.originalMediaAssetId} title={summary.title} onClose={() => setPdfPreviewOpen(false)} />}
         <DocumentPageReviewDialog key={reviewPageId ?? 'closed'} open={reviewPageId !== null} documentId={documentId} pageId={reviewPageId} hasPrevious={hasPreviousReviewPage} hasNext={hasNextReviewPage} navigationPending={pageNavigationPending} onPrevious={() => void navigateReviewPage(-1)} onNext={() => void navigateReviewPage(1)} onClose={() => setReviewPageId(null)} onChanged={() => { void pagesQuery.refetch(); void detailQuery.refetch() }} />
         <ConfirmDialog open={deletePageTarget !== null} title={t('documents.detail.deletePageTitle')} confirmLabel={t('documents.detail.deletePageConfirm')} pending={deletingPage} confirmDisabled={!deletePageReason.trim()} onCancel={() => { setDeletePageTarget(null); setDeletePageReason('') }} onConfirm={() => void deletePage()}>
             <Stack spacing={2}><Typography>{t('documents.detail.deletePageDescription', { page: deletePageTarget?.printedPageNumber ?? deletePageTarget?.pageLabel ?? deletePageTarget?.pageSequence })}</Typography><TextField autoFocus required multiline minRows={2} label={t('documents.detail.deletePageReason')} value={deletePageReason} onChange={event => setDeletePageReason(event.target.value.slice(0, 500))} /></Stack>
@@ -383,6 +386,17 @@ function JobTableHeader({ property, active, direction, onSort, children }: { pro
     return onSort
         ? <SortableTableCell active={active === property} direction={direction} onClick={() => onSort(property)}>{children}</SortableTableCell>
         : <TableCell>{children}</TableCell>
+}
+
+function ProtectedDocumentPdfViewer({ open, mediaAssetId, title, onClose }: { open: boolean; mediaAssetId: number; title: string; onClose: () => void }) {
+    const { t } = useTranslation()
+    const content = useAdminMediaContent(open ? mediaAssetId : null)
+
+    if (!open) return null
+    if (content.isError) return <Box sx={{ position: 'fixed', inset: 0, zIndex: theme => theme.zIndex.modal + 1, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0, 0, 0, .28)', p: 2 }}><Alert severity="error" action={<Button onClick={onClose}>{t('imageViewer.close')}</Button>}>{apiErrorMessage(content.error, t('documents.loadFailed'))}</Alert></Box>
+    if (!content.url) return <Box sx={{ position: 'fixed', inset: 0, zIndex: theme => theme.zIndex.modal + 1, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0, 0, 0, .28)' }}><CircularProgress /></Box>
+
+    return <PdfViewerDialog open source={content.url} title={title} onClose={onClose} />
 }
 
 function processingSummaryRow(job: ProcessingJobSummary): JobTableRow {

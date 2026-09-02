@@ -49,6 +49,7 @@ public class ArchiveEvidenceService {
                 ontologyIri,
                 entityType == FeatureType.REGION,
                 entityType == FeatureType.REGIONAL_EMBROIDERY,
+                entityType == FeatureType.REGIONAL_MOTIF,
                 pageable
         );
 
@@ -103,6 +104,9 @@ public class ArchiveEvidenceService {
 
         if(entityType == FeatureType.REGIONAL_EMBROIDERY)
             return Objects.equals(item.getOntologyRegionalEmbroideryIri(), ontologyIri);
+
+        if(entityType == FeatureType.REGIONAL_MOTIF)
+            return Objects.equals(item.getOntologyRegionalMotifIri(), ontologyIri);
 
         return false;
     }

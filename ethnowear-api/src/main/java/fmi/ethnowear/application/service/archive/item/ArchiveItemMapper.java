@@ -27,6 +27,8 @@ public class ArchiveItemMapper {
         item.setOntologyRegionLocalName(input.ontologyRegionLocalName());
         item.setOntologyRegionalEmbroideryIri(input.ontologyRegionalEmbroideryIri());
         item.setOntologyRegionalEmbroideryLocalName(input.ontologyRegionalEmbroideryLocalName());
+        item.setOntologyRegionalMotifIri(input.ontologyRegionalMotifIri());
+        item.setOntologyRegionalMotifLocalName(input.ontologyRegionalMotifLocalName());
     }
 
     public ArchiveItemDetails toDetails(@NonNull ArchiveItem item) {
@@ -49,6 +51,8 @@ public class ArchiveItemMapper {
                 item.getOntologyRegionLocalName(),
                 item.getOntologyRegionalEmbroideryIri(),
                 item.getOntologyRegionalEmbroideryLocalName(),
+                item.getOntologyRegionalMotifIri(),
+                item.getOntologyRegionalMotifLocalName(),
                 item.getSubmittedAt(),
                 item.getPublishedAt(),
                 item.getArchivedAt(),
@@ -57,4 +61,3 @@ public class ArchiveItemMapper {
         );
     }
 }
-

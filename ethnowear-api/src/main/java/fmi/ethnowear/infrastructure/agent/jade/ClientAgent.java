@@ -3,8 +3,10 @@ package fmi.ethnowear.infrastructure.agent.jade;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fmi.ethnowear.application.model.analysis.InterpretationResultPayload;
+import fmi.ethnowear.application.model.conversation.ConversationReasoningResult;
 import fmi.ethnowear.infrastructure.agent.jade.protocol.AgentMessageTypes;
 import fmi.ethnowear.infrastructure.agent.jade.protocol.AnalysisCommand;
+import fmi.ethnowear.infrastructure.agent.jade.protocol.ConversationReasoningCommand;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -32,9 +34,10 @@ public class ClientAgent extends Agent {
                     return;
                 }
 
-                if(object instanceof AnalysisCommand command){
+                if (object instanceof AnalysisCommand command)
                     addBehaviour(new AnalysisRequestBehaviour(command));
-                }
+                else if (object instanceof ConversationReasoningCommand command)
+                    addBehaviour(new ConversationReasoningRequestBehaviour(command));
             }
         });
     }
@@ -106,6 +109,84 @@ public class ClientAgent extends Agent {
             } catch (JsonProcessingException e) {
                 command.result().completeExceptionally(e);
             }
+            step = 2;
+        }
+    }
+
+    private class ConversationReasoningRequestBehaviour extends Behaviour {
+
+        private final ConversationReasoningCommand command;
+        private MessageTemplate responseTemplate;
+        private int step;
+
+        private ConversationReasoningRequestBehaviour(ConversationReasoningCommand command) {
+            this.command = command;
+        }
+
+        @Override
+        public void action() {
+            switch (step) {
+                case 0 -> sendReasoningRequest();
+                case 1 -> receiveReasoningResult();
+                default -> {
+                }
+            }
+        }
+
+        @Override
+        public boolean done() {
+            return step == 2;
+        }
+
+        private void sendReasoningRequest() {
+            try {
+                String requestId = command.payload()
+                        .requestId()
+                        .toString();
+
+                ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+                request.addReceiver(new AID(
+                        AgentNames.KNOWLEDGE_REASONING,
+                        AID.ISLOCALNAME
+                ));
+                request.setConversationId(requestId);
+                request.setOntology(AgentMessageTypes.CONVERSATION_REASONING_REQUEST);
+                request.setLanguage("JSON");
+                request.setContent(objectMapper.writeValueAsString(command.payload()));
+
+                responseTemplate = MessageTemplate.and(
+                        MessageTemplate.MatchConversationId(requestId),
+                        MessageTemplate.MatchOntology(AgentMessageTypes.CONVERSATION_INTERPRETATION_RESULT)
+                );
+
+                send(request);
+                step = 1;
+            } catch (JsonProcessingException exception) {
+                command.result().completeExceptionally(exception);
+                step = 2;
+            }
+        }
+
+        private void receiveReasoningResult() {
+            ACLMessage reply = receive(responseTemplate);
+
+            if (reply == null) {
+                block();
+                return;
+            }
+
+            try {
+                ConversationReasoningResult result =
+                        objectMapper.readValue(
+                                reply.getContent(),
+                                ConversationReasoningResult.class
+                        );
+
+                command.result().complete(result);
+            } catch (JsonProcessingException exception) {
+                command.result().completeExceptionally(exception);
+            }
+
             step = 2;
         }
     }

@@ -6,7 +6,10 @@ from ethnowear_document_worker.ocr.process import (
     OcrProcessError,
     run_bounded_process
 )
-from ethnowear_document_worker.ocr.tsv import parse_tsv_metadata
+from ethnowear_document_worker.ocr.tsv import (
+    InvalidTsvError,
+    parse_tsv_metadata_with_diagnostics,
+)
 
 
 class TesseractRunner:
@@ -73,7 +76,13 @@ class TesseractRunner:
             timeout_seconds=self._timeout_seconds,
             maximum_stdout_bytes=maximum_output_bytes,
         )
-        mean_confidence, words = parse_tsv_metadata(tsv)
+        try:
+            mean_confidence, words, diagnostics = (
+                parse_tsv_metadata_with_diagnostics(tsv)
+            )
+        except InvalidTsvError as error:
+            error.selected_psm = selected_psm
+            raise
         if offset_x or offset_y:
             words = tuple(word.with_offset(offset_x, offset_y) for word in words)
 
@@ -85,6 +94,7 @@ class TesseractRunner:
             engine_version=await self.engine_version(),
             language=self._language,
             psm=selected_psm,
+            tsv_diagnostics=diagnostics,
         )
 
     def _command(self, image_path: Path, psm: int, output_format: str) -> tuple[str, ...]:

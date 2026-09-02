@@ -45,9 +45,7 @@ public class RetrievalController {
             @ApiResponse(responseCode = "503", description = "Retrieval dependency unavailable")
     })
     @PostMapping("/search")
-    public GroundedRetrievalDetails search(
-            @Valid @RequestBody GroundedRetrievalQuery query
-    ) {
+    public GroundedRetrievalDetails search(@Valid @RequestBody GroundedRetrievalQuery query) {
         return retrievalService.retrieve(query);
     }
 }

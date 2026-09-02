@@ -56,6 +56,8 @@ public interface EmbroideryOntologyClient {
 
     List<LocalizedOntologyResource> listLocalizedOrnamentTypes(OntologyLanguage language);
 
+    List<OntologyResource> listOrnamentsOfType(String ornamentTypeLocalName);
+
     List<OntologyResource> listGeometricOrnaments();
 
     List<OntologyResource> listPlantOrnaments();
@@ -117,6 +119,23 @@ public interface EmbroideryOntologyClient {
     Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalEmbroidery(String regionalEmbroideryClassLocalName, OntologyLanguage language);
 
     Optional<LocalizedOntologyResource> findLocalizedRegionalEmbroideryByName(String nameOrLocalName, OntologyLanguage language);
+
+    // Regional motif types
+
+    List<OntologyResource> listRegionalMotifTypes();
+
+    List<LocalizedOntologyResource> listLocalizedRegionalMotifTypes(OntologyLanguage language);
+
+    Optional<OntologyResource> findRegionalMotifByName(String nameOrLocalName, OntologyLanguage language);
+
+    Optional<OntologyResource> findRegionForRegionalMotif(String regionalMotifClassName);
+
+    Optional<LocalizedOntologyResource> findLocalizedRegionForRegionalMotif(
+            String regionalMotifClassLocalName,
+            OntologyLanguage language
+    );
+
+    List<OntologyResource> listRegionalMotifsForRegion(String regionLocalName);
 
     List<OntologyResource> listRegionsOfMotif(String motifLocalName);
 

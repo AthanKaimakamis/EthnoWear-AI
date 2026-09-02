@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from pathlib import Path
 
 from ethnowear_document_worker.api.client import WorkerApiClient
@@ -17,7 +18,11 @@ from ethnowear_document_worker.ocr.image import (
 )
 from ethnowear_document_worker.ocr.tesseract import TesseractRunner
 from ethnowear_document_worker.ocr.pipeline import OcrPipeline
+from ethnowear_document_worker.ocr.tsv import InvalidTsvError
 from ethnowear_document_worker.temp.workspace import JobWorkspace
+
+
+logger = logging.getLogger(__name__)
 
 
 class OcrProcessor:
@@ -97,17 +102,48 @@ class OcrProcessor:
                         maximum_pixels=claim.limits.maximum_page_pixels,
                     )
 
-                output = await self._pipeline.recognize_page(
-                    ocr_input,
-                    workspace.path,
-                    claim.limits.maximum_ocr_output_bytes,
-                    maximum_figure_candidates=(
-                        claim.limits.maximum_figure_candidates
-                    ),
-                    maximum_figure_caption_characters=(
-                        claim.limits.maximum_figure_caption_characters
-                    ),
-                )
+                try:
+                    output = await self._pipeline.recognize_page(
+                        ocr_input,
+                        workspace.path,
+                        claim.limits.maximum_ocr_output_bytes,
+                        maximum_figure_candidates=(
+                            claim.limits.maximum_figure_candidates
+                        ),
+                        maximum_figure_caption_characters=(
+                            claim.limits.maximum_figure_caption_characters
+                        ),
+                    )
+                except InvalidTsvError as error:
+                    logger.error(
+                        "ocr_tsv_rejected",
+                        extra={
+                            "job_id": claim.job_id,
+                            "document_page_id": claim.target.document_page_id,
+                            "failure_category": error.category,
+                            "rejected_row_count": error.rejected_row_count,
+                            "usable_word_count": error.usable_word_count,
+                            "selected_psm": error.selected_psm,
+                        },
+                    )
+                    raise
+
+                diagnostics = output.tsv_diagnostics
+                if diagnostics is not None and diagnostics.rejected_row_count:
+                    logger.warning(
+                        "ocr_tsv_rows_skipped",
+                        extra={
+                            "job_id": claim.job_id,
+                            "document_page_id": claim.target.document_page_id,
+                            "failure_category": "isolated_malformed_rows",
+                            "rejected_row_count": diagnostics.rejected_row_count,
+                            "usable_word_count": diagnostics.usable_word_count,
+                            "rejection_reasons": dict(
+                                diagnostics.rejection_reasons
+                            ),
+                            "selected_psm": output.psm,
+                        },
+                    )
 
                 request = build_ocr_result(
                     output,

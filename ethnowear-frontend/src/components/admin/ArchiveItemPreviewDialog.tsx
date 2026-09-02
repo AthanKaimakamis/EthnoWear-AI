@@ -38,7 +38,7 @@ export default function ArchiveItemPreviewDialog({ itemId, onClose, onEdit }: Pr
             .then(([itemDetails, reference]) => {
                 setDetails(itemDetails)
                 const resources: ReferenceResource[] = [
-                    ...reference.regions, ...reference.regionalEmbroideryTypes, ...reference.techniques,
+                    ...reference.regions, ...reference.regionalEmbroideryTypes, ...reference.regionalMotifTypes, ...reference.techniques,
                     ...reference.ornaments, ...reference.motifs, ...reference.colors,
                 ]
                 setLabels(new Map(resources.map(resource => [resource.localName, resource.label])))

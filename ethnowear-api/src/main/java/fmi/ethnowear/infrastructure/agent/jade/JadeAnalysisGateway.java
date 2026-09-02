@@ -34,11 +34,8 @@ public class JadeAnalysisGateway implements AnalysisGateway {
             return result.get(AGENT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
         } catch (StaleProxyException exception) {
             throw new IllegalStateException("Could not send analysis command to ClientAgent.", exception);
-        } catch (TimeoutException exception) {
-            throw new IllegalStateException(
-                    "Timed out waiting for JADE analysis result: " + payload.conversationId(),
-                    exception
-            );
+        } catch (TimeoutException ex) {
+            throw new IllegalStateException("Timed out waiting for JADE analysis result: " + payload.conversationId(), ex);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted while waiting for JADE analysis result.", exception);

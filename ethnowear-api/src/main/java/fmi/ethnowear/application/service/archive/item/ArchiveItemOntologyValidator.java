@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Component
@@ -31,6 +33,26 @@ public class ArchiveItemOntologyValidator {
                 input.ontologyRegionalEmbroideryLocalName(),
                 ontology::listRegionalEmbroideryTypes
         );
+
+        validateIdentity(
+                "Regional motif",
+                input.ontologyRegionalMotifIri(),
+                input.ontologyRegionalMotifLocalName(),
+                ontology::listRegionalMotifTypes
+        );
+
+        validateRegionMatch(
+                "Regional embroidery",
+                input.ontologyRegionalEmbroideryLocalName(),
+                input.ontologyRegionLocalName(),
+                ontology::findRegionForRegionalEmbroidery
+        );
+        validateRegionMatch(
+                "Regional motif",
+                input.ontologyRegionalMotifLocalName(),
+                input.ontologyRegionLocalName(),
+                ontology::findRegionForRegionalMotif
+        );
     }
 
     private void validateIdentity(
@@ -51,9 +73,33 @@ public class ArchiveItemOntologyValidator {
                 .stream()
                 .filter(candidate -> identity.localName().equals(candidate.localName()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(resourceName + "dose not exist: " + identity.localName()));
+                .orElseThrow(() -> new IllegalArgumentException(resourceName + " does not exist: " + identity.localName()));
 
         if(!Objects.equals(resource.iri(), identity.iri()))
-            throw new IllegalArgumentException(resourceName + " IRI dose not match local name: " + identity.localName());
+            throw new IllegalArgumentException(resourceName + " IRI does not match local name: " + identity.localName());
+    }
+
+    private void validateRegionMatch(
+            String resourceName,
+            String resourceLocalName,
+            String regionLocalName,
+            Function<String, Optional<OntologyResource>> regionResolver
+    ) {
+        if(resourceLocalName == null)
+            return;
+
+        if(regionLocalName == null)
+            throw new IllegalArgumentException(
+                    "Region is required when " + resourceName.toLowerCase() + " is selected"
+            );
+
+        OntologyResource region = regionResolver.apply(resourceLocalName)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        resourceName + " has no region classification"
+                ));
+        if(!regionLocalName.equals(region.localName()))
+            throw new IllegalArgumentException(
+                    resourceName + " does not belong to region: " + regionLocalName
+            );
     }
 }

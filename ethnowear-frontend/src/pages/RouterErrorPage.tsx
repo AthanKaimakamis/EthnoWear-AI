@@ -14,7 +14,7 @@ function RouterErrorPage() {
     const status = isRouteErrorResponse(error) ? error.status : null
 
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'grid', gridTemplateRows: 'auto 1fr' }}>
+        <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default', display: 'grid', gridTemplateRows: 'auto 1fr' }}>
             <Box component="header" sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', px: { xs: 2, sm: 4 }, py: 1.5 }}>
                 <Stack direction="row" spacing={1.5} sx={{ maxWidth: 1180, mx: 'auto', alignItems: 'center' }}>
                     <Box component="img" src="/logo_v3.png" alt="" aria-hidden="true" sx={{ width: 44, height: 44, objectFit: 'contain' }} />

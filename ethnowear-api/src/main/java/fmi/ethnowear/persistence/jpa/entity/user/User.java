@@ -59,6 +59,13 @@ public class User extends UpdatableEntity {
     @JoinColumn(name = "CreatedByUserId")
     private User createdByUser;
 
+    @Column(name = "DeletedAt")
+    private LocalDateTime deletedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DeletedByUserId")
+    private User deletedByUser;
+
     @Version
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Type(SqlServerRowVersionType.class)
@@ -119,5 +126,17 @@ public class User extends UpdatableEntity {
 
     public void revokeTokens() {
         this.tokenVersion++;
+    }
+
+    public void softDelete(User deletedByUser, LocalDateTime deletedAt) {
+        this.enabled = false;
+        this.passwordHash = null;
+        this.mustChangePassword = true;
+        this.temporaryPasswordExpiresAt = null;
+        this.failedLoginAttempts = 0;
+        this.lockedUntil = null;
+        this.deletedByUser = deletedByUser;
+        this.deletedAt = deletedAt;
+        revokeTokens();
     }
 }

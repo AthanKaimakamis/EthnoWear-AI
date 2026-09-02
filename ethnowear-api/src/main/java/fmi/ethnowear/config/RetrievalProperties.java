@@ -13,6 +13,7 @@ public record RetrievalProperties(
         int candidateMultiplier,
         int maximumCandidateCount,
         int maximumQuestionCharacters,
+        double minimumSimilarity,
         Duration embeddingTimeout,
         Duration qdrantTimeout
 ) {
@@ -23,7 +24,10 @@ public record RetrievalProperties(
                 || maximumResultCount < defaultResultCount
                 || candidateMultiplier <= 1
                 || maximumCandidateCount < maximumResultCount
-                || maximumQuestionCharacters <= 0)
+                || maximumQuestionCharacters <= 0
+                || !Double.isFinite(minimumSimilarity)
+                || minimumSimilarity < -1.0
+                || minimumSimilarity > 1.0)
             throw new IllegalStateException("Invalid retrieval limits");
 
         if (embeddingTimeout == null

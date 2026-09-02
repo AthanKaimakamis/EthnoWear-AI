@@ -29,9 +29,8 @@ public class AdminUserController {
     private final UserManagementService managementService;
 
     @GetMapping
-    public Page<UserSummaryDetails> findAll(
-            @RequestParam(required = false) String search,
-            Pageable pageable
+    public Page<UserSummaryDetails> findAll(@RequestParam(required = false) String search,
+                                            Pageable pageable
     ) {
         return queryService.findAll(search, pageable);
     }
@@ -42,9 +41,8 @@ public class AdminUserController {
     }
 
     @PostMapping
-    public ResponseEntity<CreatedUserDetails> create(
-            @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody UserCreateCommand command
+    public ResponseEntity<CreatedUserDetails> create(@AuthenticationPrincipal Jwt jwt,
+                                                     @Valid @RequestBody UserCreateCommand command
     ) {
         CreatedUserDetails result = managementService.create(command, userId(jwt));
 
@@ -58,26 +56,23 @@ public class AdminUserController {
     }
 
     @PutMapping("/{userId}/profile")
-    public UserDetails updateProfile(
-            @PathVariable Long userId,
-            @Valid @RequestBody UserProfileCommand command
+    public UserDetails updateProfile(@PathVariable Long userId,
+                                     @Valid @RequestBody UserProfileCommand command
     ) {
         return managementService.updateProfile(userId, command);
     }
 
     @PutMapping("/{userId}/roles/{role}")
-    public UserDetails assignRole(
-            @AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long userId,
-            @PathVariable RoleName role
+    public UserDetails assignRole(@AuthenticationPrincipal Jwt jwt,
+                                  @PathVariable Long userId,
+                                  @PathVariable RoleName role
     ) {
         return managementService.assignRole(userId, role, userId(jwt));
     }
 
     @DeleteMapping("/{userId}/roles/{role}")
-    public UserDetails removeRole(
-            @PathVariable Long userId,
-            @PathVariable RoleName role
+    public UserDetails removeRole(@PathVariable Long userId,
+                                  @PathVariable RoleName role
     ) {
         return managementService.removeRole(userId, role);
     }
@@ -100,6 +95,14 @@ public class AdminUserController {
     @PostMapping("/{userId}/reset-password")
     public TemporaryPasswordDetails resetPassword(@PathVariable Long userId) {
         return managementService.resetPassword(userId);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt jwt,
+                                       @PathVariable Long userId
+    ) {
+        managementService.delete(userId, userId(jwt));
+        return ResponseEntity.noContent().build();
     }
 
     private @NonNull Long userId(@NonNull Jwt jwt) {

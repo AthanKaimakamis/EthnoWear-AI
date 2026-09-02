@@ -487,6 +487,7 @@ class WorkerJobTerminalServicesTest {
                         fmi.ethnowear.application.service.document.processing.DocumentProcessingStateReconciler.class
                 ),
                 org.mockito.Mockito.mock(fmi.ethnowear.application.service.document.figure.FigureExtractionJobStateService.class),
+                new IndexingFailureClassifier(),
                 Clock.fixed(NOW, ZoneOffset.UTC),
                 fmi.ethnowear.support.ManagementEventTestSupport.events()
         );

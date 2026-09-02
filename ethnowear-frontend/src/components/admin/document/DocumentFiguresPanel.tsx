@@ -19,7 +19,7 @@ import AdminModal from '../AdminModal'
 import ConfirmDialog from '../ConfirmDialog'
 import DocumentFigureReviewEditor, { FigureStateChip, ProtectedFigureImage, formatConfidence } from './DocumentFigureReviewEditor'
 
-export default function DocumentFiguresPanel({ documentId }: { documentId: number }) {
+export default function DocumentFiguresPanel({ documentId, defaultSourceReferenceId = null }: { documentId: number; defaultSourceReferenceId?: number | null }) {
     const { t } = useTranslation()
     const [params, setParams] = useSearchParams()
     const queryClient = useQueryClient()
@@ -96,6 +96,7 @@ export default function DocumentFiguresPanel({ documentId }: { documentId: numbe
             open={selected !== null}
             page={selected?.page ?? null}
             figure={selected?.figure ?? null}
+            defaultSourceReferenceId={defaultSourceReferenceId}
             canEdit={canEdit}
             canReview={canReview}
             onClose={closeFigure}
@@ -140,11 +141,11 @@ function FigureCard({ page, figure, onOpen }: { page: DocumentPageSummary; figur
     </Paper>
 }
 
-function FigureReviewDialog({ open, page, figure, canEdit, canReview, onClose, onChanged, onConflict }: { open: boolean; page: DocumentPageSummary | null; figure: DocumentPageFigure | null; canEdit: boolean; canReview: boolean; onClose: () => void; onChanged: (figure: DocumentPageFigure) => void; onConflict: () => void }) {
+function FigureReviewDialog({ open, page, figure, defaultSourceReferenceId, canEdit, canReview, onClose, onChanged, onConflict }: { open: boolean; page: DocumentPageSummary | null; figure: DocumentPageFigure | null; defaultSourceReferenceId: number | null; canEdit: boolean; canReview: boolean; onClose: () => void; onChanged: (figure: DocumentPageFigure) => void; onConflict: () => void }) {
     const { t } = useTranslation()
     if (!figure || !page) return null
     return <AdminModal open={open} onClose={onClose} maxWidth="lg" title={figure.printedFigureNumber || t('documents.figures.ordinal', { number: figure.figureOrdinal })} description={t('documents.figures.pageHeading', { page: pageLabel(page) })} actions={<Button onClick={onClose}>{t('admin.cancel')}</Button>}>
-        <DocumentFigureReviewEditor figure={figure} canEdit={canEdit} canReview={canReview} onChanged={onChanged} onConflict={onConflict} />
+        <DocumentFigureReviewEditor figure={figure} suggestedSourceReferenceId={page.sourceReferenceId ?? defaultSourceReferenceId} canEdit={canEdit} canReview={canReview} onChanged={onChanged} onConflict={onConflict} />
     </AdminModal>
 }
 

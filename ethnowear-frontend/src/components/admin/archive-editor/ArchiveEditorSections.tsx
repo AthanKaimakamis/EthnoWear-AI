@@ -1,7 +1,6 @@
 import {
     Alert,
     Autocomplete,
-    Avatar,
     Box,
     Button,
     Paper,
@@ -18,6 +17,7 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import AdminModal from '../AdminModal'
+import AdminMediaThumbnail from '../media/AdminMediaThumbnail'
 import OntologyRelationshipField from '../OntologyRelationshipField'
 import FormSelectField from '../../forms/FormSelectField'
 import type { OptionCategory, SelectOption } from '../../forms/formTypes'
@@ -30,6 +30,7 @@ import type {
 } from '../../../types/archive'
 import { ARCHIVE_TYPES } from '../../../types/archive'
 import type { ReferenceData, ReferenceResource } from '../../../types/reference'
+import { regionalMotifsForRegion } from '../../../app/regionalMotifs'
 
 export type FeatureSelections = Record<
     'ORNAMENT' | 'TECHNIQUE' | 'MOTIF' | 'COLOR',
@@ -126,11 +127,12 @@ export function ClassificationSection({
     )
 
     const regionCategories = refs.regionGroups.map(resource => referenceCategory(resource, refs.regionsByRegionGroup))
-    const embroideryByRegion = Object.entries(refs.regionByRegionalEmbroidery).reduce<Record<string, string[]>>(
+    const embroideryByRegion = Object.entries(refs.regionByRegionalEmbroidery ?? {}).reduce<Record<string, string[]>>(
         (result, [embroidery, region]) => ({ ...result, [region]: [...(result[region] ?? []), embroidery] }),
         {},
     )
     const embroideryCategories = refs.regions.map(resource => referenceCategory(resource, embroideryByRegion))
+    const regionalMotifs = regionalMotifsForRegion(refs, item.ontologyRegionLocalName)
     const techniqueCategories = refs.techniqueTypes.map(resource => referenceCategory(resource, refs.techniquesByType))
     const ornamentCategories = refs.ornamentTypes.map(resource => referenceCategory(resource, refs.ornamentsByType))
 
@@ -142,10 +144,15 @@ export function ClassificationSection({
                     setField('ontologyRegionLocalName', resource?.localName ?? null)
                     setField('ontologyRegionIri', resource?.iri ?? null)
                 }, regionCategories)}
-                {single(t('curator.fields.embroidery'), refs.regionalEmbroideryTypes, item.ontologyRegionalEmbroideryLocalName, resource => {
+                {item.archiveType === 'EMBROIDERY_SAMPLE' && single(t('curator.fields.embroidery'), refs.regionalEmbroideryTypes.filter(resource =>
+                    refs.regionByRegionalEmbroidery[resource.localName] === item.ontologyRegionLocalName), item.ontologyRegionalEmbroideryLocalName, resource => {
                     setField('ontologyRegionalEmbroideryLocalName', resource?.localName ?? null)
                     setField('ontologyRegionalEmbroideryIri', resource?.iri ?? null)
                 }, embroideryCategories)}
+                {item.archiveType === 'MOTIF_EXAMPLE' && single(t('curator.fields.regionalMotif'), regionalMotifs, item.ontologyRegionalMotifLocalName, resource => {
+                    setField('ontologyRegionalMotifLocalName', resource?.localName ?? null)
+                    setField('ontologyRegionalMotifIri', resource?.iri ?? null)
+                })}
                 {multi('TECHNIQUE', refs.techniques, techniqueCategories)}
                 {multi('ORNAMENT', refs.ornaments, ornamentCategories)}
                 {multi('MOTIF', refs.motifs)}
@@ -203,7 +210,7 @@ export function MediaSection({
             {media.map((link, index) => (
                 <Paper key={`${link.asset.id}-${index}`} variant="outlined" sx={{ p: 2 }}>
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                        <Avatar variant="rounded" src={link.asset.mediaType === 'IMAGE' ? `/api/media/${link.asset.id}/content` : undefined} sx={{ width: 120, height: 92 }} />
+                        <AdminMediaThumbnail mediaAssetId={link.asset.mediaType === 'IMAGE' ? link.asset.id : null} alt={link.asset.fileName ?? ''} sx={{ width: 120, height: 92, borderRadius: 1, flexShrink: 0 }} />
                         <Stack spacing={1.5} sx={{ flex: 1 }}>
                             <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
                                 <Box>
@@ -315,7 +322,7 @@ export function MediaLibraryDialog({
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 1.5 }}>
                 {assets.map(asset => (
                     <Paper key={asset.id} variant="outlined" sx={{ overflow: 'hidden' }}>
-                        <Avatar variant="square" src={asset.mediaType === 'IMAGE' ? `/api/media/${asset.id}/content` : undefined} sx={{ width: '100%', height: 120 }} />
+                        <AdminMediaThumbnail mediaAssetId={asset.mediaType === 'IMAGE' ? asset.id : null} alt={asset.fileName ?? ''} sx={{ width: '100%', height: 120 }} />
                         <Box sx={{ p: 1 }}>
                             <Typography variant="body2" noWrap>{asset.fileName ?? `#${asset.id}`}</Typography>
                             <Button fullWidth size="small" disabled={used.has(asset.id)} onClick={() => onSelect(asset)}>

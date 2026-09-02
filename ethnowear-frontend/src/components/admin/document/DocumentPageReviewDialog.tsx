@@ -17,6 +17,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
+import AddIcon from '@mui/icons-material/Add'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -53,6 +54,8 @@ import VisionAssessmentPanel, { VisionAssessmentHistoryPanel } from './VisionAss
 import SynchronizedTextDiff from './SynchronizedTextDiff'
 import ResizableSplitPane from '../../common/ResizableSplitPane'
 import DocumentPageFiguresWorkspace from './DocumentPageFiguresWorkspace'
+import { useAdminMediaContent } from '../media/useAdminMediaContent'
+import SourceReferenceCreateDialog from '../archive-editor/SourceReferenceCreateDialog'
 
 type Props = {
     open: boolean
@@ -70,8 +73,6 @@ type Props = {
 const MIN_ZOOM = 0.5
 const MAX_ZOOM = 3
 const ZOOM_STEP = 0.25
-const DEFAULT_PROVENANCE_REASON = 'Reviewer approval'
-
 export default function DocumentPageReviewDialog({ open, documentId, pageId, onClose, onChanged, hasPrevious = false, hasNext = false, navigationPending = false, onPrevious, onNext }: Props) {
     const { t } = useTranslation()
     const { admin } = useAdminAuth()
@@ -79,6 +80,10 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
     const canProcess = Boolean(admin && hasAnyRole(admin.roles, processingMutationRoles))
     const canReview = Boolean(admin && hasAnyRole(admin.roles, reviewRoles))
     const isAdministrator = Boolean(admin && hasAnyRole(admin.roles, administratorRoles))
+    const auditReason = t('documents.sourceReference.reviewAuditReason', {
+        username: admin?.username ?? 'unknown',
+        role: admin?.roles.map(role => t(`auth.roles.${role}`)).join(', ') ?? 'unknown',
+    })
     const validIds = documentId > 0 && pageId !== null && pageId > 0
     const documentQuery = useQuery({
         queryKey: documentQueryKeys.detail(documentId),
@@ -129,8 +134,9 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
     const [printedPageNumber, setPrintedPageNumber] = useState('')
     const [sourceReferenceId, setSourceReferenceId] = useState('')
     const [sourceReason, setSourceReason] = useState('')
+    const [sourceReferenceCreateOpen, setSourceReferenceCreateOpen] = useState(false)
     const [provenanceTrust, setProvenanceTrust] = useState<ProvenanceTrustState>('UNKNOWN')
-    const [provenanceReason, setProvenanceReason] = useState(DEFAULT_PROVENANCE_REASON)
+    const [provenanceReason, setProvenanceReason] = useState('')
     const [zoom, setZoom] = useState(1)
     const [imagePreviewOpen, setImagePreviewOpen] = useState(false)
     const editorRef = useRef<HTMLTextAreaElement | null>(null)
@@ -162,8 +168,6 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         setNotice(null)
         setZoom(1)
         setImagePreviewOpen(false)
-        setWorkspaceTab('edit')
-        setEditTab('editor')
         setSupportTab('checks')
         setInspectorOpen(false)
         setMoreAnchor(null)
@@ -173,12 +177,10 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         if (!detail) return
         setPrintedPageNumber(detail.summary.printedPageNumber ?? '')
         setSourceReferenceId(String(detail.summary.sourceReferenceId ?? documentQuery.data?.summary.defaultSourceReferenceId ?? ''))
-        setSourceReason(detail.summary.sourceReferenceId === null && documentQuery.data?.summary.defaultSourceReferenceId
-            ? t('documents.pageReview.sourceInheritedReason')
-            : '')
+        setSourceReason(auditReason)
         setProvenanceTrust(detail.summary.provenanceTrustState)
-        setProvenanceReason(DEFAULT_PROVENANCE_REASON)
-    }, [detail?.summary.id, detail?.summary.versionToken, documentQuery.data?.summary.defaultSourceReferenceId, t])
+        setProvenanceReason(auditReason)
+    }, [auditReason, detail?.summary.id, detail?.summary.versionToken, documentQuery.data?.summary.defaultSourceReferenceId])
 
     function closeImmediately() {
         setDraft(null)
@@ -357,6 +359,7 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
 
     const summary = detail?.summary
     const previewId = summary?.previewMediaAssetId ?? detail?.media[0]?.mediaAssetId
+    const previewContent = useAdminMediaContent(open ? previewId : null)
     const title = summary
         ? t('documents.pageWorkspace.title', { page: summary.printedPageNumber ?? summary.pageLabel ?? summary.pageSequence })
         : t('documents.pageWorkspace.reviewTitle')
@@ -371,7 +374,8 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         setConfirmAction(action)
     }
 
-    return <AdminModal
+    return <>
+    <AdminModal
         open={open}
         title={title}
         description={summary && <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ mt: 1, alignItems: { md: 'center' } }}>
@@ -385,7 +389,7 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         onClose={() => requestNavigation('close')}
         closeDisabled={pending !== null}
         maxWidth="xl"
-        fullScreen
+        workspace
         headerActions={<>
             <Tooltip title={t('documents.pageWorkspace.previous')}><span><IconButton aria-label={t('documents.pageWorkspace.previous')} disabled={!hasPrevious || navigationPending || pending !== null} onClick={() => requestNavigation('previous')}><ChevronLeftIcon /></IconButton></span></Tooltip>
             <Tooltip title={t('documents.pageWorkspace.next')}><span><IconButton aria-label={t('documents.pageWorkspace.next')} disabled={!hasNext || navigationPending || pending !== null} onClick={() => requestNavigation('next')}><ChevronRightIcon /></IconButton></span></Tooltip>
@@ -429,8 +433,8 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
             <ResizableSplitPane
                 label={t('documents.pageReview.resizePanels')}
                 initialPercent={40}
-                first={<Paper variant="outlined" sx={{ height: { md: 'calc(100vh - 230px)' }, minHeight: 420, overflow: 'hidden', position: 'relative', bgcolor: 'grey.100' }}>
-                {previewId && <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
+                first={<Paper variant="outlined" sx={{ height: { md: 'calc(100dvh - 230px)' }, minHeight: 420, overflow: 'hidden', position: 'relative', bgcolor: 'grey.100' }}>
+                {previewContent.url && <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
                     <Stack direction="row" sx={{ overflow: 'hidden', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, boxShadow: 1, '& .MuiIconButton-root': { width: 36, height: 36, borderRadius: 0 } }}>
                         <Tooltip title={t('pdfViewer.zoomOut')}><span><IconButton disabled={zoom <= MIN_ZOOM} onClick={() => setZoom(value => Math.max(MIN_ZOOM, value - ZOOM_STEP))}><ZoomOutIcon fontSize="small" /></IconButton></span></Tooltip>
                         <Typography variant="body2" sx={{ width: 64, display: 'grid', placeItems: 'center', borderLeft: 1, borderRight: 1, borderColor: 'divider', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{Math.round(zoom * 100)}%</Typography>
@@ -440,11 +444,15 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                     </Stack>
                 </Box>}
                 <Box sx={{ width: '100%', height: '100%', overflow: 'auto' }}>
-                    {previewId ? <Box sx={{ width: `${zoom * 100}%`, height: `${zoom * 100}%`, minWidth: '100%', minHeight: 420, mx: 'auto', display: 'grid', placeItems: 'center' }}><Box component="img" src={`/api/media/${previewId}/content`} alt={t('documents.pageWorkspace.preview')} sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }} /></Box> : <Box sx={{ minHeight: 420, display: 'grid', placeItems: 'center' }}><Typography color="text.secondary">{t('documents.pageWorkspace.noPreview')}</Typography></Box>}
+                    {previewContent.isPending && previewId
+                        ? <Box sx={{ minHeight: 420, display: 'grid', placeItems: 'center' }}><CircularProgress /></Box>
+                        : previewContent.url
+                            ? <Box sx={{ width: `${zoom * 100}%`, height: `${zoom * 100}%`, minWidth: '100%', minHeight: 420, mx: 'auto', display: 'grid', placeItems: 'center' }}><Box component="img" src={previewContent.url} alt={t('documents.pageWorkspace.preview')} sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }} /></Box>
+                            : <Box sx={{ minHeight: 420, display: 'grid', placeItems: 'center' }}><Typography color="text.secondary">{t('documents.pageWorkspace.noPreview')}</Typography></Box>}
                 </Box>
-                {previewId && <ImageViewerDialog open={imagePreviewOpen} src={`/api/media/${previewId}/content`} alt={t('documents.pageWorkspace.preview')} onClose={() => setImagePreviewOpen(false)} />}
+                {previewContent.url && <ImageViewerDialog open={imagePreviewOpen} src={previewContent.url} alt={t('documents.pageWorkspace.preview')} onClose={() => setImagePreviewOpen(false)} />}
             </Paper>}
-                second={<Box sx={{ height: { md: 'calc(100vh - 230px)' }, minHeight: { xs: 720, md: 640 }, display: 'grid', gridTemplateRows: { md: !textWorkspace ? 'minmax(0, 1fr)' : inspectorOpen ? 'minmax(360px, 1fr) minmax(210px, .72fr)' : 'minmax(0, 1fr) auto' }, gap: 1, overflow: 'hidden' }}>
+                second={<Box sx={{ height: { md: 'calc(100dvh - 230px)' }, minHeight: { xs: 720, md: 640 }, display: 'grid', gridTemplateRows: { md: !textWorkspace ? 'minmax(0, 1fr)' : inspectorOpen ? 'minmax(360px, 1fr) minmax(210px, .72fr)' : 'minmax(0, 1fr) auto' }, gap: 1, overflow: 'hidden' }}>
                 <Paper variant="outlined" sx={{ minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ px: 1.5, borderBottom: 1, borderColor: 'divider', alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
                         <Tabs value={workspaceTab} onChange={(_, value) => setWorkspaceTab(value)} sx={{ minHeight: 48, '& .MuiTab-root': { minHeight: 48 } }}>
@@ -516,22 +524,25 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                         <Box>
                             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>{t('documents.pageReview.provenanceTitle')}</Typography>
                             <Stack spacing={1.5}>
-                                <TextField select fullWidth size="small" label={t('documents.pageReview.sourceReference')} value={sourceReferenceId} onChange={event => setSourceReferenceId(event.target.value)} disabled={!canReview || pending !== null || sourceOptionsQuery.isPending} helperText={detail.summary.sourceReferenceId === null && sourceReferenceId === String(documentQuery.data?.summary.defaultSourceReferenceId ?? '') ? t('documents.pageReview.sourceInheritedHelp') : t('documents.pageReview.sourceReferenceHelp')}>
-                                    <MenuItem value="" disabled>{t('documents.pageReview.selectSourceReference')}</MenuItem>
-                                    {(sourceOptionsQuery.data?.references ?? []).map(reference => <MenuItem key={reference.id} value={String(reference.id)}>{sourceReferenceLabel(reference, sourceOptionsQuery.data?.sources ?? [])}</MenuItem>)}
-                                </TextField>
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'flex-start' } }}>
+                                    <TextField select fullWidth size="small" label={t('documents.pageReview.sourceReference')} value={sourceReferenceId} onChange={event => setSourceReferenceId(event.target.value)} disabled={!canReview || pending !== null || sourceOptionsQuery.isPending} helperText={detail.summary.sourceReferenceId === null && sourceReferenceId === String(documentQuery.data?.summary.defaultSourceReferenceId ?? '') ? t('documents.pageReview.sourceInheritedHelp') : t('documents.pageReview.sourceReferenceHelp')}>
+                                        <MenuItem value="" disabled>{t('documents.pageReview.selectSourceReference')}</MenuItem>
+                                        {(sourceOptionsQuery.data?.references ?? []).map(reference => <MenuItem key={reference.id} value={String(reference.id)}>{sourceReferenceLabel(reference, sourceOptionsQuery.data?.sources ?? [])}</MenuItem>)}
+                                    </TextField>
+                                    {canReview && <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setSourceReferenceCreateOpen(true)} disabled={pending !== null || sourceOptionsQuery.isPending} sx={{ whiteSpace: 'nowrap' }}>{t('curator.source.createCitation')}</Button>}
+                                </Stack>
                                 {canReview && <TextField fullWidth size="small" required label={t('documents.pageReview.sourceReason')} value={sourceReason} onChange={event => setSourceReason(event.target.value.slice(0, 1000))} disabled={pending !== null} />}
                                 {canReview && <Button variant="outlined" onClick={() => void runSourceUpdate()} disabled={pending !== null || !sourceReferenceId || !sourceReason.trim() || Number(sourceReferenceId) === detail.summary.sourceReferenceId} sx={{ alignSelf: 'flex-start' }}>{t('documents.pageReview.saveSource')}</Button>}
                                 <Divider />
                                 <TextField select fullWidth size="small" label={t('documents.pageReview.provenanceTrust')} value={provenanceTrust} onChange={event => setProvenanceTrust(event.target.value as ProvenanceTrustState)} disabled={!canReview || pending !== null}>
                                     {(['UNKNOWN', 'UNTRUSTED', 'PARTIAL', 'TRUSTED', 'VERIFIED'] as ProvenanceTrustState[]).map(value => <MenuItem key={value} value={value}>{t(`documents.pageReview.trust.${value}`)}</MenuItem>)}
                                 </TextField>
-                                {canReview && <TextField fullWidth size="small" required multiline minRows={3} label={t('documents.pageReview.provenanceReason')} value={provenanceReason} onChange={event => setProvenanceReason(event.target.value.slice(0, 1000))} disabled={pending !== null} />}
+                                {canReview && <TextField fullWidth size="small" required multiline minRows={2} label={t('documents.pageReview.provenanceReason')} value={provenanceReason} onChange={event => setProvenanceReason(event.target.value.slice(0, 1000))} disabled={pending !== null} />}
                                 {canReview && <Button variant="outlined" onClick={() => void runTrustUpdate()} disabled={pending !== null || !provenanceReason.trim() || provenanceTrust === detail.summary.provenanceTrustState} sx={{ alignSelf: 'flex-start' }}>{t('documents.pageReview.saveProvenance')}</Button>}
                             </Stack>
                         </Box>
                     </Stack>}
-                    {workspaceTab === 'figures' && pageId !== null && <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}><DocumentPageFiguresWorkspace documentId={documentId} pageId={pageId} /></Box>}
+                    {workspaceTab === 'figures' && pageId !== null && <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}><DocumentPageFiguresWorkspace documentId={documentId} pageId={pageId} sourceReferenceId={Number(sourceReferenceId) || documentQuery.data?.summary.defaultSourceReferenceId} /></Box>}
                 </Paper>
                 {textWorkspace && <Paper variant="outlined" sx={{ minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <Stack direction="row" sx={{ alignItems: 'center', borderBottom: inspectorOpen ? 1 : 0, borderColor: 'divider' }}>
@@ -580,6 +591,20 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         <ConfirmDialog open={confirmUnchangedApproval} title={t('documents.pageReview.unchangedApproval.title')} confirmLabel={t('documents.pageReview.unchangedApproval.confirm')} confirmColor="primary" pending={pending !== null} onCancel={() => setConfirmUnchangedApproval(false)} onConfirm={() => void runApproval()}>{t('documents.pageReview.unchangedApproval.description')}</ConfirmDialog>
         <ConfirmDialog open={unsavedAction !== null} title={t('documents.pageReview.unsavedConfirm.title')} confirmLabel={t('documents.pageReview.unsavedConfirm.confirm')} confirmColor="error" onCancel={() => setUnsavedAction(null)} onConfirm={() => { const action = unsavedAction; setUnsavedAction(null); setDraft(null); if (action) navigateImmediately(action) }}>{t('documents.pageReview.unsavedConfirm.description')}</ConfirmDialog>
     </AdminModal>
+    {sourceReferenceCreateOpen && <SourceReferenceCreateDialog
+            sources={sourceOptionsQuery.data?.sources ?? []}
+            initialSourceId={documentQuery.data?.summary.sourceId}
+            onClose={() => setSourceReferenceCreateOpen(false)}
+            onCreated={reference => {
+                queryClient.setQueryData<{ references: SourceReferenceDetails[]; sources: SourceDetails[] }>(['admin', 'document-page-source-options'], current => current
+                    ? { ...current, references: [...current.references.filter(item => item.id !== reference.id), reference] }
+                    : current)
+                setSourceReferenceId(String(reference.id))
+                setSourceReferenceCreateOpen(false)
+                void queryClient.invalidateQueries({ queryKey: ['admin', 'source-references'] })
+            }}
+    />}
+    </>
 }
 
 function sourceReferenceLabel(reference: SourceReferenceDetails, sources: SourceDetails[]) {

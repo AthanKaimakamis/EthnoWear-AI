@@ -55,7 +55,7 @@ export default function PasswordChangePage() {
     }
 
     return (
-        <Box sx={{ minHeight: 'calc(100vh - 68px)', display: 'grid', placeItems: 'center', px: 2, py: 5 }}>
+        <Box sx={{ minHeight: 'calc(100dvh - 68px)', display: 'grid', placeItems: 'center', px: 2, py: 5 }}>
             <Paper component="form" onSubmit={submit} variant="outlined" sx={{ width: '100%', maxWidth: 560, overflow: 'hidden' }}>
                 {pending && <LinearProgress />}
                 <Stack spacing={3} sx={{ p: { xs: 3, sm: 4 } }}>

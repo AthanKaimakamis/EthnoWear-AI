@@ -1,10 +1,12 @@
 ### Project resources excluded from Git ###
-/Resources/
+/ethnowear-private/
+/Resources
 /tmp/
 /media/
-/Essay/
+/Essay
+/tools
 /tools/ethnowear-password
-/tools/password-tool/
+/tools/password-tool
 
 ### macOS ###
 .DS_Store
@@ -56,6 +58,8 @@ pnpm-debug.log*
 **/.vscode/
 !.vscode/extensions.json
 .env
+.env.*
+!.env.example
 .gitignore
 !ethnowear-api/.gitignore
 .env.example

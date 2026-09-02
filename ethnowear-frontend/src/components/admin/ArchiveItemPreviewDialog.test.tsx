@@ -20,8 +20,10 @@ vi.mock('../../api/ReferenceApi', () => ({
 
 beforeEach(() => {
     apiMocks.getFullReference.mockResolvedValue({
-        regions: [], regionGroups: [], regionalEmbroideryTypes: [],
-        techniques: [], ornaments: [], motifs: [], colors: [],
+        regions: [], regionGroups: [], regionalMotifTypes: [], regionalEmbroideryTypes: [],
+        techniques: [], techniqueTypes: [], ornaments: [], ornamentTypes: [], motifs: [], colors: [],
+        regionsByRegionGroup: {}, regionByRegionalEmbroidery: {}, regionByRegionalMotif: {},
+        ornamentsByRegion: {}, techniquesByRegion: {}, ornamentsByType: {}, techniquesByType: {},
     })
 })
 
@@ -65,6 +67,8 @@ function details(publicationStatus: PublicationStatus): ArchiveItemDetailDetails
             ontologyRegionLocalName: null,
             ontologyRegionalEmbroideryIri: null,
             ontologyRegionalEmbroideryLocalName: null,
+            ontologyRegionalMotifIri: null,
+            ontologyRegionalMotifLocalName: null,
             submittedAt: null,
             publishedAt: publicationStatus === 'PUBLISHED' ? '2026-08-15T10:00:00' : null,
             archivedAt: null,

@@ -45,4 +45,11 @@ public class AdminAuthExceptionHandler extends BaseExceptionHandler {
     ) {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
+
+    @ExceptionHandler(UserDeletionConflictException.class)
+    public ResponseEntity<Map<String, Object>> deletionConflict(
+            @NonNull UserDeletionConflictException ex
+    ) {
+        return error(HttpStatus.CONFLICT, ex.getCode(), ex.getMessage());
+    }
 }

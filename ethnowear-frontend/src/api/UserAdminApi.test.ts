@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createUser, getUsers, resetUserPassword } from './UserAdminApi'
+import { createUser, deleteUser, getUsers, resetUserPassword } from './UserAdminApi'
 import { clearAdminSession, setAdminSession } from '../app/adminAuthStore'
 
 function jsonResponse(body: unknown, status = 200) {
@@ -44,5 +44,16 @@ describe('UserAdminApi', () => {
     it('uses the reset endpoint and returns one-time credentials', async () => {
         vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(jsonResponse({ temporaryPassword: 'Generated!234', expiresAt: '2099-01-01T00:00:00' }))
         await expect(resetUserPassword(12)).resolves.toMatchObject({ temporaryPassword: 'Generated!234' })
+    })
+
+    it('deletes a user through the protected user endpoint', async () => {
+        const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 204 }))
+
+        await deleteUser(12)
+
+        const [url, request] = fetchMock.mock.calls[0]
+        expect(String(url)).toContain('/api/admin/users/12')
+        expect(request?.method).toBe('DELETE')
+        expect((request?.headers as Headers).get('Authorization')).toBe('Bearer jwt-token')
     })
 })

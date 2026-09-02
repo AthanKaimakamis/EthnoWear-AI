@@ -54,7 +54,7 @@ public class RagRetrievalService {
         );
 
         if (candidates.isEmpty())
-            return new GroundedRetrievalDetails(question, 0, List.of());
+            return insufficientEvidence(question);
 
         Map<Long, KnowledgeChunk> chunks = chunkRepository
                 .findRetrievalCandidatesByIdIn(candidateIds(candidates))
@@ -76,7 +76,12 @@ public class RagRetrievalService {
                 .limit(resultCount)
                 .toList();
 
-        return new GroundedRetrievalDetails(question, passages.size(), passages);
+        return new GroundedRetrievalDetails(
+                question,
+                passages.size(),
+                passages,
+                passages.isEmpty()
+        );
 
     }
 
@@ -139,10 +144,16 @@ public class RagRetrievalService {
         if (candidates == null)
             throw new RetrievalUnavailableException("The vector search response is invalid");
 
+        if (candidates.stream()
+                .filter(Objects::nonNull)
+                .mapToDouble(VectorSearchCandidate::similarity)
+                .anyMatch(score -> !Double.isFinite(score) || score < -1.0 || score > 1.0))
+            throw new RetrievalUnavailableException("The vector search response contains an invalid similarity score");
+
         return candidates.stream()
                 .filter(Objects::nonNull)
                 .filter(candidate -> candidate.knowledgeChunkId() != null)
-                .filter(candidate -> Double.isFinite(candidate.similarity()))
+                .filter(candidate -> candidate.similarity() >= properties.minimumSimilarity())
                 .collect(Collectors.toMap(
                         VectorSearchCandidate::knowledgeChunkId,
                         Function.identity(),
@@ -156,6 +167,10 @@ public class RagRetrievalService {
                 .sorted(Comparator.comparingDouble(VectorSearchCandidate::similarity).reversed())
                 .limit(properties.maximumCandidateCount())
                 .toList();
+    }
+
+    private @NonNull GroundedRetrievalDetails insufficientEvidence(String question) {
+        return new GroundedRetrievalDetails(question, 0, List.of(), true);
     }
 
     @Contract("_ -> !null")

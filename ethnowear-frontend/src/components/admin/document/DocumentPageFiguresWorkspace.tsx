@@ -14,7 +14,7 @@ import type { DocumentPageFigure } from '../../../types/document'
 import ConfirmDialog from '../ConfirmDialog'
 import DocumentFigureReviewEditor, { FigureStateChip } from './DocumentFigureReviewEditor'
 
-export default function DocumentPageFiguresWorkspace({ documentId, pageId }: { documentId: number; pageId: number }) {
+export default function DocumentPageFiguresWorkspace({ documentId, pageId, sourceReferenceId = null }: { documentId: number; pageId: number; sourceReferenceId?: number | null }) {
     const { t } = useTranslation()
     const { admin } = useAdminAuth()
     const queryClient = useQueryClient()
@@ -85,6 +85,7 @@ export default function DocumentPageFiguresWorkspace({ documentId, pageId }: { d
                 {selected && <DocumentFigureReviewEditor
                     key={`${selected.id}-${selected.version}`}
                     figure={selected}
+                    suggestedSourceReferenceId={sourceReferenceId}
                     canEdit={canEdit}
                     canReview={canReview}
                     onConflict={() => void refreshFigures()}

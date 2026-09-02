@@ -1,8 +1,9 @@
+import { ChatPage } from '../components/chat/ChatExperience'
 import { Suspense } from 'react'
 import { createBrowserRouter, Navigate, useLocation } from 'react-router'
 import MainLayout from "../components/layout/MainLayout.tsx";
 import RequireAdmin from "../components/admin/RequireAdmin.tsx";
-import { administratorRoles, processingReadRoles, reviewRoles } from './permissions'
+import { administratorRoles, processingReadRoles, reviewRoles, rightsManagementRoles } from './permissions'
 import RouterErrorPage from "../pages/RouterErrorPage.tsx";
 import ArchiveLayout from '../components/archive/ArchiveLayout'
 import EmbroideryPageSkeleton from '../components/loading/EmbroideryPageSkeleton'
@@ -15,6 +16,7 @@ import {
     ArchiveItemDetailPage,
     ArchiveManagerPage,
     ArchivePage,
+    RegionalMotifArchivePage,
     ArchiveReferencePage,
     DocumentsPage,
     DocumentDetailPage,
@@ -22,6 +24,7 @@ import {
     EntityDetailPage,
     MediaLibraryPage,
     OntologyEntityPage,
+    OntologyVersionsPage,
     ProcessingStatusPage,
     PasswordChangePage,
     UserManagementPage,
@@ -34,6 +37,7 @@ export const router = createBrowserRouter([
         errorElement: <RouterErrorPage />,
         children: [
             { index: true, element: <Navigate to="archive/embroideries" replace /> },
+            { path: 'chat', element: <ChatPage /> },
             {
                 path: 'archive',
                 element: <ArchiveLayout />,
@@ -45,6 +49,10 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: 'motifs',
+                        element: <Suspense fallback={<EmbroideryPageSkeleton />}><RegionalMotifArchivePage /></Suspense>,
+                    },
+                    {
+                        path: 'motif-concepts',
                         element: <Suspense fallback={<ArchiveReferencePageSkeleton />}><ArchiveReferencePage key="motifs" kind="motifs" /></Suspense>,
                     },
                     {
@@ -82,6 +90,9 @@ export const router = createBrowserRouter([
                     { path: 'processing', element: <RequireAdmin roles={processingReadRoles}><ProcessingStatusPage /></RequireAdmin> },
                     { path: 'users', element: <RequireAdmin roles={administratorRoles}><UserManagementPage /></RequireAdmin> },
                     { path: 'ontology', element: <Navigate to="/management/ornaments" replace /> },
+                    { path: 'ontology/versions', element: <RequireAdmin roles={administratorRoles}><OntologyVersionsPage /></RequireAdmin> },
+                    { path: 'advanced/sources', element: <RequireAdmin roles={rightsManagementRoles}><ArchiveAdminPage resourceOverride="sources" /></RequireAdmin> },
+                    { path: 'advanced/media-assets', element: <RequireAdmin roles={rightsManagementRoles}><ArchiveAdminPage resourceOverride="media-assets" /></RequireAdmin> },
                     { path: 'advanced/:resource', element: <RequireAdmin roles={reviewRoles}><ArchiveAdminPage /></RequireAdmin> },
                     { path: 'archive/:resource', element: <ArchiveAdminPage /> },
                     { path: ':entityType', element: <OntologyEntityPage /> },

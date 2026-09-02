@@ -14,14 +14,27 @@ import java.util.List;
 
 public interface ArchiveItemMediaRepository extends JpaRepository<ArchiveItemMedia, Long> {
 
-    @EntityGraph(attributePaths = {"mediaAsset", "mediaAsset.sourceReference"})
+    @EntityGraph(attributePaths = {
+            "mediaAsset",
+            "mediaAsset.sourceReference",
+            "mediaAsset.sourceReference.source"
+    })
     List<ArchiveItemMedia> findByArchiveItemId(Long archiveItemId);
 
     @EntityGraph(attributePaths = {"mediaAsset", "mediaAsset.sourceReference"})
     @Query("""
             SELECT itemMedia
             FROM ArchiveItemMedia itemMedia
+            LEFT JOIN itemMedia.mediaAsset.sourceReference sourceReference
+            LEFT JOIN sourceReference.source source
             WHERE itemMedia.archiveItem.id = :archiveItemId
+              AND itemMedia.mediaAsset.publicDisplayAllowed = true
+              AND itemMedia.mediaAsset.storageState =
+                  fmi.ethnowear.domain.model.media.MediaStorageState.AVAILABLE
+              AND (
+                    sourceReference IS NULL
+                    OR source.publicDisplayAllowed = true
+              )
               AND (
                     NOT EXISTS (
                         SELECT figure.id
@@ -50,13 +63,23 @@ public interface ArchiveItemMediaRepository extends JpaRepository<ArchiveItemMed
     @EntityGraph(attributePaths = {
             "archiveItem",
             "mediaAsset",
-            "mediaAsset.sourceReference"
+            "mediaAsset.sourceReference",
+            "mediaAsset.sourceReference.source"
     })
     @Query("""
             SELECT itemMedia
             FROM ArchiveItemMedia itemMedia
+            LEFT JOIN itemMedia.mediaAsset.sourceReference sourceReference
+            LEFT JOIN sourceReference.source source
             WHERE itemMedia.archiveItem.id IN :archiveItemIds
               AND itemMedia.role IN :roles
+              AND itemMedia.mediaAsset.publicDisplayAllowed = true
+              AND itemMedia.mediaAsset.storageState =
+                  fmi.ethnowear.domain.model.media.MediaStorageState.AVAILABLE
+              AND (
+                    sourceReference IS NULL
+                    OR source.publicDisplayAllowed = true
+              )
               AND (
                     NOT EXISTS (
                         SELECT figure.id
@@ -87,14 +110,24 @@ public interface ArchiveItemMediaRepository extends JpaRepository<ArchiveItemMed
     @EntityGraph(attributePaths = {
             "archiveItem",
             "mediaAsset",
-            "mediaAsset.sourceReference"
+            "mediaAsset.sourceReference",
+            "mediaAsset.sourceReference.source"
     })
     @Query("""
             SELECT itemMedia
             FROM ArchiveItemMedia itemMedia
+            LEFT JOIN itemMedia.mediaAsset.sourceReference sourceReference
+            LEFT JOIN sourceReference.source source
             WHERE itemMedia.archiveItem.id IN :archiveItemIds
               AND itemMedia.role IN :roles
               AND itemMedia.mediaAsset.mediaType = :mediaType
+              AND itemMedia.mediaAsset.publicDisplayAllowed = true
+              AND itemMedia.mediaAsset.storageState =
+                  fmi.ethnowear.domain.model.media.MediaStorageState.AVAILABLE
+              AND (
+                    sourceReference IS NULL
+                    OR source.publicDisplayAllowed = true
+              )
               AND (
                     NOT EXISTS (
                         SELECT figure.id

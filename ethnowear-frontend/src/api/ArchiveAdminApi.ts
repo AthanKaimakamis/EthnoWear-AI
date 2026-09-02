@@ -53,9 +53,16 @@ export const knowledgeChunksApi = createCrudApi<KnowledgeChunkWriteDto, Knowledg
     '/api/admin/knowledge-chunks',
 )
 
-export const mediaAssetsApi = createCrudApi<MediaAssetWriteDto, MediaAssetDetails>(
+const mediaAssetsCrudApi = createCrudApi<MediaAssetWriteDto, MediaAssetDetails>(
     '/api/admin/media-assets',
 )
+
+export const mediaAssetsApi = {
+    ...mediaAssetsCrudApi,
+    update(id: number, input: MediaAssetWriteDto) {
+        return apiRequest<MediaAssetDetails>('/api/admin/media-assets/' + id, { method: 'PATCH', body: input })
+    },
+}
 
 export function findDocumentMediaLinks(mediaAssetIds: number[], signal?: AbortSignal) {
     if (mediaAssetIds.length === 0) return Promise.resolve([] as DocumentMediaLinkDetails[])
@@ -63,6 +70,21 @@ export function findDocumentMediaLinks(mediaAssetIds: number[], signal?: AbortSi
         query: { mediaAssetIds: mediaAssetIds.join(',') },
         signal,
     })
+}
+
+export async function getAdminMediaContent(mediaAssetId: number, signal?: AbortSignal) {
+    const response = await fetch(apiUrl(`/api/admin/media-assets/${mediaAssetId}/content`), {
+        headers: adminAuthorizationHeaders({ Accept: '*/*' }),
+        signal,
+    })
+    if (!response.ok) {
+        handleAdminResponseStatus(response.status)
+        const details = response.headers.get('content-type')?.includes('application/json')
+            ? await response.json()
+            : await response.text()
+        throw new ApiError(`Request failed with status ${response.status}`, response.status, details)
+    }
+    return response.blob()
 }
 
 export const mediaEntityLinksApi = createCrudApi<MediaEntityLinkWriteDto, MediaEntityLinkDetails>(

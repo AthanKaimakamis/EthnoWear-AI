@@ -3,11 +3,13 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import pytest
 
 from ethnowear_document_worker.layout.detector import LayoutAnalysis
 from ethnowear_document_worker.layout.models import LayoutRegion
 from ethnowear_document_worker.ocr.models import BoundingBox, OcrAttempt, OcrBlockType, OcrOutput, OcrWord
 from ethnowear_document_worker.ocr.pipeline import OcrPipeline, OcrPipelineError, _select_attempt, _selection_key
+from ethnowear_document_worker.ocr.tsv import InvalidTsvError
 
 
 def recognized(text: str, confidence: float, *, offset_x: int = 0, offset_y: int = 0) -> OcrOutput:
@@ -262,3 +264,104 @@ def test_psm_three_wins_close_full_page_score_to_preserve_reading_order() -> Non
     )
 
     assert _select_attempt([psm_three, psm_four]) is psm_three
+
+
+class InvalidPrimaryTsvTesseract(FakeTesseract):
+    async def recognize(
+        self,
+        path: Path,
+        maximum_output_bytes: int,
+        *,
+        psm: int,
+        offset_x: int = 0,
+        offset_y: int = 0,
+    ) -> OcrOutput:
+        self.calls.append((path.name, psm))
+        if path.name == "masked.png" and psm == 3:
+            raise InvalidTsvError(
+                "safe parser failure",
+                category="no_usable_words",
+                rejected_row_count=2,
+                selected_psm=psm,
+            )
+        return recognized(
+            "Валиден резервен резултат",
+            0.93,
+            offset_x=offset_x,
+            offset_y=offset_y,
+        )
+
+
+def test_pipeline_uses_bounded_alternate_psm_after_invalid_primary_tsv(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "page.png"
+    cv2.imwrite(str(source), np.full((500, 400), 255, dtype=np.uint8))
+    layout = LayoutAnalysis(400, 500, (
+        LayoutRegion(1, OcrBlockType.BODY_TEXT, BoundingBox(30, 50, 340, 300), 0),
+    ))
+    monkeypatch.setattr(
+        "ethnowear_document_worker.ocr.pipeline.detect_layout",
+        lambda *args, **kwargs: layout,
+    )
+    runner = InvalidPrimaryTsvTesseract()
+
+    output = asyncio.run(OcrPipeline(runner).recognize_page(
+        source,
+        tmp_path,
+        100_000,
+        maximum_figure_candidates=10,
+        maximum_figure_caption_characters=2_000,
+    ))
+
+    assert output.raw_text == "Валиден резервен резултат"
+    assert ("masked.png", 3) in runner.calls
+    assert ("masked.png", 4) in runner.calls
+    assert {attempt.psm for attempt in output.attempts} == {4, 6}
+
+
+class AlwaysInvalidTsvTesseract(FakeTesseract):
+    async def recognize(
+        self,
+        path: Path,
+        maximum_output_bytes: int,
+        *,
+        psm: int,
+        offset_x: int = 0,
+        offset_y: int = 0,
+    ) -> OcrOutput:
+        raise InvalidTsvError(
+            "safe parser failure",
+            category="no_usable_words",
+            rejected_row_count=3,
+            selected_psm=psm,
+        )
+
+
+def test_pipeline_reports_fallback_exhaustion_when_every_psm_is_unusable(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "page.png"
+    cv2.imwrite(str(source), np.full((500, 400), 255, dtype=np.uint8))
+    layout = LayoutAnalysis(400, 500, (
+        LayoutRegion(1, OcrBlockType.BODY_TEXT, BoundingBox(30, 50, 340, 300), 0),
+    ))
+    monkeypatch.setattr(
+        "ethnowear_document_worker.ocr.pipeline.detect_layout",
+        lambda *args, **kwargs: layout,
+    )
+
+    with pytest.raises(InvalidTsvError) as captured:
+        asyncio.run(OcrPipeline(AlwaysInvalidTsvTesseract()).recognize_page(
+            source,
+            tmp_path,
+            100_000,
+            maximum_figure_candidates=10,
+            maximum_figure_caption_characters=2_000,
+        ))
+
+    assert captured.value.category == "fallback_exhausted"
+    assert captured.value.rejected_row_count == 3
+    assert captured.value.selected_psm == 6

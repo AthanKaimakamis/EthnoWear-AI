@@ -2,6 +2,14 @@ package fmi.ethnowear.domain.constant.ontology;
 
 public final class OntologyTerms {
 
+    public static final class AnnotationProperties {
+        public static final String SYSTEM_GENERATED = "systemGenerated";
+        public static final String GENERATED_FROM_REGION = "generatedFromRegion";
+
+        private AnnotationProperties() {
+        }
+    }
+
     private OntologyTerms() {
     }
 
@@ -67,6 +75,7 @@ public final class OntologyTerms {
         public static final String REGION = "Region";
         public static final String REGION_GROUP = "RegionGroup";
         public static final String REGIONAL_EMBROIDERY = "RegionalEmbroidery";
+        public static final String REGIONAL_MOTIF = "RegionalMotif";
         public static final String RUSE_EMBROIDERY = "RuseEmbroidery";
         public static final String SAMOKOV_IHTIMAN_EMBROIDERY = "SamokovIhtimanEmbroidery";
         public static final String SOFIA_EMBROIDERY = "SofiaEmbroidery";

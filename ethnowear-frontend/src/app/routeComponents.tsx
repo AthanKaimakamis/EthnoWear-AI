@@ -1,8 +1,10 @@
 import { lazy } from 'react'
 
 export const ArchivePage = lazy(() => import('../pages/ArchivePage'))
+export const RegionalMotifArchivePage = lazy(() => import('../pages/RegionalMotifArchivePage'))
 export const AdminLayout = lazy(() => import('../components/admin/AdminLayout'))
 export const OntologyEntityPage = lazy(() => import('../pages/admin/OntologyEntityPage'))
+export const OntologyVersionsPage = lazy(() => import('../pages/admin/OntologyVersionsPage'))
 export const ArchiveReferencePage = lazy(() => import('../pages/archive/ArchiveReferencePage'))
 export const EntityDetailPage = lazy(() => import('../pages/archive/EntityDetailPage'))
 export const ArchiveItemDetailPage = lazy(() => import('../pages/archive/ArchiveItemDetailPage'))

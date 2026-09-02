@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { useState } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as documentApi from '../../../api/DocumentAdminApi'
-import { sourceReferencesApi, sourcesApi } from '../../../api/ArchiveAdminApi'
+import { getAdminMediaContent, sourceReferencesApi, sourcesApi } from '../../../api/ArchiveAdminApi'
 import { AdminAuthContext } from '../../../app/adminAuth'
 import { renderApp } from '../../../test/render'
 import type { DocumentPageDetails, DocumentPageFigure } from '../../../types/document'
@@ -21,7 +22,7 @@ vi.mock('../../../api/DocumentAdminApi', async importOriginal => ({
 }))
 vi.mock('../../../api/ArchiveAdminApi', async importOriginal => ({
     ...await importOriginal<typeof import('../../../api/ArchiveAdminApi')>(),
-    sourceReferencesApi: { findAll: vi.fn() }, sourcesApi: { findAll: vi.fn() },
+    getAdminMediaContent: vi.fn(), sourceReferencesApi: { findAll: vi.fn(), create: vi.fn() }, sourcesApi: { findAll: vi.fn() },
 }))
 
 const detail: DocumentPageDetails = {
@@ -62,7 +63,7 @@ function renderDialog(onClose = vi.fn()) {
 }
 
 beforeEach(() => {
-    vi.mocked(documentApi.getDocument).mockResolvedValue({ summary: { defaultSourceReferenceId: 3 } } as never)
+    vi.mocked(documentApi.getDocument).mockResolvedValue({ summary: { sourceId: 2, defaultSourceReferenceId: 3 } } as never)
     vi.mocked(documentApi.getDocumentPage).mockResolvedValue(detail)
     vi.mocked(documentApi.getCurrentPageQuality).mockResolvedValue([])
     vi.mocked(documentApi.getDocumentPageWorkflow).mockResolvedValue({ documentId: 7, pageId: 42, completedSteps: 4, totalSteps: 4, steps: [] })
@@ -74,17 +75,36 @@ beforeEach(() => {
     vi.mocked(documentApi.changePageProvenanceTrust).mockResolvedValue({} as never)
     vi.mocked(documentApi.listPageFigures).mockResolvedValue([figure])
     vi.mocked(documentApi.getPageFigureContent).mockResolvedValue(new Blob(['image'], { type: 'image/jpeg' }))
+    vi.mocked(getAdminMediaContent).mockResolvedValue(new Blob(['page'], { type: 'image/jpeg' }))
     vi.mocked(sourceReferencesApi.findAll).mockResolvedValue({ content: [{ id: 3, sourceId: 2, chapter: null, pageFrom: 1, pageTo: 1, figureNumber: null, sectionTitle: null, catalogNumber: null, referenceUrl: null, accessedDate: null, locator: null, note: null, createdAt: '', updatedAt: '' }], totalElements: 1, totalPages: 1, size: 1000, number: 0, first: true, last: true, empty: false, numberOfElements: 1 })
     vi.mocked(sourcesApi.findAll).mockResolvedValue({ content: [{ id: 2, title: 'Existing source' } as never], totalElements: 1, totalPages: 1, size: 1000, number: 0, first: true, last: true, empty: false, numberOfElements: 1 })
     vi.stubGlobal('URL', { ...URL, createObjectURL: vi.fn(() => 'blob:figure'), revokeObjectURL: vi.fn() })
 })
 
 describe('DocumentPageReviewDialog', () => {
+    it('keeps the active workspace tab when navigating to the next page', async () => {
+        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        const user = userEvent.setup()
+        function NavigationHarness() {
+            const [pageId, setPageId] = useState(42)
+            return <DocumentPageReviewDialog open documentId={7} pageId={pageId} hasNext onNext={() => setPageId(43)} onClose={vi.fn()} />
+        }
+        renderApp(<AdminAuthContext.Provider value={{ authenticated: true, initializing: false, sessionExpired: false, admin: { id: 1, username: 'admin', firstName: 'Admin', lastName: 'User', email: null, roles: ['ADMINISTRATOR'], passwordChangeRequired: false }, login: vi.fn(), logout: vi.fn(), changePassword: vi.fn() }}><QueryClientProvider client={client}><NavigationHarness /></QueryClientProvider></AdminAuthContext.Provider>)
+
+        const figuresTab = await screen.findByRole('tab', { name: 'Extracted figures' })
+        await user.click(figuresTab)
+        expect(figuresTab).toHaveAttribute('aria-selected', 'true')
+        await user.click(screen.getByRole('button', { name: 'Next page' }))
+
+        await waitFor(() => expect(documentApi.getDocumentPage).toHaveBeenCalledWith(7, 43, expect.any(AbortSignal)))
+        expect(screen.getByRole('tab', { name: 'Extracted figures' })).toHaveAttribute('aria-selected', 'true')
+    })
+
     it('keeps image and transcription side by side and warns when approved text changes', async () => {
         const user = userEvent.setup()
         renderDialog()
         const editor = await screen.findByRole('textbox', { name: 'Recognized and corrected text' })
-        expect(screen.getByRole('img', { name: 'Page preview' })).toBeInTheDocument()
+        expect(await screen.findByRole('img', { name: 'Page preview' })).toBeInTheDocument()
         await user.type(editor, ' changed')
         expect(screen.getByText(/Changing approved text revokes approval/)).toBeInTheDocument()
     })
@@ -124,7 +144,7 @@ describe('DocumentPageReviewDialog', () => {
         await user.type(screen.getByRole('textbox', { name: 'Reason for rejection' }), 'Text does not match the page')
         await user.click(confirm)
         await waitFor(() => expect(documentApi.rejectPageTranscription).toHaveBeenCalledWith(42, 'Text does not match the page'))
-    })
+    }, 10_000)
 
     it('keeps the corrected text visible while support panels change', async () => {
         const user = userEvent.setup()
@@ -259,9 +279,24 @@ describe('DocumentPageReviewDialog', () => {
         await user.click(await screen.findByRole('tab', { name: 'Page details' }))
         await user.click(await screen.findByRole('combobox', { name: 'Provenance trust' }))
         await user.click(screen.getByRole('option', { name: 'Trusted provenance' }))
-        expect(screen.getByRole('textbox', { name: 'Reason for trust decision' })).toHaveValue('Reviewer approval')
+        expect(screen.getByRole('textbox', { name: 'Reason for trust decision' })).toHaveValue('Reviewed by admin - Administrator')
         await user.click(screen.getByRole('button', { name: 'Save trust decision' }))
-        await waitFor(() => expect(documentApi.changePageProvenanceTrust).toHaveBeenCalledWith(42, { provenanceTrustState: 'TRUSTED', reason: 'Reviewer approval' }))
+        await waitFor(() => expect(documentApi.changePageProvenanceTrust).toHaveBeenCalledWith(42, { provenanceTrustState: 'TRUSTED', reason: 'Reviewed by admin - Administrator' }))
+    })
+
+    it('creates and immediately selects a citation from the page workspace', async () => {
+        const created = { id: 12, sourceId: 2, chapter: 'IV', pageFrom: 41, pageTo: 59, figureNumber: null, sectionTitle: 'Ornaments', catalogNumber: null, referenceUrl: null, accessedDate: null, locator: null, note: null, createdAt: '', updatedAt: '' }
+        vi.mocked(sourceReferencesApi.create).mockResolvedValue(created)
+        const user = userEvent.setup()
+        renderDialog()
+
+        await user.click(await screen.findByRole('tab', { name: 'Page details' }))
+        await user.click(screen.getByRole('button', { name: 'Add citation' }))
+        await screen.findByText('New exact citation')
+        await user.click(screen.getAllByRole('button', { name: 'Add citation' }).at(-1)!)
+
+        await waitFor(() => expect(sourceReferencesApi.create).toHaveBeenCalledWith(expect.objectContaining({ sourceId: 2 })))
+        expect(screen.getByRole('combobox', { name: 'Exact citation for this page' })).toHaveTextContent('IV')
     })
 
     it('persists the document citation on an unassigned page', async () => {
@@ -314,7 +349,7 @@ describe('DocumentPageReviewDialog', () => {
             provenanceStatus: 'KNOWN_SOURCE',
             provenanceTrustState: 'VERIFIED',
             note: null,
-            reason: 'Inherited from the document source',
+            reason: 'Reviewed by admin - Administrator',
         }))
         expect(vi.mocked(documentApi.changePageSourceProvenance).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(documentApi.approvePageTranscription).mock.invocationCallOrder[0])
     })

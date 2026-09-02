@@ -33,7 +33,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
         String normalizedUsername = normalize(username);
 
         User user = userRepository
-                .findByNormalizedUsername(normalizedUsername)
+                .findByNormalizedUsernameAndDeletedAtIsNull(normalizedUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid username or password"));
 
         Set<RoleName> roles = userRoleRepository

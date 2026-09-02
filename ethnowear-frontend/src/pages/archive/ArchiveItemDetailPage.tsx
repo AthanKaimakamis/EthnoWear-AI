@@ -16,7 +16,7 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { archiveMediaUrl } from '../../api/PublicArchiveApi'
@@ -26,6 +26,7 @@ import {
 } from '../../api/PublicQueryOptions'
 import { conceptPath } from '../../app/archiveRoutes'
 import MediaGallery, { type MediaGalleryItem } from '../../components/archive/MediaGallery'
+import ArchiveWorkspaceDialog from '../../components/archive/ArchiveWorkspaceDialog'
 import SourceCitation from '../../components/archive/SourceCitation'
 import { PreviewableImage } from '../../components/common/ImageViewerDialog'
 import PageLoading from '../../components/loading/PageLoading'
@@ -45,6 +46,7 @@ function humanizeLocalName(value: string) {
 
 function ArchiveItemDetailPage() {
     const { id } = useParams()
+    const navigate = useNavigate()
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const archiveItemId = Number(id)
@@ -61,7 +63,7 @@ function ArchiveItemDetailPage() {
 
         return new Map([
             ...reference.regions,
-            ...reference.regionalEmbroideryTypes,
+            ...reference.regionalEmbroideryTypes, ...reference.regionalMotifTypes,
             ...reference.motifs,
             ...reference.ornaments,
             ...reference.techniques,
@@ -124,9 +126,12 @@ function ArchiveItemDetailPage() {
     )
     const labelFor = (localName: string) => labels.get(localName) ?? humanizeLocalName(localName)
 
+    const close = () => navigateBackOr(navigate, '/archive/embroideries')
+
     return (
-        <Box sx={{ maxWidth: 1280, mx: 'auto', px: { xs: 2, sm: 3, md: 5 }, py: { xs: 2.5, md: 4 } }}>
-            <Button component={Link} to="/archive/embroideries" startIcon={<ArrowBackIcon />} sx={{ mb: { xs: 2, md: 3 } }}>
+        <ArchiveWorkspaceDialog onClose={close} labelledBy="archive-item-title">
+            <Box component="article">
+            <Button onClick={close} startIcon={<ArrowBackIcon />} sx={{ mb: { xs: 2, md: 3 } }}>
                 {t('archiveDetails.back')}
             </Button>
 
@@ -151,7 +156,8 @@ function ArchiveItemDetailPage() {
                         <Typography
                             variant="h3"
                             component="h1"
-                            sx={{ color: 'text.primary', fontWeight: 800, fontSize: { xs: '2rem', sm: '2.65rem' }, lineHeight: 1.08, m: 0 }}
+                            id="archive-item-title"
+                            sx={{ color: '#171917', fontWeight: 800, fontSize: { xs: '1.75rem', sm: '2.25rem' }, lineHeight: 1.12, m: 0, pr: 6 }}
                         >
                             {title}
                         </Typography>
@@ -176,7 +182,7 @@ function ArchiveItemDetailPage() {
             <Divider sx={{ my: { xs: 4, md: 5 } }} />
 
             <Stack spacing={{ xs: 4, md: 5 }}>
-                {(item.ontologyRegionalEmbroideryLocalName || item.ontologyRegionLocalName) && (
+                {(item.ontologyRegionalEmbroideryLocalName || item.ontologyRegionalMotifLocalName || item.ontologyRegionLocalName) && (
                     <Box component="section">
                         <SectionHeading
                             title={t('archiveDetails.classification')}
@@ -188,6 +194,13 @@ function ArchiveItemDetailPage() {
                                     type={t('archiveDetails.regionalStyle')}
                                     label={labelFor(item.ontologyRegionalEmbroideryLocalName)}
                                     to={conceptPath('REGIONAL_EMBROIDERY', item.ontologyRegionalEmbroideryLocalName)}
+                                />
+                            )}
+                            {item.ontologyRegionalMotifLocalName && (
+                                <ConceptRelationship
+                                    type={t('archiveDetails.regionalMotif')}
+                                    label={labelFor(item.ontologyRegionalMotifLocalName)}
+                                    to={conceptPath('REGIONAL_MOTIF', item.ontologyRegionalMotifLocalName)}
                                 />
                             )}
                             {item.ontologyRegionLocalName && (
@@ -244,8 +257,14 @@ function ArchiveItemDetailPage() {
                     <SourceCitation source={details.source} />
                 </Box>
             </Stack>
-        </Box>
+            </Box>
+        </ArchiveWorkspaceDialog>
     )
+}
+
+function navigateBackOr(navigate: ReturnType<typeof useNavigate>, fallback: string) {
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1)
+    else navigate(fallback)
 }
 
 function PrimaryMedia({

@@ -1,6 +1,7 @@
 package fmi.ethnowear.persistence.jpa.repository;
 
 import fmi.ethnowear.persistence.jpa.repository.document.*;
+import fmi.ethnowear.persistence.jpa.repository.ontology.OntologyVersionRepository;
 import fmi.ethnowear.persistence.jdbc.document.DocumentDeletionStore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -27,6 +28,9 @@ class PersistenceSmokeTest {
 
     @Autowired
     private KnowledgeChunkRepository knowledgeChunkRepository;
+
+    @Autowired
+    private OntologyVersionRepository ontologyVersionRepository;
 
     @Autowired
     private DocumentRepository documentRepository;
@@ -97,6 +101,11 @@ class PersistenceSmokeTest {
         assertThat(textSuggestionRepository.findAll(firstPage)).isNotNull();
         assertThat(provenanceEventRepository.findAll(firstPage)).isNotNull();
         assertThat(knowledgeChunkPageRepository.findAll(firstPage)).isNotNull();
+    }
+
+    @Test
+    void readsOntologyVersionMapping() {
+        assertThat(ontologyVersionRepository.findAll(PageRequest.of(0, 1))).isNotNull();
     }
 
     @Test

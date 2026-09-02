@@ -30,7 +30,8 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     @Query("""
             SELECT asset
             FROM MediaAsset asset
-            WHERE asset.origin <> :generatedOrigin
+            WHERE asset.origin IS NULL
+               OR asset.origin <> :generatedOrigin
                OR EXISTS (
                     SELECT figure.id
                     FROM DocumentPageFigure figure
@@ -50,7 +51,8 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
             FROM MediaAsset asset
             WHERE asset.id = :assetId
               AND (
-                    asset.origin <> :generatedOrigin
+                    asset.origin IS NULL
+                    OR asset.origin <> :generatedOrigin
                     OR EXISTS (
                         SELECT figure.id
                         FROM DocumentPageFigure figure
@@ -68,7 +70,16 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     @Query("""
             SELECT asset
             FROM MediaAsset asset
+            LEFT JOIN asset.sourceReference sourceReference
+            LEFT JOIN sourceReference.source source
             WHERE asset.id = :assetId
+              AND asset.publicDisplayAllowed = true
+              AND asset.storageState =
+                  fmi.ethnowear.domain.model.media.MediaStorageState.AVAILABLE
+              AND (
+                    sourceReference IS NULL
+                    OR source.publicDisplayAllowed = true
+              )
               AND (
                     NOT EXISTS (
                         SELECT figure.id

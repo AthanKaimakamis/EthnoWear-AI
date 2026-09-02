@@ -27,10 +27,44 @@ public record ArchiveItemDetails(
         String ontologyRegionLocalName,
         String ontologyRegionalEmbroideryIri,
         String ontologyRegionalEmbroideryLocalName,
+        String ontologyRegionalMotifIri,
+        String ontologyRegionalMotifLocalName,
         LocalDateTime submittedAt,
         LocalDateTime publishedAt,
         LocalDateTime archivedAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) implements IdentifiableDto {
+    public ArchiveItemDetails(
+            Long id,
+            Long sourceReferenceId,
+            String collectionId,
+            String inventoryNumber,
+            String titleBg,
+            String titleEn,
+            String descriptionBg,
+            String descriptionEn,
+            ArchiveType archiveType,
+            String periodText,
+            String originText,
+            String currentLocation,
+            TrustedLevel trustedLevel,
+            PublicationStatus publicationStatus,
+            String ontologyRegionIri,
+            String ontologyRegionLocalName,
+            String ontologyRegionalEmbroideryIri,
+            String ontologyRegionalEmbroideryLocalName,
+            LocalDateTime submittedAt,
+            LocalDateTime publishedAt,
+            LocalDateTime archivedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        this(id, sourceReferenceId, collectionId, inventoryNumber, titleBg, titleEn,
+                descriptionBg, descriptionEn, archiveType, periodText, originText,
+                currentLocation, trustedLevel, publicationStatus, ontologyRegionIri,
+                ontologyRegionLocalName, ontologyRegionalEmbroideryIri,
+                ontologyRegionalEmbroideryLocalName, null, null, submittedAt, publishedAt,
+                archivedAt, createdAt, updatedAt);
+    }
 }

@@ -56,6 +56,28 @@ public class OntologyEntityDetailReader {
                 .toList();
     }
 
+    public List<EntityOntologyDetails> listSummaries(FeatureType entityType, String languageTag) {
+        if(entityType == null)
+            throw new IllegalArgumentException("Ontology entity type is required");
+
+        OntologyLanguage language = OntologyLanguage.fromTag(languageTag);
+        Map<FeatureType, List<LocalizedOntologyResource>> localizedCache = new EnumMap<>(FeatureType.class);
+
+        return localized(localizedCache, entityType, language).stream()
+                .map(entity -> new EntityOntologyDetails(
+                        entityType,
+                        entity.iri(),
+                        entity.localName(),
+                        entity.label(),
+                        entity.altLabels(),
+                        entity.comment(),
+                        language.tag(),
+                        List.of(),
+                        Map.of()
+                ))
+                .toList();
+    }
+
     private @NonNull @Unmodifiable Map<FeatureType, List<EntityLinkDetails>> relationships(
             @NonNull FeatureType entityType,
             String localName,
@@ -70,6 +92,7 @@ public class OntologyEntityDetailReader {
                 put(result, FeatureType.COLOR, ontology.listColorsUsedByRegion(localName), language, localizedCache);
                 put(result, FeatureType.TECHNIQUE, ontology.listTechniquesUsedByRegion(localName), language, localizedCache);
                 put(result, FeatureType.REGIONAL_EMBROIDERY, ontology.listRegionalEmbroideriesForRegion(localName), language, localizedCache);
+                put(result, FeatureType.REGIONAL_MOTIF, ontology.listRegionalMotifsForRegion(localName), language, localizedCache);
             }
             case MOTIF -> {
                 put(result, FeatureType.REGION, ontology.listRegionsOfMotif(localName), language, localizedCache);
@@ -86,6 +109,8 @@ public class OntologyEntityDetailReader {
                 put(result, FeatureType.TECHNIQUE, ontology.listTechniquesOfEmbroidery(localName), language, localizedCache);
                 put(result, FeatureType.MOTIF, ontology.listMotifsOfEmbroidery(localName), language, localizedCache);
             }
+            case REGIONAL_MOTIF -> ontology.findRegionForRegionalMotif(localName)
+                    .ifPresent(region -> put(result, FeatureType.REGION, List.of(region), language, localizedCache));
             case ORNAMENT -> {
                 put(result, FeatureType.REGION, ontology.listRegionsUsingOrnament(localName), language, localizedCache);
                 put(result, FeatureType.MOTIF, ontology.listMotifsUsingOrnament(localName), language, localizedCache);
@@ -138,6 +163,7 @@ public class OntologyEntityDetailReader {
             case TECHNIQUE -> ontology.listLocalizedTechniques(language);
             case MOTIF -> ontology.listLocalizedMotifs(language);
             case REGIONAL_EMBROIDERY -> ontology.listLocalizedRegionalEmbroideryTypes(language);
+            case REGIONAL_MOTIF -> ontology.listLocalizedRegionalMotifTypes(language);
         });
     }
 

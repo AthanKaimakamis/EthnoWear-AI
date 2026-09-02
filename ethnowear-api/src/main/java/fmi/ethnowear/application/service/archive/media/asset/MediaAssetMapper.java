@@ -18,6 +18,11 @@ public class MediaAssetMapper {
     ) {
         asset.setSourceReference(reference);
         asset.setDescription(input.description());
+        asset.updateRights(
+                input.rightsStatus(),
+                input.license(),
+                input.publicDisplayAllowed()
+        );
     }
 
     public MediaAssetDetails toDetails(@NonNull MediaAsset asset) {
@@ -37,7 +42,8 @@ public class MediaAssetMapper {
                 asset.getFilePath(), asset.getStorageUrl(), asset.getMimeType(),
                 asset.getMediaType(), asset.getWidth(), asset.getHeight(),
                 asset.getSizeBytes(), asset.getChecksum(), asset.getThumbnailPath(),
-                asset.getDescription(), asset.getCreatedAt(), asset.getUpdatedAt(),
+                asset.getDescription(), asset.getRightsStatus(), asset.getLicense(),
+                asset.isPublicDisplayAllowed(), asset.getCreatedAt(), asset.getUpdatedAt(),
                 documentFigure
         );
     }

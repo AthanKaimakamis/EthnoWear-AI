@@ -256,6 +256,24 @@ class DocumentEndpointSecurityTest {
     }
 
     @Test
+    void protectsRegionDerivedTypeSynchronizationAsOntologyManagement() throws Exception {
+        String endpoint = "/api/admin/ontology/regions/synchronize-derived-types";
+
+        mockMvc.perform(post(endpoint))
+                .andExpect(status().isUnauthorized());
+
+        for (String role : List.of("ADMINISTRATOR", "EDITOR")) {
+            mockMvc.perform(post(endpoint)
+                            .header("Authorization", "Bearer " + validToken(role)))
+                    .andExpect(status().isOk());
+        }
+
+        mockMvc.perform(post(endpoint)
+                        .header("Authorization", "Bearer " + validToken("REVIEWER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void reservesUserManagementForAdministrators() throws Exception {
         mockMvc.perform(get("/api/admin/users/security-check")
                         .header("Authorization", "Bearer " + validToken("ADMINISTRATOR")))
@@ -662,6 +680,11 @@ class DocumentEndpointSecurityTest {
 
         @PostMapping("/api/admin/archive-entries/security-check")
         String mutateArchiveEntry() {
+            return "ok";
+        }
+
+        @PostMapping("/api/admin/ontology/regions/synchronize-derived-types")
+        String synchronizeRegionDerivedTypes() {
             return "ok";
         }
 

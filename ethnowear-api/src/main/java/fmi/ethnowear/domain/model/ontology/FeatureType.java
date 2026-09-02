@@ -14,5 +14,7 @@ public enum FeatureType {
     @EnumAlias({"region", "regions"})
     REGION,
     @EnumAlias({"regional-embroidery", "regional-embroideries", "regional_embroidery"})
-    REGIONAL_EMBROIDERY
+    REGIONAL_EMBROIDERY,
+    @EnumAlias({"regional-motif", "regional-motifs", "regional_motif"})
+    REGIONAL_MOTIF
 }

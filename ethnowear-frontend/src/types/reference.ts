@@ -24,9 +24,11 @@ export type ReferenceData = {
     techniques: ReferenceResource[]
     techniqueTypes: ReferenceResource[]
     motifs: ReferenceResource[]
+    regionalMotifTypes: ReferenceResource[]
     regionalEmbroideryTypes: ReferenceResource[]
     regionsByRegionGroup: Record<string, string[]>
     regionByRegionalEmbroidery: Record<string, string>
+    regionByRegionalMotif: Record<string, string>
     ornamentsByRegion: Record<string, string[]>
     techniquesByRegion: Record<string, string[]>
     ornamentsByType: Record<string, string[]>

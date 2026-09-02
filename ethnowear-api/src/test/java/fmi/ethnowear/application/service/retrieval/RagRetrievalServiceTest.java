@@ -45,6 +45,7 @@ class RagRetrievalServiceTest {
                     3,
                     30,
                     1_000,
+                    0.42,
                     Duration.ofSeconds(15),
                     Duration.ofSeconds(10)
             ),
@@ -90,7 +91,72 @@ class RagRetrievalServiceTest {
 
         assertEquals(1, result.resultCount());
         assertEquals(List.of(passage), result.passages());
+        assertEquals(false, result.insufficientEvidence());
         verify(vectorSearchGateway).search(embedding, 15);
+    }
+
+    @Test
+    void acceptsCandidateAtConfiguredThreshold() {
+        QueryEmbedding embedding = embedding("bge-m3", DIMENSIONS);
+        VectorSearchCandidate candidate = new VectorSearchCandidate(101L, 0.42, "hash");
+        KnowledgeChunk chunk = chunk(101L);
+        GroundedPassageDetails passage = passage(101L, 0.42);
+
+        when(embeddingGateway.embed("граничен въпрос")).thenReturn(embedding);
+        when(vectorSearchGateway.search(embedding, 15)).thenReturn(List.of(candidate));
+        when(chunkRepository.findRetrievalCandidatesByIdIn(List.of(101L))).thenReturn(List.of(chunk));
+        when(pageRepository.findRetrievalPagesByChunkIdIn(List.of(101L))).thenReturn(List.of());
+        when(validator.isEligible(chunk, candidate, List.of())).thenReturn(true);
+        when(mapper.toDetails(chunk, candidate, List.of())).thenReturn(passage);
+
+        GroundedRetrievalDetails result = service.retrieve(
+                new GroundedRetrievalQuery("граничен въпрос", 5)
+        );
+
+        assertEquals(List.of(passage), result.passages());
+        assertEquals(false, result.insufficientEvidence());
+    }
+
+    @Test
+    void returnsInsufficientEvidenceForUnrelatedScoreBelowThreshold() {
+        assertFilteredAsInsufficient(0.4199);
+    }
+
+    @Test
+    void returnsInsufficientEvidenceForNegativeScore() {
+        assertFilteredAsInsufficient(-0.2);
+    }
+
+    @Test
+    void rejectsMalformedSimilarityScores() {
+        QueryEmbedding embedding = embedding("bge-m3", DIMENSIONS);
+        when(embeddingGateway.embed("невалиден резултат")).thenReturn(embedding);
+        when(vectorSearchGateway.search(embedding, 15)).thenReturn(List.of(
+                new VectorSearchCandidate(101L, Double.NaN, "hash")
+        ));
+
+        assertThrows(
+                RetrievalUnavailableException.class,
+                () -> service.retrieve(new GroundedRetrievalQuery("невалиден резултат", 5))
+        );
+
+        verifyNoInteractions(chunkRepository, pageRepository);
+    }
+
+    @Test
+    void rejectsSimilarityOutsideCosineRange() {
+        QueryEmbedding embedding = embedding("bge-m3", DIMENSIONS);
+        when(embeddingGateway.embed("невалиден диапазон")).thenReturn(embedding);
+        when(vectorSearchGateway.search(embedding, 15)).thenReturn(List.of(
+                new VectorSearchCandidate(101L, 1.01, "hash")
+        ));
+
+        assertThrows(
+                RetrievalUnavailableException.class,
+                () -> service.retrieve(new GroundedRetrievalQuery("невалиден диапазон", 5))
+        );
+
+        verifyNoInteractions(chunkRepository, pageRepository);
     }
 
     @Test
@@ -112,6 +178,23 @@ class RagRetrievalServiceTest {
                 model,
                 dimensions
         );
+    }
+
+    private void assertFilteredAsInsufficient(double similarity) {
+        QueryEmbedding embedding = embedding("bge-m3", DIMENSIONS);
+        when(embeddingGateway.embed("несвързан въпрос")).thenReturn(embedding);
+        when(vectorSearchGateway.search(embedding, 15)).thenReturn(List.of(
+                new VectorSearchCandidate(101L, similarity, "hash")
+        ));
+
+        GroundedRetrievalDetails result = service.retrieve(
+                new GroundedRetrievalQuery("несвързан въпрос", 5)
+        );
+
+        assertEquals(0, result.resultCount());
+        assertEquals(List.of(), result.passages());
+        assertEquals(true, result.insufficientEvidence());
+        verifyNoInteractions(chunkRepository, pageRepository);
     }
 
     private KnowledgeChunk chunk(Long id) {

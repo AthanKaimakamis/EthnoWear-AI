@@ -84,7 +84,7 @@ class PasswordChangeServiceTest {
                 UserRepository.class.getClassLoader(),
                 new Class<?>[]{UserRepository.class},
                 (proxy, method, arguments) -> switch (method.getName()) {
-                    case "findById" -> Optional.of(user);
+                    case "findByIdAndDeletedAtIsNull" -> Optional.of(user);
                     case "saveAndFlush" -> {
                         saved.set((User) arguments[0]);
                         yield arguments[0];

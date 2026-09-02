@@ -22,12 +22,13 @@ import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined'
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined'
 import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined'
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminAuth } from '../../app/adminAuth'
-import { administratorRoles, hasAnyRole, managementRoles, processingReadRoles, reviewRoles, type RoleName } from '../../app/permissions'
+import { administratorRoles, hasAnyRole, managementRoles, processingReadRoles, reviewRoles, rightsManagementRoles, type RoleName } from '../../app/permissions'
 import { ManagementEventsProvider } from '../../app/ManagementEventsProvider'
 
 const drawerWidth = 248
@@ -44,6 +45,8 @@ const ontologyItems: NavigationItem[] = [
     { path: '/management/motifs', key: 'motifs', icon: HubOutlinedIcon, roles: managementRoles },
     { path: '/management/regions', key: 'regions', icon: MapOutlinedIcon, roles: managementRoles },
     { path: '/management/regional-embroideries', key: 'regionalEmbroideries', icon: TextureOutlinedIcon, roles: managementRoles },
+    { path: '/management/regional-motifs', key: 'regionalMotifs', icon: HubOutlinedIcon, roles: managementRoles },
+    { path: '/management/ontology/versions', key: 'ontologyVersions', icon: HistoryOutlinedIcon, roles: administratorRoles },
 ]
 
 const primaryItems: NavigationItem[] = [
@@ -54,10 +57,10 @@ const primaryItems: NavigationItem[] = [
 ]
 const archiveItems: NavigationItem[] = [
     { path: '/management/advanced/archive-items', key: 'archiveitems', icon: Inventory2OutlinedIcon, roles: reviewRoles },
-    { path: '/management/advanced/sources', key: 'sources', icon: MenuBookOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/sources', key: 'sources', icon: MenuBookOutlinedIcon, roles: rightsManagementRoles },
     { path: '/management/advanced/source-references', key: 'sourcereferences', icon: BookmarkBorderOutlinedIcon, roles: reviewRoles },
     { path: '/management/advanced/archive-item-features', key: 'archiveitemfeatures', icon: FactCheckOutlinedIcon, roles: reviewRoles },
-    { path: '/management/advanced/media-assets', key: 'mediaassets', icon: PermMediaOutlinedIcon, roles: reviewRoles },
+    { path: '/management/advanced/media-assets', key: 'mediaassets', icon: PermMediaOutlinedIcon, roles: rightsManagementRoles },
     { path: '/management/advanced/archive-item-media', key: 'archiveitemmedia', icon: LinkOutlinedIcon, roles: reviewRoles },
     { path: '/management/advanced/media-feature-annotations', key: 'mediafeatureannotations', icon: CropFreeOutlinedIcon, roles: reviewRoles },
     { path: '/management/advanced/knowledge-chunks', key: 'knowledgechunks', icon: ArticleOutlinedIcon, roles: reviewRoles },
@@ -78,7 +81,7 @@ function AdminLayout() {
     const visibleArchiveItems = archiveItems.filter(item => admin && hasAnyRole(admin.roles, item.roles))
 
     const navigation = (
-        <Box sx={{ width: drawerWidth, minHeight: 'calc(100vh - 68px)', py: 2, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ width: drawerWidth, minHeight: 'calc(100dvh - 68px)', py: 2, display: 'flex', flexDirection: 'column' }}>
             <List sx={{ px: 1.25 }}>
                 {visiblePrimaryItems.map((item) => {
                     const Icon = item.icon
@@ -127,7 +130,7 @@ function AdminLayout() {
                                     }}
                                 >
                                     <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}><Icon fontSize="small" /></ListItemIcon>
-                                    <ListItemText primary={t(`admin.entities.${item.key}`)} />
+                                    <ListItemText primary={item.key === 'ontologyVersions' ? t('ontologyVersions.navigation') : t(`admin.entities.${item.key}`)} />
                                 </ListItemButton>
                             )
                         })}
@@ -160,7 +163,7 @@ function AdminLayout() {
     )
 
     return (
-        <ManagementEventsProvider><Box sx={{ display: 'flex', minHeight: 'calc(100vh - 68px)' }}>
+        <ManagementEventsProvider><Box sx={{ display: 'flex', minHeight: 'calc(100dvh - 68px)' }}>
             {desktop ? (
                 <Box component="aside" sx={{ width: drawerWidth, flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
                     {navigation}

@@ -432,6 +432,8 @@ BEGIN
       AND [SourceTextSuggestionIssueOrdinal] IS NOT NULL;
 END;
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 SET XACT_ABORT ON;
 SET NOCOUNT ON;
 
@@ -447,21 +449,34 @@ BEGIN
     ADD [FigureExtractionState] NVARCHAR(50) NOT NULL
         CONSTRAINT [DF_DocumentPageOcrResults_FigureExtractionState]
         DEFAULT N'NOT_REQUESTED';
+END;
 
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID(N'ethnowear.DocumentPageOcrResults')
+      AND name = N'FigureExtractionMessage'
+)
+BEGIN
     ALTER TABLE [ethnowear].[DocumentPageOcrResults]
     ADD [FigureExtractionMessage] NVARCHAR(500) NULL;
+END;
 
-    ALTER TABLE [ethnowear].[DocumentPageOcrResults]
+IF OBJECT_ID(N'ethnowear.CK_DocumentPageOcrResults_FigureExtractionState', N'C') IS NULL
+BEGIN
+    EXEC(N'ALTER TABLE [ethnowear].[DocumentPageOcrResults]
     ADD CONSTRAINT [CK_DocumentPageOcrResults_FigureExtractionState]
         CHECK ([FigureExtractionState] IN (
-            N'NOT_REQUESTED', N'PENDING', N'COMPLETED', N'FAILED',
-            N'SCHEDULING_FAILED', N'OUTDATED'
-        ));
+            N''NOT_REQUESTED'', N''PENDING'', N''COMPLETED'', N''FAILED'',
+            N''SCHEDULING_FAILED'', N''OUTDATED''
+        ));');
+END;
 
-    ALTER TABLE [ethnowear].[DocumentPageOcrResults]
+IF OBJECT_ID(N'ethnowear.CK_DocumentPageOcrResults_FigureExtractionMessage', N'C') IS NULL
+BEGIN
+    EXEC(N'ALTER TABLE [ethnowear].[DocumentPageOcrResults]
     ADD CONSTRAINT [CK_DocumentPageOcrResults_FigureExtractionMessage]
         CHECK ([FigureExtractionMessage] IS NULL
-            OR LEN([FigureExtractionMessage]) BETWEEN 1 AND 500);
+            OR LEN([FigureExtractionMessage]) BETWEEN 1 AND 500);');
 END;
 
 IF OBJECT_ID(N'ethnowear.DocumentPageFigureCandidates', N'U') IS NULL
@@ -580,6 +595,18 @@ BEGIN
     ON [ethnowear].[DocumentPageFigures] ([DocumentPageMediaId]);
 END;
 
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'ethnowear.DocumentPageFigures')
+      AND name = N'IX_DocumentPageFigures_MediaAsset_ReviewState'
+)
+BEGIN
+    CREATE INDEX [IX_DocumentPageFigures_MediaAsset_ReviewState]
+    ON [ethnowear].[DocumentPageFigures] ([MediaAssetId], [ReviewState])
+    INCLUDE ([DocumentPageId], [SourceReferenceId], [FigureOrdinal]);
+END;
+
 DECLARE @JobConstraintName SYSNAME;
 SELECT @JobConstraintName = cc.name
 FROM sys.check_constraints cc
@@ -602,5 +629,207 @@ CHECK ([JobType] IN (
 ));
 
 COMMIT TRANSACTION;
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF COL_LENGTH(N'ethnowear.Sources', N'RightsStatus') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[Sources]
+    ADD [RightsStatus] NVARCHAR(30) NOT NULL
+        CONSTRAINT [DF_Sources_RightsStatus] DEFAULT N'UNKNOWN' WITH VALUES;
+END;
+
+IF COL_LENGTH(N'ethnowear.Sources', N'License') IS NULL
+    ALTER TABLE [ethnowear].[Sources] ADD [License] NVARCHAR(500) NULL;
+
+IF COL_LENGTH(N'ethnowear.Sources', N'PublicDisplayAllowed') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[Sources]
+    ADD [PublicDisplayAllowed] BIT NOT NULL
+        CONSTRAINT [DF_Sources_PublicDisplayAllowed] DEFAULT (0) WITH VALUES;
+END;
+
+IF COL_LENGTH(N'ethnowear.MediaAssets', N'RightsStatus') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[MediaAssets]
+    ADD [RightsStatus] NVARCHAR(30) NOT NULL
+        CONSTRAINT [DF_MediaAssets_RightsStatus] DEFAULT N'UNKNOWN' WITH VALUES;
+END;
+
+IF COL_LENGTH(N'ethnowear.MediaAssets', N'License') IS NULL
+    ALTER TABLE [ethnowear].[MediaAssets] ADD [License] NVARCHAR(500) NULL;
+
+IF COL_LENGTH(N'ethnowear.MediaAssets', N'PublicDisplayAllowed') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[MediaAssets]
+    ADD [PublicDisplayAllowed] BIT NOT NULL
+        CONSTRAINT [DF_MediaAssets_PublicDisplayAllowed] DEFAULT (0) WITH VALUES;
+END;
+
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE [name] = N'CK_Sources_RightsStatus')
+    ALTER TABLE [ethnowear].[Sources] ADD CONSTRAINT [CK_Sources_RightsStatus]
+        CHECK ([RightsStatus] IN (N'UNKNOWN', N'PUBLIC_DOMAIN', N'LICENSED', N'RESTRICTED'));
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE [name] = N'CK_Sources_License')
+    ALTER TABLE [ethnowear].[Sources] ADD CONSTRAINT [CK_Sources_License]
+        CHECK ([RightsStatus] <> N'LICENSED'
+            OR ([License] IS NOT NULL AND LEN(LTRIM(RTRIM([License]))) > 0));
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE [name] = N'CK_Sources_PublicDisplay')
+    ALTER TABLE [ethnowear].[Sources] ADD CONSTRAINT [CK_Sources_PublicDisplay]
+        CHECK ([PublicDisplayAllowed] = 0
+            OR [RightsStatus] IN (N'PUBLIC_DOMAIN', N'LICENSED'));
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE [name] = N'CK_MediaAssets_RightsStatus')
+    ALTER TABLE [ethnowear].[MediaAssets] ADD CONSTRAINT [CK_MediaAssets_RightsStatus]
+        CHECK ([RightsStatus] IN (N'UNKNOWN', N'PUBLIC_DOMAIN', N'LICENSED', N'RESTRICTED'));
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE [name] = N'CK_MediaAssets_License')
+    ALTER TABLE [ethnowear].[MediaAssets] ADD CONSTRAINT [CK_MediaAssets_License]
+        CHECK ([RightsStatus] <> N'LICENSED'
+            OR ([License] IS NOT NULL AND LEN(LTRIM(RTRIM([License]))) > 0));
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE [name] = N'CK_MediaAssets_PublicDisplay')
+    ALTER TABLE [ethnowear].[MediaAssets] ADD CONSTRAINT [CK_MediaAssets_PublicDisplay]
+        CHECK ([PublicDisplayAllowed] = 0
+            OR [RightsStatus] IN (N'PUBLIC_DOMAIN', N'LICENSED'));
+
+IF COL_LENGTH(N'ethnowear.ArchiveItems', N'OntologyRegionalMotifIri') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[ArchiveItems]
+        ADD [OntologyRegionalMotifIri] NVARCHAR(1000) NULL;
+END;
+
+GO
+
+IF COL_LENGTH(N'ethnowear.ArchiveItems', N'OntologyRegionalMotifLocalName') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[ArchiveItems]
+        ADD [OntologyRegionalMotifLocalName] NVARCHAR(200) NULL;
+END;
+
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE [name] = N'CK_ArchiveItems_RegionalMotifIdentity'
+)
+BEGIN
+    ALTER TABLE [ethnowear].[ArchiveItems] WITH CHECK
+        ADD CONSTRAINT [CK_ArchiveItems_RegionalMotifIdentity]
+        CHECK (([OntologyRegionalMotifIri] IS NULL AND [OntologyRegionalMotifLocalName] IS NULL)
+            OR ([OntologyRegionalMotifIri] IS NOT NULL AND [OntologyRegionalMotifLocalName] IS NOT NULL));
+END;
+
+GO
+
+IF EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE [name] = N'CK_ArchiveItemFeatures_FeatureType'
+)
+    ALTER TABLE [ethnowear].[ArchiveItemFeatures]
+        DROP CONSTRAINT [CK_ArchiveItemFeatures_FeatureType];
+GO
+
+ALTER TABLE [ethnowear].[ArchiveItemFeatures] WITH CHECK
+    ADD CONSTRAINT [CK_ArchiveItemFeatures_FeatureType]
+    CHECK ([FeatureType] IN (
+        N'ORNAMENT', N'COLOR', N'TECHNIQUE', N'MOTIF',
+        N'REGION', N'REGIONAL_EMBROIDERY', N'REGIONAL_MOTIF'
+    ));
+GO
+
+IF EXISTS (
+    SELECT 1 FROM sys.check_constraints
+    WHERE [name] = N'CK_MediaEntityLinks_EntityType'
+)
+    ALTER TABLE [ethnowear].[MediaEntityLinks]
+        DROP CONSTRAINT [CK_MediaEntityLinks_EntityType];
+GO
+
+ALTER TABLE [ethnowear].[MediaEntityLinks] WITH CHECK
+    ADD CONSTRAINT [CK_MediaEntityLinks_EntityType]
+    CHECK ([EntityType] IN (
+        N'REGION', N'REGIONAL_EMBROIDERY', N'REGIONAL_MOTIF',
+        N'MOTIF', N'ORNAMENT', N'TECHNIQUE', N'COLOR'
+    ));
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'ethnowear.ArchiveItems')
+      AND [name] = N'IX_ArchiveItems_OntologyRegionalMotifLocalName'
+)
+BEGIN
+    CREATE INDEX [IX_ArchiveItems_OntologyRegionalMotifLocalName]
+        ON [ethnowear].[ArchiveItems] ([OntologyRegionalMotifLocalName]);
+END;
+
+GO
+
+IF COL_LENGTH(N'ethnowear.Users', N'DeletedAt') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[Users]
+        ADD [DeletedAt] DATETIME2(7) NULL;
+END;
+
+GO
+
+IF COL_LENGTH(N'ethnowear.Users', N'DeletedByUserId') IS NULL
+BEGIN
+    ALTER TABLE [ethnowear].[Users]
+        ADD [DeletedByUserId] BIGINT NULL;
+END;
+
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE [name] = N'FK_Users_DeletedByUser'
+)
+BEGIN
+    ALTER TABLE [ethnowear].[Users] WITH CHECK
+        ADD CONSTRAINT [FK_Users_DeletedByUser]
+        FOREIGN KEY ([DeletedByUserId])
+        REFERENCES [ethnowear].[Users] ([Id]);
+END;
+
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE [name] = N'CK_Users_Deletion'
+)
+BEGIN
+    ALTER TABLE [ethnowear].[Users] WITH CHECK
+        ADD CONSTRAINT [CK_Users_Deletion]
+        CHECK (
+            ([DeletedAt] IS NULL AND [DeletedByUserId] IS NULL)
+            OR ([DeletedAt] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Enabled] = 0)
+        );
+END;
+
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'ethnowear.Users')
+      AND [name] = N'IX_Users_DeletedByUserId'
+)
+BEGIN
+    CREATE INDEX [IX_Users_DeletedByUserId]
+        ON [ethnowear].[Users] ([DeletedByUserId])
+        WHERE [DeletedByUserId] IS NOT NULL;
+END;
+
+GO
 
 GO

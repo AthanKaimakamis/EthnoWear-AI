@@ -16,6 +16,13 @@ export type TrustedLevel = 'VERIFIED' | 'LIKELY' | 'UNVERIFIED'
 export type PublicationStatus = 'DRAFT' | 'IN_REVIEW' | 'PUBLISHED' | 'ARCHIVED'
 export type MediaType = 'IMAGE' | 'PDF' | 'THUMBNAIL' | 'SCAN' | 'OTHER'
 export type MediaRole = 'PRIMARY' | 'DETAIL' | 'SOURCE_SCAN' | 'THUMBNAIL' | 'OTHER'
+export type RightsStatus = 'UNKNOWN' | 'PUBLIC_DOMAIN' | 'LICENSED' | 'RESTRICTED'
+
+export type RightsFields = {
+    rightsStatus?: RightsStatus
+    license?: string | null
+    publicDisplayAllowed?: boolean
+}
 export type MediaFeatureAnnotationType =
     | 'VISIBLE_IN_IMAGE'
     | 'PRIMARY_SUBJECT'
@@ -30,6 +37,7 @@ export type KnowledgeChunkType =
     | 'MOTIF'
     | 'COLOR'
     | 'REGIONAL_EMBROIDERY'
+    | 'REGIONAL_MOTIF'
     | 'SOURCE_EXCERPT'
 
 export type SourceType =
@@ -57,6 +65,8 @@ export type ArchiveItemWriteDto = {
     ontologyRegionLocalName: string | null
     ontologyRegionalEmbroideryIri: string | null
     ontologyRegionalEmbroideryLocalName: string | null
+    ontologyRegionalMotifIri: string | null
+    ontologyRegionalMotifLocalName: string | null
 }
 
 export type ArchiveItemDetails = ArchiveItemWriteDto & {
@@ -86,7 +96,7 @@ export type ArchiveItemFeatureDetails = ArchiveItemFeatureWriteDto & {
     updatedAt: string
 }
 
-export type SourceWriteDto = {
+export type SourceWriteDto = RightsFields & {
     title: string
     author: string | null
     publisher: string | null
@@ -129,7 +139,7 @@ export type SourceReferenceDetails = SourceReferenceWriteDto & {
     updatedAt: string
 }
 
-export type MediaAssetWriteDto = {
+export type MediaAssetWriteDto = RightsFields & {
     sourceReferenceId: number | null
     fileName: string | null
     filePath: string | null
@@ -140,6 +150,7 @@ export type MediaAssetWriteDto = {
     height: number | null
     sizeBytes: number | null
     checksum: string | null
+    description?: string | null
 }
 
 export type MediaAssetDetails = MediaAssetWriteDto & {
@@ -351,6 +362,17 @@ export type RegionalEmbroideryArchiveSectionDetails = {
 export type RegionalEmbroideryArchiveOverviewDetails = {
     language: string
     sections: RegionalEmbroideryArchiveSectionDetails[]
+}
+
+export type RegionalMotifArchiveSectionDetails = {
+    regionalMotif: EntityCardDetails
+    totalItems: number
+    previewItems: ArchiveEvidenceDetails[]
+}
+
+export type RegionalMotifArchiveOverviewDetails = {
+    language: string
+    sections: RegionalMotifArchiveSectionDetails[]
 }
 
 export type ArchiveEntryDetails = {

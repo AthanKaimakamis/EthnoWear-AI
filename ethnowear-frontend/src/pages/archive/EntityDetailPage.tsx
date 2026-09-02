@@ -5,7 +5,6 @@ import {
     Breadcrumbs,
     Button,
     Chip,
-    Divider,
     Grid,
     Link as MuiLink,
     LinearProgress,
@@ -14,7 +13,7 @@ import {
     Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { entityDetailsQueryOptions } from '../../api/PublicQueryOptions'
@@ -23,6 +22,7 @@ import {
     featureTypeFromRouteSegment,
 } from '../../app/archiveRoutes'
 import ArchiveEvidenceCard from '../../components/archive/ArchiveEvidenceCard'
+import ArchiveWorkspaceDialog from '../../components/archive/ArchiveWorkspaceDialog'
 import MediaGallery, { type MediaGalleryItem } from '../../components/archive/MediaGallery'
 import RelatedEntitySection from '../../components/archive/RelatedEntitySection'
 import SourceCitation from '../../components/archive/SourceCitation'
@@ -35,6 +35,7 @@ import type { Language } from '../../types/reference'
 
 function EntityDetailPage() {
     const { entityType: entityTypeSegment, localName } = useParams()
+    const navigate = useNavigate()
     const { t, i18n } = useTranslation()
     const language: Language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const entityType = featureTypeFromRouteSegment(entityTypeSegment)
@@ -97,32 +98,32 @@ function EntityDetailPage() {
         OntologyFeatureType,
         EntityLinkDetails[],
     ][]
+    const visibleRelatedEntries = relatedEntries.filter(([, items]) => items.length > 0)
+    const hasSidebar = visibleRelatedEntries.length > 0 || details.content.sources.length > 0
+
+    const close = () => navigateBackOr(navigate, conceptCollectionPath(entityType))
 
     return (
-        <Box sx={{ maxWidth: 1240, mx: 'auto', px: { xs: 2, md: 5 }, py: { xs: 3, md: 5 } }}>
-            <Stack spacing={4}>
+        <ArchiveWorkspaceDialog onClose={close} labelledBy="archive-concept-title">
+            <Stack component="article" spacing={0}>
                 {detailsQuery.isFetching && <LinearProgress aria-label={t('entityDetails.loading')} />}
-                <Breadcrumbs aria-label={t('entityDetails.breadcrumbs')}>
-                    <MuiLink component={Link} to={conceptCollectionPath(entityType)} color="inherit">
-                        {t(`entityTypes.${entityType}`)}
-                    </MuiLink>
-                    <Typography color="text.primary">{ontology.label}</Typography>
-                </Breadcrumbs>
-
-                <Box component="header">
-                    <Button
-                        component={Link}
-                        to={conceptCollectionPath(entityType)}
-                        startIcon={<ArrowBackIcon />}
-                        sx={{ mb: 2 }}
-                    >
-                        {t('entityDetails.back')}
-                    </Button>
-                    <Typography variant="h3" component="h1" sx={{ fontWeight: 800 }}>
+                <Box component="header" sx={{ borderTop: 4, borderColor: 'primary.main', bgcolor: '#F1F3F1', px: { xs: 2, md: 4 }, py: { xs: 2.5, md: 3.5 } }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', pr: 5 }}>
+                        <Breadcrumbs aria-label={t('entityDetails.breadcrumbs')}>
+                            <MuiLink component={Link} to={conceptCollectionPath(entityType)} color="inherit">
+                                {t(`entityTypes.${entityType}`)}
+                            </MuiLink>
+                            <Typography color="text.primary">{ontology.label}</Typography>
+                        </Breadcrumbs>
+                        <Button onClick={close} startIcon={<ArrowBackIcon />} sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}>
+                            {t('entityDetails.back')}
+                        </Button>
+                    </Stack>
+                    <Typography id="archive-concept-title" component="h1" sx={{ mt: 3, color: '#171917', fontWeight: 900, pr: 6, fontSize: { xs: '2rem', md: '2.75rem' }, lineHeight: 1.08 }}>
                         {ontology.label}
                     </Typography>
                     {ontology.comment && (
-                        <Typography variant="h6" color="text.secondary" sx={{ mt: 1.5, maxWidth: 900, fontWeight: 400 }}>
+                        <Typography color="text.secondary" sx={{ mt: 1.5, maxWidth: 920, fontSize: '1.05rem', lineHeight: 1.65 }}>
                             {ontology.comment}
                         </Typography>
                     )}
@@ -133,67 +134,63 @@ function EntityDetailPage() {
                     </Box>
                 </Box>
 
-                <Divider />
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: hasSidebar ? 'minmax(0, 2fr) minmax(280px, .8fr)' : '1fr' }, gap: { xs: 4, lg: 6 }, px: { xs: 1, md: 4 }, py: { xs: 4, md: 5 } }}>
+                    <Stack spacing={5} sx={{ minWidth: 0 }}>
+                        <MediaGallery title={t('entityDetails.media')} items={mediaItems} />
 
-                {relatedEntries.map(([type, items]) => (
-                    <RelatedEntitySection
-                        key={type}
-                        title={t('entityDetails.related', { type: t(`entityTypes.${type}`) })}
-                        entityType={type}
-                        items={items}
-                    />
-                ))}
+                        {details.evidence.content.length > 0 && (
+                            <Box component="section">
+                                <Stack spacing={2.5}>
+                                    <Box sx={{ pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+                                        <Typography variant="h4" sx={{ fontWeight: 850, fontSize: { xs: '1.5rem', md: '1.8rem' } }}>
+                                            {t('entityDetails.archiveEvidence')}
+                                        </Typography>
+                                        <Typography color="text.secondary" sx={{ mt: .5 }}>
+                                            {t('entityDetails.archiveEvidenceCount', { count: details.evidence.totalElements })}
+                                        </Typography>
+                                    </Box>
 
-                <MediaGallery title={t('entityDetails.media')} items={mediaItems} />
-
-                {details.evidence.content.length > 0 && (
-                    <Box component="section">
-                        <Stack spacing={2}>
-                            <Box>
-                                <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                                    {t('entityDetails.archiveEvidence')}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    {t('entityDetails.archiveEvidenceCount', { count: details.evidence.totalElements })}
-                                </Typography>
-                            </Box>
-
-                            <Grid container spacing={2.5}>
-                                {details.evidence.content.map((item) => (
-                                    <Grid key={item.archiveItemId} size={{ xs: 12, sm: 6, lg: 4 }}>
-                                        <ArchiveEvidenceCard item={item} language={language} />
+                                    <Grid container spacing={2.5}>
+                                        {details.evidence.content.map((item) => (
+                                            <Grid key={item.archiveItemId} size={{ xs: 12, sm: details.evidence.content.length === 1 ? 12 : 6 }}>
+                                                <ArchiveEvidenceCard item={item} language={language} featured={details.evidence.content.length === 1} />
+                                            </Grid>
+                                        ))}
                                     </Grid>
-                                ))}
-                            </Grid>
 
-                            {details.evidence.totalPages > 1 && (
-                                <Pagination
-                                    count={details.evidence.totalPages}
-                                    page={evidencePage}
-                                    onChange={(_, page) => setEvidencePage(page)}
-                                    color="primary"
-                                    sx={{ alignSelf: 'center' }}
-                                />
+                                    {details.evidence.totalPages > 1 && (
+                                        <Pagination count={details.evidence.totalPages} page={evidencePage} onChange={(_, page) => setEvidencePage(page)} color="primary" sx={{ alignSelf: 'center' }} />
+                                    )}
+                                </Stack>
+                            </Box>
+                        )}
+                    </Stack>
+
+                    {hasSidebar && (
+                        <Stack component="aside" spacing={4} sx={{ minWidth: 0, borderLeft: { lg: 1 }, borderColor: 'divider', pl: { lg: 4 }, alignSelf: 'start' }}>
+                            {visibleRelatedEntries.map(([type, items]) => (
+                                <RelatedEntitySection key={type} title={t('entityDetails.related', { type: t(`entityTypes.${type}`) })} entityType={type} items={items} />
+                            ))}
+
+                            {details.content.sources.length > 0 && (
+                                <Box component="section">
+                                    <Stack spacing={2}>
+                                        <Typography variant="h5" sx={{ fontWeight: 800 }}>{t('entityDetails.sources')}</Typography>
+                                        {details.content.sources.map((source) => <SourceCitation key={source.sourceReferenceId} source={source} />)}
+                                    </Stack>
+                                </Box>
                             )}
                         </Stack>
-                    </Box>
-                )}
-
-                {details.content.sources.length > 0 && (
-                    <Box component="section">
-                        <Stack spacing={2}>
-                            <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                                {t('entityDetails.sources')}
-                            </Typography>
-                            {details.content.sources.map((source) => (
-                                <SourceCitation key={source.sourceReferenceId} source={source} />
-                            ))}
-                        </Stack>
-                    </Box>
-                )}
+                    )}
+                </Box>
             </Stack>
-        </Box>
+        </ArchiveWorkspaceDialog>
     )
 }
 
 export default EntityDetailPage
+
+function navigateBackOr(navigate: ReturnType<typeof useNavigate>, fallback: string) {
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1)
+    else navigate(fallback)
+}

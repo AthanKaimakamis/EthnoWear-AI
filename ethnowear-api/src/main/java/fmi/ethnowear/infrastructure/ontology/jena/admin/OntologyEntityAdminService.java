@@ -5,7 +5,9 @@ import fmi.ethnowear.application.exception.OntologyEntityException;
 import fmi.ethnowear.domain.constant.ontology.OntologyTerms;
 import fmi.ethnowear.application.dto.ontology.admin.OntologyEntityCommand;
 import fmi.ethnowear.application.dto.ontology.admin.OntologyEntityDetails;
+import fmi.ethnowear.application.dto.ontology.admin.RegionDerivedTypeSynchronizationDetails;
 import fmi.ethnowear.application.port.ontology.admin.OntologyEntityAdminPort;
+import fmi.ethnowear.application.port.ontology.admin.OntologyUsageGuard;
 import fmi.ethnowear.domain.model.ontology.OntologyReference;
 import fmi.ethnowear.infrastructure.ontology.jena.JenaOntologyStore;
 import org.apache.jena.ontology.Individual;
@@ -15,6 +17,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
@@ -31,11 +34,29 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
     private static final Property SKOS_ALT_LABEL = ResourceFactory.createProperty(
             "http://www.w3.org/2004/02/skos/core#", "altLabel");
     private static final Pattern LOCAL_NAME = Pattern.compile("[A-Za-z][A-Za-z0-9_]*");
+    private static final List<DerivedRegionTypeDefinition> DERIVED_REGION_TYPES = List.of(
+            new DerivedRegionTypeDefinition(
+                    OntologyEntityKind.REGIONAL_EMBROIDERY,
+                    OntologyTerms.ObjectProperties.HAS_REGION,
+                    "Embroidery",
+                    "Шевица - ",
+                    "Embroidery - "
+            ),
+            new DerivedRegionTypeDefinition(
+                    OntologyEntityKind.REGIONAL_MOTIF,
+                    OntologyTerms.ObjectProperties.MOTIF_HAS_REGION,
+                    "Motif",
+                    "Мотив - ",
+                    "Motif - "
+            )
+    );
 
     private final JenaOntologyStore store;
+    private final OntologyUsageGuard usageGuard;
 
-    public OntologyEntityAdminService(JenaOntologyStore store) {
+    public OntologyEntityAdminService(JenaOntologyStore store, OntologyUsageGuard usageGuard) {
         this.store = store;
+        this.usageGuard = usageGuard;
     }
 
     public List<OntologyEntityDetails> list(OntologyEntityKind kind) {
@@ -51,7 +72,7 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
     }
 
     public OntologyEntityDetails create(OntologyEntityKind kind, OntologyEntityCommand command) {
-        validate(command, true);
+        validate(kind, command, true);
         store.write(model -> {
             Resource candidate = model.getResource(store.uri(command.localName()));
 
@@ -60,8 +81,8 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
                         "Ontology resource already exists: " + command.localName());
 
             Resource resource;
-            if (kind == OntologyEntityKind.REGIONAL_EMBROIDERY) {
-                OntClass parent = requiredClass(model, OntologyTerms.Classes.REGIONAL_EMBROIDERY);
+            if (isRegionalType(kind)) {
+                OntClass parent = ensureRegionalParent(model, kind);
                 OntClass ontologyClass = model.createClass(candidate.getURI());
                 ontologyClass.addSuperClass(parent);
                 resource = ontologyClass;
@@ -69,6 +90,8 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
                 resource = model.createIndividual(candidate.getURI(), requiredClass(model, className(kind)));
             }
             apply(model, resource, kind, command);
+            if (kind == OntologyEntityKind.REGION)
+                synchronizeDerivedRegionTypes(model, List.of(resource));
 
             return null;
         });
@@ -82,10 +105,17 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
             OntologyEntityCommand command
     ) {
         validateLocalName(localName);
-        validate(command, false);
+        validate(kind, command, false);
+        if (isNotBlank(command.localName()) && !localName.equals(command.localName()))
+            throw error(
+                    OntologyEntityException.Reason.INVALID,
+                    "Ontology local names are immutable; use a dedicated rename operation"
+            );
         store.write(model -> {
             Resource resource = required(model, kind, localName);
             apply(model, resource, kind, command);
+            if (kind == OntologyEntityKind.REGION)
+                synchronizeDerivedRegionTypes(model, List.of(resource));
             return null;
         });
 
@@ -96,6 +126,25 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
         validateLocalName(localName);
         store.write(model -> {
             Resource resource = required(model, kind, localName);
+            List<Resource> derivedTypes = kind == OntologyEntityKind.REGION
+                    ? ownedDerivedRegionTypes(model, resource)
+                    : List.of();
+            List<Resource> resourcesToDelete = new ArrayList<>(derivedTypes);
+            resourcesToDelete.add(resource);
+            usageGuard.requireUnused(resourcesToDelete.stream().map(Resource::getURI).toList());
+
+            for (Resource derivedType : derivedTypes) {
+                List<OntologyReference> derivedReferences = incomingReferences(model, derivedType);
+                if (!derivedReferences.isEmpty())
+                    throw new OntologyEntityException(
+                            OntologyEntityException.Reason.IN_USE,
+                            "Derived ontology resource is referenced and cannot be deleted: "
+                                    + derivedType.getLocalName(),
+                            derivedReferences
+                    );
+                removeResource(model, derivedType, true);
+            }
+
             List<OntologyReference> references = incomingReferences(model, resource);
 
             if (!references.isEmpty())
@@ -105,11 +154,20 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
                         references
                 );
 
-            if (kind == OntologyEntityKind.REGIONAL_EMBROIDERY)
-                removeManagedRestrictions(model, resource);
-
-            model.removeAll(resource, null, (RDFNode) null);
+            removeResource(model, resource, isRegionalType(kind));
             return null;
+        });
+    }
+
+    @Override
+    public RegionDerivedTypeSynchronizationDetails synchronizeRegionDerivedTypes() {
+        return store.write(model -> {
+            OntClass regionClass = requiredClass(model, OntologyTerms.Classes.REGION);
+            List<Resource> regions = regionClass.listInstances()
+                    .filterKeep(Resource::isURIResource)
+                    .mapWith(resource -> (Resource) resource)
+                    .toList();
+            return synchronizeDerivedRegionTypes(model, regions);
         });
     }
 
@@ -133,7 +191,7 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
                     command.ornamentLocalNames(), OntologyTerms.Classes.ORNAMENT);
             replaceDirect(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_TECHNIQUE,
                     command.techniqueLocalNames(), OntologyTerms.Classes.TECHNIQUE);
-        } else {
+        } else if (kind == OntologyEntityKind.REGIONAL_EMBROIDERY) {
             removeManagedRestrictions(model, resource);
             addRestrictions(model, resource, OntologyTerms.ObjectProperties.HAS_REGION,
                     nullableSet(command.regionLocalName()), OntologyTerms.Classes.REGION);
@@ -143,12 +201,23 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
                     command.techniqueLocalNames(), OntologyTerms.Classes.TECHNIQUE);
             addRestrictions(model, resource, OntologyTerms.ObjectProperties.HAS_MOTIF,
                     command.motifLocalNames(), OntologyTerms.Classes.MOTIF);
+        } else {
+            removeManagedRestrictions(model, resource);
+            addRestrictions(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_REGION,
+                    nullableSet(command.regionLocalName()), OntologyTerms.Classes.REGION);
+            addRestrictions(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_ORNAMENT,
+                    command.ornamentLocalNames(), OntologyTerms.Classes.ORNAMENT);
+            addRestrictions(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_TECHNIQUE,
+                    command.techniqueLocalNames(), OntologyTerms.Classes.TECHNIQUE);
         }
     }
 
     private List<Resource> resources(OntModel model, OntologyEntityKind kind) {
-        if (kind == OntologyEntityKind.REGIONAL_EMBROIDERY) {
-            OntClass parent = requiredClass(model, OntologyTerms.Classes.REGIONAL_EMBROIDERY);
+        if (isRegionalType(kind)) {
+            OntClass parent = regionalParent(model, kind);
+            if (parent == null)
+                return List.of();
+
             return parent.listSubClasses(true).filterKeep(resource -> resource.getURI() != null)
                     .mapWith(resource -> (Resource) resource).toList();
         }
@@ -162,10 +231,11 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
         Resource resource = model.getResource(store.uri(localName));
         boolean exists;
 
-        if (kind == OntologyEntityKind.REGIONAL_EMBROIDERY) {
+        if (isRegionalType(kind)) {
             OntClass ontologyClass = model.getOntClass(resource.getURI());
-            OntClass parent = requiredClass(model, OntologyTerms.Classes.REGIONAL_EMBROIDERY);
-            exists = ontologyClass != null && ontologyClass.hasSuperClass(parent, false) && !ontologyClass.equals(parent);
+            OntClass parent = regionalParent(model, kind);
+            exists = ontologyClass != null && parent != null
+                    && ontologyClass.hasSuperClass(parent, false) && !ontologyClass.equals(parent);
         } else {
             Individual individual = model.getIndividual(resource.getURI());
             exists = individual != null && individual.hasOntClass(requiredClass(model, className(kind)), false);
@@ -193,13 +263,21 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
             region = firstObject(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_REGION);
             ornaments.addAll(objects(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_ORNAMENT));
             techniques.addAll(objects(model, resource, OntologyTerms.ObjectProperties.MOTIF_HAS_TECHNIQUE));
-        } else {
+        } else if (kind == OntologyEntityKind.REGIONAL_EMBROIDERY) {
             Map<String, Set<String>> restrictions = restrictions(model, resource);
             region = restrictions.getOrDefault(OntologyTerms.ObjectProperties.HAS_REGION, Set.of())
                     .stream().findFirst().orElse(null);
             ornaments.addAll(restrictions.getOrDefault(OntologyTerms.ObjectProperties.HAS_ORNAMENT, Set.of()));
             techniques.addAll(restrictions.getOrDefault(OntologyTerms.ObjectProperties.HAS_TECHNIQUE, Set.of()));
             motifs.addAll(restrictions.getOrDefault(OntologyTerms.ObjectProperties.HAS_MOTIF, Set.of()));
+        } else {
+            Map<String, Set<String>> restrictions = restrictions(model, resource);
+            region = restrictions.getOrDefault(OntologyTerms.ObjectProperties.MOTIF_HAS_REGION, Set.of())
+                    .stream().findFirst().orElse(null);
+            ornaments.addAll(restrictions.getOrDefault(
+                    OntologyTerms.ObjectProperties.MOTIF_HAS_ORNAMENT, Set.of()));
+            techniques.addAll(restrictions.getOrDefault(
+                    OntologyTerms.ObjectProperties.MOTIF_HAS_TECHNIQUE, Set.of()));
         }
 
         return new OntologyEntityDetails(resource.getURI(), resource.getLocalName(),
@@ -254,9 +332,15 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
     }
 
     private void removeManagedRestrictions(@NonNull OntModel model, Resource subject) {
-        Set<String> managed = Set.of(OntologyTerms.ObjectProperties.HAS_REGION,
-                OntologyTerms.ObjectProperties.HAS_ORNAMENT, OntologyTerms.ObjectProperties.HAS_TECHNIQUE,
-                OntologyTerms.ObjectProperties.HAS_MOTIF);
+        Set<String> managed = Set.of(
+                OntologyTerms.ObjectProperties.HAS_REGION,
+                OntologyTerms.ObjectProperties.HAS_ORNAMENT,
+                OntologyTerms.ObjectProperties.HAS_TECHNIQUE,
+                OntologyTerms.ObjectProperties.HAS_MOTIF,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_REGION,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_ORNAMENT,
+                OntologyTerms.ObjectProperties.MOTIF_HAS_TECHNIQUE
+        );
 
         List<Resource> restrictions = model.listObjectsOfProperty(subject, RDFS.subClassOf)
                 .filterKeep(RDFNode::isAnon).mapWith(RDFNode::asResource)
@@ -334,13 +418,29 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
     }
 
     private List<OntologyReference> incomingReferences(@NonNull OntModel model, Resource resource) {
-        return model.listStatements(null, null, resource)
-                .filterKeep(statement -> !statement.getSubject().isAnon())
-                .mapWith(statement -> new OntologyReference(
-                        statement.getSubject().getLocalName(),
-                        statement.getPredicate().getLocalName())
-                )
-                .toList();
+        Set<OntologyReference> references = new LinkedHashSet<>();
+        model.listStatements(null, null, resource).forEachRemaining(statement -> {
+            Resource subject = statement.getSubject();
+            if (!subject.isAnon()) {
+                references.add(new OntologyReference(
+                        subject.getLocalName(),
+                        statement.getPredicate().getLocalName()
+                ));
+                return;
+            }
+
+            Statement onProperty = subject.getProperty(OWL.onProperty);
+            String propertyName = onProperty != null && onProperty.getObject().isURIResource()
+                    ? onProperty.getResource().getLocalName()
+                    : statement.getPredicate().getLocalName();
+            model.listSubjectsWithProperty(RDFS.subClassOf, subject)
+                    .filterKeep(Resource::isURIResource)
+                    .forEachRemaining(owner -> references.add(new OntologyReference(
+                            owner.getLocalName(),
+                            propertyName
+                    )));
+        });
+        return List.copyOf(references);
     }
 
     private @NonNull Set<String> objects(@NonNull OntModel model, Resource subject, String propertyName) {
@@ -388,7 +488,11 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
         return List.copyOf(values);
     }
 
-    private void validate(OntologyEntityCommand command, boolean creating) {
+    private void validate(
+            OntologyEntityKind kind,
+            OntologyEntityCommand command,
+            boolean creating
+    ) {
         if (command == null)
             throw error(OntologyEntityException.Reason.INVALID, "Request body is required");
 
@@ -396,6 +500,12 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
 
         if (isBlank(command.labelBg()) && isBlank(command.labelEn()))
             throw error(OntologyEntityException.Reason.INVALID, "At least one localized label is required");
+
+        if (isRegionalType(kind) && isBlank(command.regionLocalName()))
+            throw error(
+                    OntologyEntityException.Reason.INVALID,
+                    "Region is required for a regional ontology type"
+            );
     }
 
     private void validateLocalName(String localName) {
@@ -413,7 +523,334 @@ public class OntologyEntityAdminService implements OntologyEntityAdminPort {
             case REGION -> OntologyTerms.Classes.REGION;
             case MOTIF -> OntologyTerms.Classes.MOTIF;
             case REGIONAL_EMBROIDERY -> OntologyTerms.Classes.REGIONAL_EMBROIDERY;
+            case REGIONAL_MOTIF -> OntologyTerms.Classes.REGIONAL_MOTIF;
         };
+    }
+
+    private boolean isRegionalType(OntologyEntityKind kind) {
+        return kind == OntologyEntityKind.REGIONAL_EMBROIDERY
+                || kind == OntologyEntityKind.REGIONAL_MOTIF;
+    }
+
+    private OntClass requiredRegionalParent(OntModel model, OntologyEntityKind kind) {
+        return requiredClass(model, className(kind));
+    }
+
+    private OntClass ensureRegionalParent(OntModel model, OntologyEntityKind kind) {
+        if (kind == OntologyEntityKind.REGIONAL_MOTIF)
+            return ensureRegionalMotifClass(model);
+
+        return requiredClass(model, OntologyTerms.Classes.REGIONAL_EMBROIDERY);
+    }
+
+    private OntClass regionalParent(OntModel model, OntologyEntityKind kind) {
+        return model.getOntClass(store.uri(className(kind)));
+    }
+
+    private OntClass ensureRegionalMotifClass(OntModel model) {
+        String uri = store.uri(OntologyTerms.Classes.REGIONAL_MOTIF);
+        OntClass regionalMotif = model.getOntClass(uri);
+        if (regionalMotif != null) {
+            OntClass motif = requiredClass(model, OntologyTerms.Classes.MOTIF);
+            if (!regionalMotif.hasSuperClass(motif, true))
+                regionalMotif.addSuperClass(motif);
+            return regionalMotif;
+        }
+
+        regionalMotif = createAvailableClass(model, uri);
+        regionalMotif.addSuperClass(requiredClass(model, OntologyTerms.Classes.MOTIF));
+        addLiteral(model, regionalMotif, RDFS.label, "Регионален мотив", "bg");
+        addLiteral(model, regionalMotif, RDFS.label, "Regional motif", "en");
+        return regionalMotif;
+    }
+
+    private RegionDerivedTypeSynchronizationDetails synchronizeDerivedRegionTypes(
+            OntModel model,
+            List<Resource> regions
+    ) {
+        for (Resource region : regions)
+            for (DerivedRegionTypeDefinition definition : DERIVED_REGION_TYPES)
+                requireAvailableOrOwned(model, region, definition);
+
+        ensureRegionalMotifClass(model);
+
+        RegionDerivedTypeSynchronizationDetails result =
+                RegionDerivedTypeSynchronizationDetails.empty();
+        for (Resource region : regions) {
+            for (DerivedRegionTypeDefinition definition : DERIVED_REGION_TYPES) {
+                result = result.add(synchronizeDerivedRegionType(model, region, definition));
+            }
+        }
+        return result;
+    }
+
+    private RegionDerivedTypeSynchronizationDetails synchronizeDerivedRegionType(
+            OntModel model,
+            Resource region,
+            DerivedRegionTypeDefinition definition
+    ) {
+        String uri = derivedRegionTypeUri(region, definition);
+        OntClass derived = model.getOntClass(uri);
+        String expectedBg = prefixed(
+                definition.bgPrefix(),
+                firstLiteral(model, region, RDFS.label, "bg")
+        );
+        String expectedEn = prefixed(
+                definition.enPrefix(),
+                firstLiteral(model, region, RDFS.label, "en")
+        );
+
+        if (derived == null) {
+            derived = model.createClass(uri);
+            markGenerated(model, derived, region);
+            derived.addSuperClass(requiredRegionalParent(model, definition.kind()));
+            replaceGeneratedLabels(model, derived, expectedBg, expectedEn);
+            replaceRestrictionsForProperty(
+                    model,
+                    derived,
+                    definition.regionProperty(),
+                    Set.of(region.getLocalName()),
+                    OntologyTerms.Classes.REGION
+            );
+            return new RegionDerivedTypeSynchronizationDetails(1, 0, 0);
+        }
+
+        OntClass expectedParent = requiredRegionalParent(model, definition.kind());
+        boolean updateRequired = !derived.hasSuperClass(expectedParent, true)
+                || hasIncorrectManagedParent(model, derived, expectedParent)
+                || !hasExactLocalizedValue(model, derived, RDFS.label, expectedBg, "bg")
+                || !hasExactLocalizedValue(model, derived, RDFS.label, expectedEn, "en")
+                || !restrictions(model, derived)
+                .getOrDefault(definition.regionProperty(), Set.of())
+                .equals(Set.of(region.getLocalName()));
+
+        if (!updateRequired)
+            return new RegionDerivedTypeSynchronizationDetails(0, 0, 1);
+
+        removeIncorrectManagedParents(model, derived, expectedParent);
+        if (!derived.hasSuperClass(expectedParent, true))
+            derived.addSuperClass(expectedParent);
+        replaceGeneratedLabels(model, derived, expectedBg, expectedEn);
+        replaceRestrictionsForProperty(
+                model,
+                derived,
+                definition.regionProperty(),
+                Set.of(region.getLocalName()),
+                OntologyTerms.Classes.REGION
+        );
+        return new RegionDerivedTypeSynchronizationDetails(0, 1, 0);
+    }
+
+    private void requireAvailableOrOwned(
+            OntModel model,
+            Resource region,
+            DerivedRegionTypeDefinition definition
+    ) {
+        String uri = derivedRegionTypeUri(region, definition);
+        Resource candidate = model.getResource(uri);
+        if (!model.containsResource(candidate))
+            return;
+
+        OntClass ontologyClass = model.getOntClass(uri);
+        if (ontologyClass == null || !isOwnedByRegion(model, ontologyClass, region))
+            throw error(
+                    OntologyEntityException.Reason.ALREADY_EXISTS,
+                    "Generated ontology local name is already owned by an unmanaged resource: "
+                            + candidate.getLocalName()
+            );
+    }
+
+    private boolean isOwnedByRegion(OntModel model, Resource resource, Resource region) {
+        Property generatedProperty = annotationProperty(
+                model,
+                OntologyTerms.AnnotationProperties.SYSTEM_GENERATED
+        );
+        List<RDFNode> generatedValues = model.listObjectsOfProperty(
+                resource,
+                generatedProperty
+        ).toList();
+        if (generatedValues.size() != 1 || !generatedValues.getFirst().isLiteral())
+            return false;
+
+        Literal marker = generatedValues.getFirst().asLiteral();
+        if (!XSDDatatype.XSDboolean.getURI().equals(marker.getDatatypeURI())
+                || !marker.getBoolean())
+            return false;
+
+        Property sourceProperty = annotationProperty(
+                model,
+                OntologyTerms.AnnotationProperties.GENERATED_FROM_REGION
+        );
+        List<RDFNode> sources = model.listObjectsOfProperty(resource, sourceProperty).toList();
+        return sources.size() == 1
+                && sources.getFirst().isURIResource()
+                && region.getURI().equals(sources.getFirst().asResource().getURI());
+    }
+
+    private void markGenerated(OntModel model, Resource resource, Resource region) {
+        Property generatedProperty = model.createAnnotationProperty(store.uri(
+                OntologyTerms.AnnotationProperties.SYSTEM_GENERATED
+        ));
+        Property sourceProperty = model.createAnnotationProperty(store.uri(
+                OntologyTerms.AnnotationProperties.GENERATED_FROM_REGION
+        ));
+        resource.addLiteral(generatedProperty, model.createTypedLiteral(true));
+        resource.addProperty(sourceProperty, region);
+    }
+
+    private Property annotationProperty(OntModel model, String localName) {
+        return model.getProperty(store.uri(localName));
+    }
+
+    private void replaceGeneratedLabels(
+            OntModel model,
+            Resource resource,
+            String labelBg,
+            String labelEn
+    ) {
+        replaceLocalizedLanguage(model, resource, RDFS.label, labelBg, "bg");
+        replaceLocalizedLanguage(model, resource, RDFS.label, labelEn, "en");
+    }
+
+    private boolean hasIncorrectManagedParent(
+            OntModel model,
+            OntClass derived,
+            OntClass expectedParent
+    ) {
+        return managedRegionalParents(model).stream()
+                .anyMatch(parent -> !parent.equals(expectedParent)
+                        && derived.hasSuperClass(parent, true));
+    }
+
+    private void removeIncorrectManagedParents(
+            OntModel model,
+            OntClass derived,
+            OntClass expectedParent
+    ) {
+        managedRegionalParents(model).stream()
+                .filter(parent -> !parent.equals(expectedParent))
+                .filter(parent -> derived.hasSuperClass(parent, true))
+                .forEach(derived::removeSuperClass);
+    }
+
+    private List<OntClass> managedRegionalParents(OntModel model) {
+        return List.of(
+                requiredClass(model, OntologyTerms.Classes.REGIONAL_EMBROIDERY),
+                requiredClass(model, OntologyTerms.Classes.REGIONAL_MOTIF)
+        );
+    }
+
+    private boolean hasExactLocalizedValue(
+            OntModel model,
+            Resource resource,
+            Property property,
+            String expected,
+            String language
+    ) {
+        List<String> values = literals(model, resource, property, language);
+        return expected == null ? values.isEmpty() : values.equals(List.of(expected));
+    }
+
+    private void replaceLocalizedLanguage(
+            OntModel model,
+            Resource resource,
+            Property property,
+            String value,
+            String language
+    ) {
+        List<Statement> existing = model.listStatements(resource, property, (RDFNode) null)
+                .filterKeep(statement -> statement.getObject().isLiteral())
+                .filterKeep(statement -> language.equalsIgnoreCase(
+                        statement.getLiteral().getLanguage()
+                ))
+                .toList();
+        model.remove(existing);
+        addLiteral(model, resource, property, value, language);
+    }
+
+    private void replaceRestrictionsForProperty(
+            OntModel model,
+            Resource subject,
+            String propertyName,
+            Set<String> valueLocalNames,
+            String expectedClass
+    ) {
+        removeRestrictionsForProperty(model, subject, propertyName);
+        addRestrictions(model, subject, propertyName, valueLocalNames, expectedClass);
+    }
+
+    private void removeRestrictionsForProperty(
+            OntModel model,
+            Resource subject,
+            String propertyName
+    ) {
+        List<Resource> matching = model.listObjectsOfProperty(subject, RDFS.subClassOf)
+                .filterKeep(RDFNode::isAnon)
+                .mapWith(RDFNode::asResource)
+                .filterKeep(resource -> {
+                    Statement property = resource.getProperty(OWL.onProperty);
+                    return property != null
+                            && property.getObject().isURIResource()
+                            && propertyName.equals(property.getResource().getLocalName());
+                })
+                .toList();
+        matching.forEach(restriction -> {
+            model.removeAll(subject, RDFS.subClassOf, restriction);
+            model.removeAll(restriction, null, (RDFNode) null);
+        });
+    }
+
+    private OntClass createAvailableClass(OntModel model, String uri) {
+        Resource candidate = model.getResource(uri);
+        if (model.containsResource(candidate))
+            throw error(
+                    OntologyEntityException.Reason.ALREADY_EXISTS,
+                    "Ontology resource already exists: " + candidate.getLocalName()
+            );
+
+        return model.createClass(uri);
+    }
+
+    private List<Resource> ownedDerivedRegionTypes(OntModel model, Resource region) {
+        List<Resource> result = new ArrayList<>();
+        for (DerivedRegionTypeDefinition definition : DERIVED_REGION_TYPES) {
+            OntClass candidate = model.getOntClass(derivedRegionTypeUri(region, definition));
+            if (candidate != null && isOwnedByRegion(model, candidate, region))
+                result.add(candidate);
+        }
+        return List.copyOf(result);
+    }
+
+    private String derivedRegionTypeUri(
+            Resource region,
+            DerivedRegionTypeDefinition definition
+    ) {
+        return store.uri(regionStem(region.getLocalName()) + definition.suffix());
+    }
+
+    private void removeResource(OntModel model, Resource resource, boolean removeRestrictions) {
+        if (removeRestrictions)
+            removeManagedRestrictions(model, resource);
+        model.removeAll(resource, null, (RDFNode) null);
+    }
+
+    private String regionStem(String localName) {
+        return localName.endsWith("Region")
+                ? localName.substring(0, localName.length() - "Region".length())
+                : localName;
+    }
+
+    private String prefixed(String prefix, String value) {
+        return isBlank(value) ? null : prefix + value.trim();
+    }
+
+    private record DerivedRegionTypeDefinition(
+            OntologyEntityKind kind,
+            String regionProperty,
+            String suffix,
+            String bgPrefix,
+            String enPrefix
+    ) {
     }
 
     @Contract("_, _ -> new")

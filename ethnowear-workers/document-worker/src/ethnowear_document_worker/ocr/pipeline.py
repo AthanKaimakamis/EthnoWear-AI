@@ -20,6 +20,7 @@ from ethnowear_document_worker.ocr.models import (
     OcrWord,
 )
 from ethnowear_document_worker.ocr.tesseract import TesseractRunner
+from ethnowear_document_worker.ocr.tsv import InvalidTsvError
 
 _CYRILLIC = re.compile(r"[\u0400-\u052f]")
 _LATIN = re.compile(r"[A-Za-z]")
@@ -60,7 +61,7 @@ class OcrPipeline:
         create_masked_page(preprocessing.path, masked, layout)
 
         attempts: list[OcrAttempt] = []
-        failures: list[OcrPipelineError] = []
+        failures: list[Exception] = []
         for psm in (3, 4):
             try:
                 attempts.append(await self._full_page_attempt(
@@ -70,7 +71,7 @@ class OcrPipeline:
                     psm,
                     maximum_output_bytes,
                 ))
-            except OcrPipelineError as error:
+            except (OcrPipelineError, InvalidTsvError) as error:
                 failures.append(error)
         try:
             attempts.append(await self._region_attempt(
@@ -80,9 +81,22 @@ class OcrPipeline:
                 preprocessing.steps,
                 maximum_output_bytes,
             ))
-        except OcrPipelineError as error:
+        except (OcrPipelineError, InvalidTsvError) as error:
             failures.append(error)
         if not attempts:
+            tsv_failure = next(
+                (error for error in reversed(failures)
+                 if isinstance(error, InvalidTsvError)),
+                None,
+            )
+            if tsv_failure is not None:
+                raise InvalidTsvError(
+                    "OCR structured output remained unusable after fallback",
+                    category="fallback_exhausted",
+                    rejected_row_count=tsv_failure.rejected_row_count,
+                    usable_word_count=tsv_failure.usable_word_count,
+                    selected_psm=tsv_failure.selected_psm,
+                ) from tsv_failure
             raise OcrPipelineError("All OCR layout strategies failed") from failures[-1]
         selected = _select_attempt(attempts)
         warnings = set(selected.warnings)
@@ -114,6 +128,7 @@ class OcrPipeline:
             blocks=selected.blocks,
             attempts=tuple(attempts),
             figure_candidates=figure_candidates,
+            tsv_diagnostics=selected.tsv_diagnostics,
         )
 
     async def _full_page_attempt(
@@ -144,6 +159,7 @@ class OcrPipeline:
             warnings=warnings,
             blocks=blocks,
             words=output.words,
+            tsv_diagnostics=output.tsv_diagnostics,
         )
 
     async def _region_attempt(
@@ -199,6 +215,7 @@ class OcrPipeline:
             warnings=tuple(sorted(warnings)),
             blocks=ordered_blocks,
             words=words,
+            tsv_diagnostics=None,
         )
 
     @property

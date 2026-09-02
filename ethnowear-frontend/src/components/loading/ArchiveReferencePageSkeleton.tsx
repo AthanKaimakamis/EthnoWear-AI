@@ -1,4 +1,5 @@
-import { Box, Divider, Paper, Skeleton, Stack } from '@mui/material'
+import { Box, Divider, Paper, Skeleton, Stack, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import CatalogueConceptCardSkeleton from './CatalogueConceptCardSkeleton'
 import ArchiveBrowseLayout from '../archive/browse/ArchiveBrowseLayout'
 
@@ -29,9 +30,18 @@ function CatalogueFilterPanelSkeleton() {
 }
 
 function ArchiveReferencePageSkeleton() {
+    const { t } = useTranslation()
+
     return (
         <ArchiveBrowseLayout filters={<CatalogueFilterPanelSkeleton />}>
-            <Stack spacing={3} sx={{ minWidth: 0 }} aria-busy="true">
+            <Stack
+                spacing={3}
+                sx={{ minWidth: 0 }}
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+            >
+                <Typography sx={{ fontWeight: 700 }}>{t('archiveReference.loading')}</Typography>
                 <Stack spacing={2}>
                     <Box>
                         <Skeleton variant="text" width="45%" height={48} />
