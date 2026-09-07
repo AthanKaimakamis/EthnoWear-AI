@@ -14,6 +14,8 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.springframework.cache.annotation.CacheEvict;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,6 +28,8 @@ import java.util.function.Function;
 import static fmi.ethnowear.application.constant.CacheNames.ONTOLOGY_REFERENCE_FULL;
 
 public class JenaOntologyStore {
+
+    private static final Logger log = LoggerFactory.getLogger(JenaOntologyStore.class);
 
     private final Path ontologyPath;
     private final String namespace;
@@ -79,32 +83,41 @@ public class JenaOntologyStore {
             OntologyChangeMetadata metadata = metadataProvider.current();
             OntologySnapshot previousSnapshot = fileSnapshot();
             Long previousVersionId = versionRecorder.ensureActiveSnapshot(previousSnapshot, metadata);
-            OntModel backup = copy(assertedModel);
+            OntModel working = copy(assertedModel);
+            OntModel prepared = null;
             OntologySnapshot candidate = null;
             Long stagedVersionId = null;
+            boolean persistenceAttempted = false;
+            boolean valid = false;
             try {
-                T result = operation.apply(assertedModel);
-                candidate = modelSnapshot(assertedModel);
-                validate(candidate);
+                T result = operation.apply(working);
+                candidate = modelSnapshot(working);
+                prepared = prepareValidated(candidate);
+                valid = true;
                 stagedVersionId = versionRecorder.stageSnapshot(
                         previousVersionId,
                         null,
                         candidate,
                         metadata
                 );
+                persistenceAttempted = true;
                 persist(candidate.content());
-                rebuildInferenceModel();
                 versionRecorder.activateSnapshot(
                         stagedVersionId,
                         previousVersionId
                 );
+                install(prepared);
+                prepared = null;
                 return result;
             } catch (RuntimeException ex) {
-                assertedModel = backup;
-                restoreFile(previousSnapshot.content(), ex);
-                rebuildInferenceModel();
-                recordFailure(previousVersionId, stagedVersionId, candidate, metadata, ex);
+                if (persistenceAttempted)
+                    restoreFile(previousSnapshot.content(), ex);
+                recordFailure(previousVersionId, stagedVersionId, candidate, metadata, valid, ex);
                 throw ex;
+            } finally {
+                working.close();
+                if (prepared != null)
+                    prepared.close();
             }
         } finally {
             modelLock.unlock();
@@ -120,12 +133,11 @@ public class JenaOntologyStore {
             }
 
             try {
-                assertedModel = parse(Files.readString(ontologyPath, StandardCharsets.UTF_8));
+                install(prepareValidated(snapshot(Files.readString(ontologyPath, StandardCharsets.UTF_8))));
             } catch (Exception ex) {
                 throw new IllegalStateException("Could not load ontology", ex);
             }
 
-            rebuildInferenceModel();
         } finally {
             modelLock.unlock();
         }
@@ -143,28 +155,36 @@ public class JenaOntologyStore {
             OntologySnapshot previousSnapshot = fileSnapshot();
             Long previousVersionId = versionRecorder.ensureActiveSnapshot(previousSnapshot, metadata);
             Long stagedVersionId = null;
+            OntModel prepared = null;
+            boolean persistenceAttempted = false;
+            boolean valid = false;
 
             try {
-                validate(selectedSnapshot);
+                prepared = prepareValidated(selectedSnapshot);
+                valid = true;
                 stagedVersionId = versionRecorder.stageSnapshot(
                         previousVersionId,
                         restoredFromVersionId,
                         selectedSnapshot,
                         metadata
                 );
+                persistenceAttempted = true;
                 persist(selectedSnapshot.content());
-                assertedModel = parse(selectedSnapshot.content());
-                rebuildInferenceModel();
-                return versionRecorder.activateSnapshot(
+                Long versionId = versionRecorder.activateSnapshot(
                         stagedVersionId,
                         previousVersionId
                 );
+                install(prepared);
+                prepared = null;
+                return versionId;
             } catch (RuntimeException ex) {
-                restoreFile(previousSnapshot.content(), ex);
-                assertedModel = parse(previousSnapshot.content());
-                rebuildInferenceModel();
-                recordFailure(previousVersionId, stagedVersionId, selectedSnapshot, metadata, ex);
+                if (persistenceAttempted)
+                    restoreFile(previousSnapshot.content(), ex);
+                recordFailure(previousVersionId, stagedVersionId, selectedSnapshot, metadata, valid, ex);
                 throw ex;
+            } finally {
+                if (prepared != null)
+                    prepared.close();
             }
         } finally {
             modelLock.unlock();
@@ -177,7 +197,9 @@ public class JenaOntologyStore {
 
         try {
             Files.writeString(temp, content, StandardCharsets.UTF_8);
-            validate(snapshot(Files.readString(temp, StandardCharsets.UTF_8)));
+            // The candidate was already validated; verify the exact persisted bytes.
+            if (!content.equals(Files.readString(temp, StandardCharsets.UTF_8)))
+                throw new IllegalStateException("Ontology temporary file differs from validated content");
 
             Files.copy(ontologyPath, backup, StandardCopyOption.REPLACE_EXISTING);
             try {
@@ -201,12 +223,18 @@ public class JenaOntologyStore {
         }
     }
 
-    private void rebuildInferenceModel() {
-        inferenceModel = ModelFactory.createOntologyModel(
-                OntModelSpec.OWL_MEM_RULE_INF,
-                assertedModel
-        );
-        inferenceModel.prepare();
+    private void install(OntModel prepared) {
+        OntModel previous = inferenceModel;
+        assertedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, prepared.getBaseModel());
+        inferenceModel = prepared;
+        if (previous != null) {
+            try {
+                previous.close();
+            } catch (RuntimeException ex) {
+                // Cleanup must not roll back an already activated SQL/file version.
+                log.warn("Could not close superseded ontology model", ex);
+            }
+        }
     }
 
     private OntologySnapshot fileSnapshot() {
@@ -241,11 +269,12 @@ public class JenaOntologyStore {
             RDFDataMgr.read(model, input, Lang.RDFXML);
             return model;
         } catch (Exception ex) {
+            model.close();
             throw new IllegalArgumentException("Ontology content is not valid RDF/XML", ex);
         }
     }
 
-    private void validate(OntologySnapshot snapshot) {
+    private OntModel prepareValidated(OntologySnapshot snapshot) {
         if (!ContentHashUtils.sha256(snapshot.content()).equals(snapshot.contentHash()))
             throw new IllegalArgumentException("Ontology content hash does not match the snapshot");
 
@@ -253,10 +282,16 @@ public class JenaOntologyStore {
                 OntModelSpec.OWL_MEM_RULE_INF,
                 parse(snapshot.content())
         );
-        verification.prepare();
-        ValidityReport report = verification.validate();
-        if (!report.isValid())
-            throw new IllegalArgumentException("Ontology validation failed");
+        try {
+            verification.prepare();
+            ValidityReport report = verification.validate();
+            if (!report.isValid())
+                throw new IllegalArgumentException("Ontology validation failed");
+            return verification;
+        } catch (RuntimeException ex) {
+            verification.close();
+            throw ex;
+        }
     }
 
     private void requireCompatible(OntologySnapshot snapshot) {
@@ -281,6 +316,7 @@ public class JenaOntologyStore {
             Long stagedVersionId,
             OntologySnapshot candidate,
             OntologyChangeMetadata metadata,
+            boolean valid,
             RuntimeException failure
     ) {
         if (candidate == null)
@@ -292,7 +328,6 @@ public class JenaOntologyStore {
                 return;
             }
 
-            boolean valid = isValid(candidate);
             versionRecorder.recordFailedSnapshot(
                     previousVersionId,
                     candidate,
@@ -302,15 +337,6 @@ public class JenaOntologyStore {
             );
         } catch (RuntimeException historyFailure) {
             failure.addSuppressed(historyFailure);
-        }
-    }
-
-    private boolean isValid(OntologySnapshot snapshot) {
-        try {
-            validate(snapshot);
-            return true;
-        } catch (RuntimeException ignored) {
-            return false;
         }
     }
 

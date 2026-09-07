@@ -17,40 +17,75 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 public class ArchiveItemOntologyValidator {
+    public void resolveDerivedClassifications(fmi.ethnowear.persistence.jpa.entity.ArchiveItem item) {
+        if (item.getOntologyRegionLocalName() == null) return;
+        if (item.getArchiveType() == fmi.ethnowear.domain.model.archive.ArchiveType.MOTIF_EXAMPLE
+                && item.getOntologyRegionalMotifLocalName() == null) {
+            var matches = ontology.listRegionalMotifTypes().stream().filter(resource ->
+                    ontology.findRegionForRegionalMotif(resource.localName())
+                            .map(region -> region.localName().equals(item.getOntologyRegionLocalName())).orElse(false)).toList();
+            if (matches.size() == 1) {
+                item.setOntologyRegionalMotifIri(matches.getFirst().iri());
+                item.setOntologyRegionalMotifLocalName(matches.getFirst().localName());
+            }
+        }
+        if (item.getArchiveType() == fmi.ethnowear.domain.model.archive.ArchiveType.EMBROIDERY_SAMPLE
+                && item.getOntologyRegionalEmbroideryLocalName() == null) {
+            var matches = ontology.listRegionalEmbroideryTypes().stream().filter(resource ->
+                    ontology.findRegionForRegionalEmbroidery(resource.localName())
+                            .map(region -> region.localName().equals(item.getOntologyRegionLocalName())).orElse(false)).toList();
+            if (matches.size() == 1) {
+                item.setOntologyRegionalEmbroideryIri(matches.getFirst().iri());
+                item.setOntologyRegionalEmbroideryLocalName(matches.getFirst().localName());
+            }
+        }
+    }
 
     private final EmbroideryOntologyClient ontology;
 
     public void validateClassifications(@NotNull ArchiveItemWriteDto input) {
+        validateClassifications(
+                input.ontologyRegionIri(), input.ontologyRegionLocalName(),
+                input.ontologyRegionalEmbroideryIri(), input.ontologyRegionalEmbroideryLocalName(),
+                input.ontologyRegionalMotifIri(), input.ontologyRegionalMotifLocalName()
+        );
+    }
+
+    public void validateClassifications(
+            String regionIri, String regionLocalName,
+            String embroideryIri, String embroideryLocalName,
+            String motifIri, String motifLocalName
+    ) {
         validateIdentity(
                 "Region",
-                input.ontologyRegionIri(),
-                input.ontologyRegionLocalName(),
+                regionIri,
+                regionLocalName,
                 ontology::listRegions);
 
         validateIdentity(
                 "Regional embroidery",
-                input.ontologyRegionalEmbroideryIri(),
-                input.ontologyRegionalEmbroideryLocalName(),
+                embroideryIri,
+                embroideryLocalName,
                 ontology::listRegionalEmbroideryTypes
         );
 
         validateIdentity(
                 "Regional motif",
-                input.ontologyRegionalMotifIri(),
-                input.ontologyRegionalMotifLocalName(),
+                motifIri,
+                motifLocalName,
                 ontology::listRegionalMotifTypes
         );
 
         validateRegionMatch(
                 "Regional embroidery",
-                input.ontologyRegionalEmbroideryLocalName(),
-                input.ontologyRegionLocalName(),
+                embroideryLocalName,
+                regionLocalName,
                 ontology::findRegionForRegionalEmbroidery
         );
         validateRegionMatch(
                 "Regional motif",
-                input.ontologyRegionalMotifLocalName(),
-                input.ontologyRegionLocalName(),
+                motifLocalName,
+                regionLocalName,
                 ontology::findRegionForRegionalMotif
         );
     }

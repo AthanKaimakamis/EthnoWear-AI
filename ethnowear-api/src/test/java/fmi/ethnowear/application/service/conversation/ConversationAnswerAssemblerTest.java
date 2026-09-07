@@ -45,6 +45,21 @@ class ConversationAnswerAssemblerTest {
     }
 
     @Test
+    void formatsSupportedClaimsWithoutDisplayingUnvalidatedIntroduction() {
+        var ontology = new ConversationOntologyEvidence("ontology:TECHNIQUE:ChainTechnique", FeatureType.TECHNIQUE,
+                "https://example.org/ChainTechnique", "ChainTechnique", "Синджир бод", "Описание", List.of());
+        var evidence = new ConversationEvidenceBundle(List.of(), List.of(ontology), List.of(), List.of(), List.of());
+        var claims = List.of(
+                new fmi.ethnowear.application.model.conversation.ConversationGeneratedClaim("Първа мисъл.", List.of(ontology.citationId())),
+                new fmi.ethnowear.application.model.conversation.ConversationGeneratedClaim("Втора мисъл.", List.of(ontology.citationId())),
+                new fmi.ethnowear.application.model.conversation.ConversationGeneratedClaim("Трета мисъл.", List.of(ontology.citationId())));
+        var answer = assembler.assemble(context, evidence, new ConversationGenerationResult(
+                "Unvalidated introduction", true, claims, List.of(ontology.citationId()), List.of()));
+        assertThat(answer.answer()).startsWith("Първа мисъл. Втора мисъл.\n\nТрета мисъл.")
+                .contains("не обхваща целия въпрос").doesNotContain("Unvalidated introduction");
+    }
+
+    @Test
     void exposesOnlyCitedAuthoritativeSourcesAndCards() {
         GroundedSourceCitationDetails source = new GroundedSourceCitationDetails(
                 11L, "Българска народна шевица", "Автор", null, null,

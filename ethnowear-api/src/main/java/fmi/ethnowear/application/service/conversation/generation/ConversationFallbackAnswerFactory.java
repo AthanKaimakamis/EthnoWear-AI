@@ -18,6 +18,11 @@ public class ConversationFallbackAnswerFactory {
 
     private final ConversationGenerationProperties properties;
 
+    public ConversationGenerationResult createMissingEvidence(ConversationTurnExecutionContext context) {
+        return new ConversationGenerationResult(message(context.language(), true), true,
+                List.of(), List.of(), List.of());
+    }
+
     public ConversationGenerationResult create(
             @NonNull ConversationTurnExecutionContext context,
             @NonNull ConversationEvidenceBundle evidence,
@@ -135,11 +140,11 @@ public class ConversationFallbackAnswerFactory {
 
         if ("en".equalsIgnoreCase(language))
             return concepts.isEmpty()
-                    ? "I found verified evidence, shown below, but could not safely formulate a complete answer."
+                    ? "I found sources for this search, but could not produce a reliable answer. The source list below does not confirm the assertions in your question."
                     : "The verified related concepts are: " + concepts + ". The supporting evidence is shown below.";
 
         return concepts.isEmpty()
-                ? "Намерени са проверени данни, показани по-долу, но не може безопасно да се формулира пълен отговор."
+                ? "Намерих източници за това търсене, но не успях да изготвя надежден отговор. Списъкът по-долу не потвърждава твърденията във въпроса."
                 : "Проверените свързани понятия са: " + concepts + ". Подкрепящите данни са показани по-долу.";
     }
 
@@ -147,12 +152,12 @@ public class ConversationFallbackAnswerFactory {
     private @NonNull String message(String language, boolean insufficientEvidence) {
         if ("en".equalsIgnoreCase(language)) {
             return insufficientEvidence
-                    ? "There is not enough verified evidence to answer this question."
+                    ? "I couldn't find enough information in the available sources to answer that reliably. Could you specify a motif, region or source so I can narrow the search?"
                     : "The language service is temporarily unavailable. The verified sources and related concepts found for this question are shown below.";
         }
 
         return insufficientEvidence
-                ? "Няма достатъчно проверени данни, за да се отговори на този въпрос."
+                ? "Не намирам достатъчно сведения в наличните източници, за да отговоря надеждно. Можеш ли да уточниш мотив, регион или източник, за да насоча търсенето?"
                 : "Езиковата услуга временно не е достъпна. По-долу са показани намерените проверени източници и свързани понятия.";
     }
 }

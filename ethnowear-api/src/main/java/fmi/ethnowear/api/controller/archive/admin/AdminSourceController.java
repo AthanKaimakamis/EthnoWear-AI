@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/sources")
-public class AdminSourceController
-        extends BaseCrudController<SourceWriteDto, SourceDetails> {
+public class AdminSourceController extends BaseCrudController<SourceWriteDto, SourceDetails> {
 
     public AdminSourceController(SourceService service) {
         super(service);

@@ -10,6 +10,7 @@ import { getAdminArchiveItemDetail } from '../../api/ArchiveAdminApi'
 import { getFullReference } from '../../api/ReferenceApi'
 import MediaGallery, { type MediaGalleryItem } from '../archive/MediaGallery'
 import SourceCitation from '../archive/SourceCitation'
+import InheritedObservations from '../archive/InheritedObservations'
 import PageLoading from '../loading/PageLoading'
 import AdminModal from './AdminModal'
 import ArchiveStatusChip from './ArchiveStatusChip'
@@ -17,6 +18,8 @@ import TrustedLevelChip from './TrustedLevelChip'
 import { publicationErrorMessages } from './archiveWorkflow'
 import type { ArchiveItemDetailDetails } from '../../types/archive'
 import type { ReferenceResource } from '../../types/reference'
+import { useAdminMediaContent } from './media/useAdminMediaContent'
+import { PreviewableImage } from '../common/ImageViewerDialog'
 
 type Props = {
     itemId: number
@@ -105,13 +108,24 @@ export default function ArchiveItemPreviewDialog({ itemId, onClose, onEdit }: Pr
                             <Detail label={t('curator.fields.embroidery')} value={labels.get(item.ontologyRegionalEmbroideryLocalName ?? '')} />
                         </Box>
                         {details.features.length > 0 && <Box><Typography variant="h6" sx={{ mb: 1 }}>{t('archiveDetails.observedFeatures')}</Typography><Box sx={{ display: 'flex', gap: .75, flexWrap: 'wrap' }}>{details.features.map(feature => <Chip key={feature.id} label={labels.get(feature.ontologyLocalName) ?? feature.ontologyLocalName} variant="outlined" />)}</Box></Box>}
-                        <MediaGallery title={t('archiveDetails.media')} items={mediaItems} />
-                        <Box><Typography variant="h6" sx={{ mb: 1 }}>{t('entityDetails.sources')}</Typography><SourceCitation source={details.source} /></Box>
+                        <InheritedObservations observations={details.inheritedObservations ?? []} labels={labels} />
+                        <MediaGallery title={t('archiveDetails.media')} items={mediaItems} renderMedia={media => <AdminPreviewMedia item={media} />} />
+                        <Box><Typography variant="h6" sx={{ mb: 1 }}>{t('entityDetails.sources')}</Typography><SourceCitation source={details.source} />{(details.imageSources ?? []).filter(source => source.sourceReferenceId !== details.source?.sourceReferenceId).map(source => <SourceCitation key={source.sourceReferenceId} source={source} />)}</Box>
                     </Stack>
                 )}
             </Box>
         </AdminModal>
     )
+}
+
+function AdminPreviewMedia({ item }: { item: MediaGalleryItem }) {
+    const content = useAdminMediaContent(item.mediaAssetId)
+    const { t } = useTranslation()
+    if (content.isError) return <Alert severity="error">{t('publication.errors.preview')}</Alert>
+    if (!content.url) return <Box sx={{ height: 220 }}><PageLoading message={t('archiveDetails.loading')} /></Box>
+    return item.mimeType?.startsWith('image/')
+        ? <PreviewableImage src={content.url} alt={item.title} caption={item.caption} buttonSx={{ width: '100%' }} imageSx={{ width: '100%', height: 220, objectFit: 'contain' }} />
+        : <Box component="a" href={content.url} target="_blank" rel="noreferrer" sx={{ display: 'grid', placeItems: 'center', height: 160, color: 'primary.main' }}>{item.title}</Box>
 }
 
 function Detail({ label, value }: { label: string, value: string | null | undefined }) {

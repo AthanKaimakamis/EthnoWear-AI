@@ -42,6 +42,12 @@ type DynamicMatch = {
 }
 
 const dynamicMatches: DynamicMatch[] = [
+    { pattern: /^(Regional motif|Regional embroidery) does not belong to region: .+$/, key: 'classificationRegionMismatch', values: ['classification'], enumValues: ['classification'] },
+    { pattern: /^(Regional motif|Regional embroidery) has no region classification$/, key: 'classificationRegionMissing', values: ['classification'], enumValues: ['classification'] },
+    { pattern: /^(Region|Regional motif|Regional embroidery) IRI and local name must be provided together$/, key: 'classificationIdentityIncomplete', values: ['classification'], enumValues: ['classification'] },
+    { pattern: /^(Region|Regional motif|Regional embroidery) does not exist: .+$/, key: 'classificationMissing', values: ['classification'], enumValues: ['classification'] },
+    { pattern: /^(Region|Regional motif|Regional embroidery) IRI does not match local name: .+$/, key: 'classificationIdentityMismatch', values: ['classification'], enumValues: ['classification'] },
+    { pattern: /^Region is required when (regional motif|regional embroidery) is selected$/, key: 'classificationRegionRequired', values: ['classification'], enumValues: ['classification'] },
     { pattern: /^User not found: (.+)$/, key: 'userNotFound', values: ['id'] },
     { pattern: /^User information not found: (.+)$/, key: 'userInformationNotFound', values: ['id'] },
     { pattern: /^Archive item (.+) cannot be modified while its status is (.+)$/, key: 'archiveNotEditable', values: ['id', 'status'], enumValues: ['status'] },
@@ -196,6 +202,12 @@ function localizeReference(reference: unknown) {
 }
 
 function localizeDynamicValue(value: string) {
+    const classificationKey: Record<string, string> = {
+        'region': 'curator.fields.region',
+        'regional motif': 'curator.fields.regionalMotif',
+        'regional embroidery': 'curator.fields.embroidery',
+    }
+    if (classificationKey[value.toLowerCase()]) return tr(classificationKey[value.toLowerCase()])
     const normalized = value.trim().replace(/^ROLE_/, '')
     const candidates = [
         `errors.values.${normalized}`,

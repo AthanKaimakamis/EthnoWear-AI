@@ -101,7 +101,7 @@ services:
       dockerfile: document-worker/Dockerfile
     image: ethnowear-document-worker:local
     environment:
-      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://api:8080}"
       ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_DOCUMENT_WORKER_ID:-document-worker-1}"
       ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
       ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
@@ -116,7 +116,7 @@ services:
       ETHNOWEAR_WORKER_OCR_TIMEOUT_SECONDS: "${ETHNOWEAR_WORKER_OCR_TIMEOUT_SECONDS:-300}"
       ETHNOWEAR_WORKER_OCR_MAXIMUM_LAYOUT_REGIONS: "${ETHNOWEAR_WORKER_OCR_MAXIMUM_LAYOUT_REGIONS:-32}"
     depends_on:
-      - backend
+      - api
     init: true
     read_only: true
     tmpfs:
@@ -137,7 +137,7 @@ services:
       dockerfile: indexing-worker/Dockerfile
     image: ethnowear-indexing-worker:local
     environment:
-      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://api:8080}"
       ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_INDEXING_WORKER_ID:-indexing-worker-1}"
       ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
       ETHNOWEAR_QDRANT_URL: "http://qdrant:6333"
@@ -151,7 +151,7 @@ services:
       ETHNOWEAR_QDRANT_TIMEOUT_SECONDS: "${ETHNOWEAR_QDRANT_TIMEOUT_SECONDS:-30}"
       ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-indexing-worker
     depends_on:
-      backend:
+      api:
         condition: service_started
       qdrant:
         condition: service_healthy
@@ -175,7 +175,7 @@ services:
       dockerfile: quality-worker/Dockerfile
     image: ethnowear-quality-worker:local
     environment:
-      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://api:8080}"
       ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_QUALITY_WORKER_ID:-quality-worker-1}"
       ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
       ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
@@ -186,7 +186,7 @@ services:
       ETHNOWEAR_WORKER_TEMPORARY_ROOT: /tmp/ethnowear-quality-worker
       ETHNOWEAR_WORKER_BULGARIAN_DICTIONARY_PATH: /usr/share/hunspell/bg_BG.dic
     depends_on:
-      backend:
+      api:
         condition: service_started
     init: true
     read_only: true
@@ -208,7 +208,7 @@ services:
       dockerfile: figure-worker/Dockerfile
     image: ethnowear-figure-worker:local
     environment:
-      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://api:8080}"
       ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_FIGURE_WORKER_ID:-figure-worker-1}"
       ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
       ETHNOWEAR_WORKER_POLL_MIN_SECONDS: "${ETHNOWEAR_WORKER_POLL_MIN_SECONDS:-1}"
@@ -221,7 +221,7 @@ services:
       ETHNOWEAR_FIGURE_MAXIMUM_LOCAL_CANDIDATES: "${ETHNOWEAR_FIGURE_MAXIMUM_LOCAL_CANDIDATES:-100}"
       ETHNOWEAR_FIGURE_JPEG_QUALITY: "${ETHNOWEAR_FIGURE_JPEG_QUALITY:-95}"
     depends_on:
-      backend:
+      api:
         condition: service_started
     init: true
     read_only: true
@@ -243,7 +243,7 @@ services:
       dockerfile: vision-worker/Dockerfile
     image: ethnowear-vision-worker:local
     environment:
-      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://backend:8080}"
+      ETHNOWEAR_WORKER_BASE_URL: "${ETHNOWEAR_WORKER_BACKEND_URL:-http://api:8080}"
       ETHNOWEAR_WORKER_ID: "${ETHNOWEAR_VISION_WORKER_ID:-vision-worker-1}"
       ETHNOWEAR_WORKER_API_TOKEN: "${ETHNOWEAR_WORKER_API_TOKEN:?Set ETHNOWEAR_WORKER_API_TOKEN in .env}"
       ETHNOWEAR_OLLAMA_BASE_URL: "${ETHNOWEAR_OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
@@ -264,7 +264,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      backend:
+      api:
         condition: service_started
     init: true
     read_only: true
@@ -280,11 +280,11 @@ services:
     stop_grace_period: "${ETHNOWEAR_VISION_WORKER_STOP_GRACE_PERIOD:-6m}"
     restart: unless-stopped
 
-  backend:
+  api:
     build:
       context: ./ethnowear-api
       dockerfile: Dockerfile
-    image: ethnowear-backend:local
+    image: ethnowear-api:local
     environment:
       ETHNOWEAR_DB_URL: "jdbc:sqlserver://sqlserver:1433;databaseName=EthnoWear;encrypt=true;trustServerCertificate=true"
       ETHNOWEAR_DB_USERNAME: "sa"
@@ -305,6 +305,7 @@ services:
       ETHNOWEAR_RETRIEVAL_MINIMUM_SIMILARITY: "${ETHNOWEAR_RETRIEVAL_MINIMUM_SIMILARITY:-0.42}"
       ETHNOWEAR_OLLAMA_BASE_URL: "${ETHNOWEAR_OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
       ETHNOWEAR_CONVERSATION_GENERATION_ENABLED: "${ETHNOWEAR_CONVERSATION_GENERATION_ENABLED:-true}"
+      ETHNOWEAR_CONVERSATION_GENERATION_TIMEOUT: "${ETHNOWEAR_CONVERSATION_GENERATION_TIMEOUT:-5m}"
       ETHNOWEAR_CONVERSATION_SSE_HEARTBEAT_INTERVAL: "${ETHNOWEAR_CONVERSATION_SSE_HEARTBEAT_INTERVAL:-20s}"
       ETHNOWEAR_CONVERSATION_MAXIMUM_TURNS_PER_MINUTE: "${ETHNOWEAR_CONVERSATION_MAXIMUM_TURNS_PER_MINUTE:-10}"
       ETHNOWEAR_CONVERSATION_MAXIMUM_TRACKED_OWNERS: "${ETHNOWEAR_CONVERSATION_MAXIMUM_TRACKED_OWNERS:-10000}"
@@ -362,7 +363,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-5173}:80"
     depends_on:
-      - backend
+      - api
     restart: unless-stopped
 
 

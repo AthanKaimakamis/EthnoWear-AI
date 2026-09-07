@@ -42,15 +42,28 @@ public class DefaultConversationAnswerOrchestrator implements ConversationAnswer
     private final ConversationEvidenceAuditService evidenceAudit;
     private final ConversationFallbackAnswerFactory fallbackFactory;
     private final ConversationHistoryService historyService;
+    private final ConversationPolicyService conversationPolicy;
 
     @Override
     public ConversationAnswerDetails generate(
             @NonNull ConversationTurnExecutionContext context,
             @NonNull Consumer<ConversationProgressStage> progress
     ) {
+        var history = historyService.recent(context);
+        var conversationalReply = conversationPolicy.reply(context,
+                conversationPolicy.route(context.userMessage(), history));
+        if (conversationalReply.isPresent()) return conversationalReply.get();
+
         var evidence = evidenceCollector.collect(context, progress);
 
         evidenceAudit.record(context, evidence);
+
+        // Do not ask the model to fill an evidence gap from its background knowledge.
+        if (evidence.isEmpty()) {
+            progress.accept(ConversationProgressStage.VALIDATING_ANSWER);
+            return answerAssembler.assemble(context, evidence,
+                    fallbackFactory.createMissingEvidence(context));
+        }
 
         progress.accept(ConversationProgressStage.REASONING);
 
@@ -62,8 +75,6 @@ public class DefaultConversationAnswerOrchestrator implements ConversationAnswer
         List<String> reasoningWarnings = reasoning.warningCodes();
         ConversationGenerationGateway gateway = generationGateways.getIfAvailable();
         ConversationGenerationResult generation;
-
-        var history = historyService.recent(context);
 
         try {
             if (gateway == null)
@@ -79,7 +90,9 @@ public class DefaultConversationAnswerOrchestrator implements ConversationAnswer
                     )
             );
 
-            generation = mergeWarnings(generation, reasoningWarnings);
+            generation = generation.claims().isEmpty()
+                    ? fallbackFactory.createAfterRejected(context, evidence, reasoningWarnings)
+                    : mergeWarnings(generation, reasoningWarnings);
         } catch (ConversationGenerationRejectedException exception) {
             generation = fallbackFactory.createAfterRejected(context, evidence, reasoningWarnings);
         } catch (ConversationGenerationUnavailableException exception) {

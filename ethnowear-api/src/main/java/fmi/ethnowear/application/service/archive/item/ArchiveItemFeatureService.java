@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Set;
+import java.util.Objects;
 
 import static fmi.ethnowear.util.IdentifierUtils.requireId;
 import static fmi.ethnowear.util.TextUtils.isBlank;
@@ -61,6 +62,7 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
     @Transactional
     public ArchiveItemFeatureDetails create(ArchiveItemFeatureWriteDto input) {
         validate(input);
+        rejectNewMotifFeature(input, null);
 
         ArchiveItemFeature feature = new ArchiveItemFeature();
         apply(feature, input);
@@ -74,6 +76,7 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
         validate(input);
 
         ArchiveItemFeature feature = requireFeature(id);
+        rejectNewMotifFeature(input, feature);
         workflowGuard.requireDraft(feature.getArchiveItem());
         apply(feature, input);
 
@@ -114,6 +117,20 @@ public class ArchiveItemFeatureService implements CrudService<ArchiveItemFeature
 
         return featureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item feature", id));
+    }
+
+    private void rejectNewMotifFeature(ArchiveItemFeatureWriteDto input, ArchiveItemFeature existing) {
+        if(input.featureType() != FeatureType.MOTIF)
+            return;
+
+        // Preserve existing legacy links without permitting new motif observations.
+        if(existing != null && existing.getFeatureType() == FeatureType.MOTIF
+                && Objects.equals(existing.getArchiveItem().getId(), input.archiveItemId())
+                && Objects.equals(existing.getOntologyIri(), input.ontologyIri())
+                && Objects.equals(existing.getOntologyLocalName(), input.ontologyLocalName()))
+            return;
+
+        throw new IllegalArgumentException("Motifs must be assigned as regional motif classifications, not observed features");
     }
 
     private void validate(ArchiveItemFeatureWriteDto input) {

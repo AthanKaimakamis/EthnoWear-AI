@@ -173,13 +173,13 @@ class PublicArchiveControllerTest {
         private Long id;
 
         private StubArchiveItemDetailService() {
-            super(null, null, null, null, null, null, null, null, null, null);
+            super(null, null, null, null, null, null, null, null, null, null, null);
         }
 
         @Override
         public ArchiveItemDetailDetails findById(Long id) {
             this.id = id;
-            return new ArchiveItemDetailDetails(null, null, List.of(), List.of());
+            return new ArchiveItemDetailDetails(null, null, List.of(), List.of(), List.of(), List.of());
         }
     }
 

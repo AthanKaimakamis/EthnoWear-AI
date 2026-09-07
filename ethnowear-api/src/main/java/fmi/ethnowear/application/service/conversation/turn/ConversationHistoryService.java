@@ -44,7 +44,9 @@ public class ConversationHistoryService {
 
             var message = new ConversationHistoryMessage(
                     turn.getUserMessage(),
-                    answer.answer()
+                    answer.answer(),
+                    answer.sources().stream().map(source -> source.citationId()).limit(20).toList(),
+                    answer.entityCards().stream().map(card -> card.localName()).limit(12).toList()
             );
 
             if (message.characterCount() > remaining)

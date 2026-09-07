@@ -269,7 +269,7 @@ describe('DocumentPageReviewDialog', () => {
         const input = await screen.findByRole('textbox', { name: 'Printed page number' })
         await user.clear(input)
         await user.type(input, '15')
-        await user.click(screen.getByRole('button', { name: 'Save page identity' }))
+        await user.click(screen.getByRole('button', { name: 'Save' }))
         await waitFor(() => expect(documentApi.updateDocumentPageMetadata).toHaveBeenCalledWith(7, 42, 'v1', { printedPageNumber: '15', printedPageSort: 1, pageLabel: null }))
     })
 
@@ -280,7 +280,7 @@ describe('DocumentPageReviewDialog', () => {
         await user.click(await screen.findByRole('combobox', { name: 'Provenance trust' }))
         await user.click(screen.getByRole('option', { name: 'Trusted provenance' }))
         expect(screen.getByRole('textbox', { name: 'Reason for trust decision' })).toHaveValue('Reviewed by admin - Administrator')
-        await user.click(screen.getByRole('button', { name: 'Save trust decision' }))
+        await user.click(screen.getByRole('button', { name: 'Save' }))
         await waitFor(() => expect(documentApi.changePageProvenanceTrust).toHaveBeenCalledWith(42, { provenanceTrustState: 'TRUSTED', reason: 'Reviewed by admin - Administrator' }))
     })
 
@@ -293,10 +293,13 @@ describe('DocumentPageReviewDialog', () => {
         await user.click(await screen.findByRole('tab', { name: 'Page details' }))
         await user.click(screen.getByRole('button', { name: 'Add citation' }))
         await screen.findByText('New exact citation')
+        const chapterField = screen.getByRole('textbox', { name: 'Chapter' })
+        await user.type(chapterField, 'Part one ')
+        expect(chapterField).toHaveValue('Part one ')
         await user.click(screen.getAllByRole('button', { name: 'Add citation' }).at(-1)!)
 
         await waitFor(() => expect(sourceReferencesApi.create).toHaveBeenCalledWith(expect.objectContaining({ sourceId: 2 })))
-        expect(screen.getByRole('combobox', { name: 'Exact citation for this page' })).toHaveTextContent('IV')
+        expect((screen.getByRole('combobox', { name: 'Exact citation for this page' }) as HTMLInputElement).value).toContain('IV')
     })
 
     it('persists the document citation on an unassigned page', async () => {
@@ -317,11 +320,11 @@ describe('DocumentPageReviewDialog', () => {
         renderDialog()
 
         await user.click(await screen.findByRole('tab', { name: 'Page details' }))
-        expect(await screen.findByRole('combobox', { name: 'Exact citation for this page' })).toHaveTextContent('Source book')
+        expect((await screen.findByRole('combobox', { name: 'Exact citation for this page' }) as HTMLInputElement).value).toContain('Source book')
         const reason = screen.getByRole('textbox', { name: 'Reason for source selection' })
         await user.clear(reason)
         await user.type(reason, 'Inherited from document source')
-        await user.click(screen.getByRole('button', { name: 'Save source' }))
+        await user.click(screen.getByRole('button', { name: 'Save' }))
 
         await waitFor(() => expect(documentApi.changePageSourceProvenance).toHaveBeenCalledWith(42, {
             sourceReferenceId: 9,

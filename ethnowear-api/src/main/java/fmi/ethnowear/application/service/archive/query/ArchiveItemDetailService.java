@@ -43,6 +43,7 @@ public class ArchiveItemDetailService {
     private final MediaAssetMapper mediaAssetMapper;
     private final MediaFeatureAnnotationMapper annotationMapper;
     private final EntitySourceCitationMapper sourceCitationMapper;
+    private final fmi.ethnowear.application.service.archive.workflow.ArchiveImageInheritance imageInheritance;
 
     public ArchiveItemDetailDetails findById(Long id) {
         requireId(id, "Archive item");
@@ -79,7 +80,12 @@ public class ArchiveItemDetailService {
                         .sorted(Comparator.comparing(UpdatableEntity::getId))
                         .map(featureMapper::toDetails)
                         .toList(),
-                media
+                media,
+                imageInheritance.observations(id, true),
+                mediaRepository.findPublicByArchiveItemId(id, FigureReviewState.APPROVED).stream()
+                        .map(value -> value.getMediaAsset().getSourceReference())
+                        .filter(java.util.Objects::nonNull).distinct()
+                        .map(sourceCitationMapper::toDetails).toList()
         );
     }
 }

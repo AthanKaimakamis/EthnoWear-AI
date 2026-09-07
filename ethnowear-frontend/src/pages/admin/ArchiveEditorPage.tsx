@@ -1,3 +1,4 @@
+import { archiveMediaDefaults, primaryCaption } from '../../components/admin/archive-editor/archiveMediaDefaults'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Alert, AlertTitle, Box, Button, Paper,
@@ -42,7 +43,9 @@ import type {
 import type { OntologyFeatureType } from '../../types/catalogue'
 import type { ReferenceResource } from '../../types/reference'
 import { invalidatePublicQueries } from '../../app/queryClient'
-import { validateArchiveClassification } from '../../app/regionalMotifs'
+import { changeArchiveItemField } from '../../app/regionalMotifs'
+import { buildArchiveEntryPayload } from '../../components/admin/archive-editor/archiveEditorPayload'
+import ImageInheritanceSummary from '../../components/admin/archive-editor/ImageInheritanceSummary'
 
 const emptyItem: ArchiveItemWriteDto = {
     sourceReferenceId: 0,
@@ -68,13 +71,14 @@ const emptyItem: ArchiveItemWriteDto = {
 const emptyFeatures: FeatureSelections = {
     ORNAMENT: [],
     TECHNIQUE: [],
-    MOTIF: [],
     COLOR: [],
 }
 
-const editorTabs = ['basic', 'classification', 'media', 'source', 'description', 'review'] as const
+const editorTabs = ['basic', 'media', 'review'] as const
 
 type Props = {
+    initialMedia?: MediaAssetDetails[]
+    duplicateFromId?: number
     itemId?: number | null
     embedded?: boolean
     onClose?: () => void
@@ -85,6 +89,8 @@ type Props = {
 
 export default function ArchiveEditorPage({
     itemId: itemIdOverride,
+    duplicateFromId,
+    initialMedia,
     embedded = false,
     onClose,
     onSaved,
@@ -100,7 +106,8 @@ export default function ArchiveEditorPage({
     const [publicationStatus, setPublicationStatus] = useState<PublicationStatus>('DRAFT')
     const [features, setFeatures] = useState<FeatureSelections>(emptyFeatures)
     const [savedFeatures, setSavedFeatures] = useState<ArchiveItemFeatureDetails[]>([])
-    const [media, setMedia] = useState<MediaDraft[]>([])
+    const [media, setMedia] = useState<MediaDraft[]>(() => (initialMedia ?? []).map((asset, index) => ({ asset, role: index === 0 ? 'PRIMARY' : 'DETAIL', captionBg: asset.description ?? '', captionEn: '' })))
+    const [duplicateMedia, setDuplicateMedia] = useState<MediaDraft[]>([])
     const [assets, setAssets] = useState<MediaAssetDetails[]>([])
     const [sources, setSources] = useState<SourceDetails[]>([])
     const [references, setReferences] = useState<SourceReferenceDetails[]>([])
@@ -143,7 +150,7 @@ export default function ArchiveEditorPage({
             sourceReferencesApi.findAll({ size: 1000 }, controller.signal),
             mediaAssetsApi.findAll({ size: 1000 }, controller.signal),
             getFullReference(language),
-            itemId ? getAdminArchiveItemDetail(itemId, controller.signal) : Promise.resolve(null),
+            (itemId || duplicateFromId) ? getAdminArchiveItemDetail((itemId || duplicateFromId)!, controller.signal) : Promise.resolve(null),
         ]).then(([sourcePage, referencePage, assetPage, refs, details]) => {
             setSources(sourcePage.content)
             setReferences(referencePage.content)
@@ -151,23 +158,23 @@ export default function ArchiveEditorPage({
             setReferenceData(refs)
 
             if (!details) return
-            setItem(details.archiveItem)
-            setPublicationStatus(details.archiveItem.publicationStatus)
-            setSavedFeatures(details.features)
+            setItem(duplicateFromId ? { ...details.archiveItem, inventoryNumber: null, trustedLevel: 'UNVERIFIED' } : details.archiveItem)
+            setPublicationStatus(duplicateFromId ? 'DRAFT' : details.archiveItem.publicationStatus)
+            setSavedFeatures(duplicateFromId ? [] : details.features)
             setFeatures({
                 ORNAMENT: selectedResources('ORNAMENT', details.features, refs.ornaments),
                 TECHNIQUE: selectedResources('TECHNIQUE', details.features, refs.techniques),
-                MOTIF: selectedResources('MOTIF', details.features, refs.motifs),
                 COLOR: selectedResources('COLOR', details.features, refs.colors),
             })
-            setMedia(details.media.map(({ media: link, asset }) => ({
+            setMedia((duplicateFromId ? [] : details.media).map(({ media: link, asset }) => ({
                 id: link.id,
                 asset,
                 role: link.role,
                 captionBg: link.captionBg ?? '',
                 captionEn: link.captionEn ?? '',
             })))
-            void loadReadiness(details.archiveItem.id, controller.signal)
+            if (duplicateFromId) setDuplicateMedia(details.media.map(({ media: link, asset }) => ({ asset, role: link.role, captionBg: link.captionBg ?? '', captionEn: link.captionEn ?? '' })))
+            if (!duplicateFromId) void loadReadiness(details.archiveItem.id, controller.signal)
         }).catch(caught => {
             if (!(caught instanceof DOMException && caught.name === 'AbortError')) {
                 setErrorMessages(publicationErrorMessages(caught, t('publication.errors.load'), t))
@@ -177,7 +184,7 @@ export default function ArchiveEditorPage({
         })
 
         return () => controller.abort()
-    }, [i18n.resolvedLanguage, itemId, loadReadiness, t])
+    }, [i18n.resolvedLanguage, itemId, duplicateFromId, loadReadiness, t])
 
     useEffect(() => {
         const warn = (event: BeforeUnloadEvent) => {
@@ -193,26 +200,7 @@ export default function ArchiveEditorPage({
         setReadinessErrors([])
     }
     const setField = <K extends keyof ArchiveItemWriteDto>(key: K, value: ArchiveItemWriteDto[K]) => {
-        setItem(current => {
-            const next = { ...current, [key]: value }
-            if (key === 'archiveType') {
-                if (value !== 'EMBROIDERY_SAMPLE') {
-                    next.ontologyRegionalEmbroideryIri = null
-                    next.ontologyRegionalEmbroideryLocalName = null
-                }
-                if (value !== 'MOTIF_EXAMPLE') {
-                    next.ontologyRegionalMotifIri = null
-                    next.ontologyRegionalMotifLocalName = null
-                }
-            }
-            if (key === 'ontologyRegionLocalName') {
-                next.ontologyRegionalEmbroideryIri = null
-                next.ontologyRegionalEmbroideryLocalName = null
-                next.ontologyRegionalMotifIri = null
-                next.ontologyRegionalMotifLocalName = null
-            }
-            return next
-        })
+        setItem(current => changeArchiveItemField(current, key, value, referenceData))
         markDirty()
     }
 
@@ -224,53 +212,17 @@ export default function ArchiveEditorPage({
         return [source?.title ?? `#${reference.sourceId}`, pages].filter(Boolean).join(' · ')
     }
 
-    const selectedReference = references.find(reference => reference.id === item.sourceReferenceId)
+    const resolvedItem = archiveMediaDefaults(item, media)
+    const selectedReference = references.find(reference => reference.id === resolvedItem.sourceReferenceId)
     const selectedSource = selectedReference ? sources.find(source => source.id === selectedReference.sourceId) : null
     const editable = publicationStatus === 'DRAFT' && permissions.edit
 
-    const aggregatePayload = useMemo<ArchiveEntryWriteDto>(() => ({
-        archiveItem: {
-            ...item,
-            titleBg: nullText(item.titleBg),
-            titleEn: nullText(item.titleEn),
-            descriptionBg: nullText(item.descriptionBg),
-            descriptionEn: nullText(item.descriptionEn),
-        },
-        features: Object.entries(features).flatMap(([featureType, resources]) => resources.map(resource => ({
-            id: savedFeatures.find(feature => featureKey(feature) === featureKey({
-                featureType: featureType as OntologyFeatureType,
-                ontologyIri: resource.iri,
-                ontologyLocalName: resource.localName,
-            }))?.id,
-            featureType: featureType as OntologyFeatureType,
-            ontologyIri: resource.iri,
-            ontologyLocalName: resource.localName,
-            confidence: null,
-            validated: true,
-            notes: null,
-            sourceReferenceId: item.sourceReferenceId || null,
-        }))),
-        media: media.map(link => ({
-            id: link.id,
-            mediaAssetId: link.asset.id,
-            role: link.role,
-            captionBg: nullText(link.captionBg),
-            captionEn: nullText(link.captionEn),
-        })),
-    }), [features, item, media, savedFeatures])
+    const aggregatePayload = useMemo<ArchiveEntryWriteDto>(
+        () => buildArchiveEntryPayload(archiveMediaDefaults(item, media), features, savedFeatures, media),
+        [features, item, media, savedFeatures],
+    )
 
     async function saveDraft() {
-        if (!item.sourceReferenceId) {
-            setTab(3)
-            setErrorMessages([t('curator.validation.source')])
-            return
-        }
-        const classificationError = validateArchiveClassification(item, referenceData)
-        if (classificationError) {
-            setTab(1)
-            setErrorMessages([t(classificationError)])
-            return
-        }
         setSaving(true)
         setErrorMessages([])
         try {
@@ -323,14 +275,13 @@ export default function ArchiveEditorPage({
             setMedia(current => [...current, {
                 asset,
                 role: current.length ? 'DETAIL' : 'PRIMARY',
-                captionBg: '',
-                captionEn: '',
+                captionBg: i18n.resolvedLanguage === 'en' ? '' : asset.description ?? '',
+                captionEn: i18n.resolvedLanguage === 'en' ? asset.description ?? '' : '',
             }])
             markDirty()
         }
         setAssets(current => current.some(candidate => candidate.id === asset.id) ? current : [...current, asset])
         setUploadOpen(false)
-        setLibraryOpen(false)
     }
 
     function closeEditor() {
@@ -360,7 +311,7 @@ export default function ArchiveEditorPage({
                 readiness={dirty ? null : readiness}
                 loading={readinessLoading}
                 errorMessages={readinessErrors}
-                onOpenRequirement={requirement => setTab(tabForRequirement(requirement))}
+                onOpenRequirement={requirement => setTab(tabForRequirement(requirement) === 2 ? 1 : 0)}
             />
             {itemId && (
                 <ArchiveWorkflowActions
@@ -391,13 +342,15 @@ export default function ArchiveEditorPage({
                 <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider', px: 1 }}>
                     {editorTabs.map(name => <Tab key={name} label={t(`curator.editor.tabs.${name}`)} />)}
                 </Tabs>
-                <Box component="fieldset" disabled={!editable && tab !== 5} sx={{ p: { xs: 2, md: 3 }, m: 0, minWidth: 0, border: 0 }}>
-                    {tab === 0 && <BasicSection item={item} setField={setField} t={t} />}
-                    {tab === 1 && referenceData && <ClassificationSection item={item} setField={setField} features={features} setFeatures={value => { setFeatures(value); markDirty() }} refs={referenceData} t={t} />}
-                    {tab === 2 && <MediaSection media={media} setMedia={value => { setMedia(value); markDirty() }} onRemove={removeMedia} onUpload={() => setUploadOpen(true)} onLibrary={() => setLibraryOpen(true)} t={t} />}
-                    {tab === 3 && <SourceSection references={references} sourceReferenceLabel={sourceReferenceLabel} value={item.sourceReferenceId} setValue={value => setField('sourceReferenceId', value)} selectedSource={selectedSource} canCreateCitation={sources.length > 0} onCreateSource={() => setSourceCreateOpen(true)} onCreateCitation={() => { setNewCitationSourceId(selectedSource?.id ?? newCitationSourceId ?? sources[0]?.id ?? null); setCitationCreateOpen(true) }} t={t} />}
-                    {tab === 4 && <DescriptionSection item={item} setField={setField} t={t} />}
-                    {tab === 5 && reviewContent}
+                <Box component="fieldset" disabled={!editable && tab !== 2} sx={{ p: { xs: 2, md: 3 }, m: 0, minWidth: 0, border: 0, '& > * + *': { mt: 3 } }}>
+                    {tab === 0 && <><BasicSection item={item} setField={setField} t={t} />{!item.titleBg?.trim() && primaryCaption(media, 'bg') && <Button onClick={() => setField('titleBg', primaryCaption(media, 'bg'))}>{t('archiveFast.useCaption')}</Button>}{!item.titleEn?.trim() && primaryCaption(media, 'en') && <Button onClick={() => setField('titleEn', primaryCaption(media, 'en'))}>{t('archiveFast.useCaption')}</Button>}</>}
+                    {tab === 0 && referenceData && <ClassificationSection item={item} setField={setField} features={features} setFeatures={value => { setFeatures(value); markDirty() }} refs={referenceData} t={t} />}
+                    {tab === 0 && referenceData && <ImageInheritanceSummary media={media} reference={referenceData} citationLabel={id => { const reference = references.find(value => value.id === id); return reference ? sourceReferenceLabel(reference) : t('archiveDetails.sources') }} />}
+                    {tab === 1 && duplicateFromId && duplicateMedia.length > 0 && <Button variant="outlined" onClick={() => { setMedia(current => [...current, ...duplicateMedia.filter(value => !current.some(existing => existing.asset.id === value.asset.id))]); setDuplicateMedia([]); markDirty() }}>{i18n.resolvedLanguage === 'en' ? 'Include original images' : 'Включи оригиналните изображения'}</Button>}
+                    {tab === 1 && <MediaSection media={media} setMedia={value => { setMedia(value); markDirty() }} onRemove={removeMedia} onUpload={() => setUploadOpen(true)} onLibrary={() => setLibraryOpen(true)} t={t} />}
+                    {tab === 0 && <SourceSection references={references} sourceReferenceLabel={sourceReferenceLabel} value={resolvedItem.sourceReferenceId ?? 0} setValue={value => setField('sourceReferenceId', value)} selectedSource={selectedSource} canCreateCitation={sources.length > 0} onCreateSource={() => setSourceCreateOpen(true)} onCreateCitation={() => { setNewCitationSourceId(selectedSource?.id ?? newCitationSourceId ?? sources[0]?.id ?? null); setCitationCreateOpen(true) }} t={t} />}
+                    {tab === 0 && <DescriptionSection item={item} setField={setField} t={t} />}
+                    {tab === 2 && reviewContent}
                 </Box>
             </Paper>
             <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sources={sources} sourceReferenceLabel={sourceReferenceLabel} onClose={() => setUploadOpen(false)} onUploaded={asset => { addAsset(asset); setUploadOpen(true) }} />
@@ -467,17 +420,11 @@ export default function ArchiveEditorPage({
 
 function selectedResources(
     type: OntologyFeatureType,
-    features: Array<{ featureType: OntologyFeatureType, ontologyLocalName: string }>,
+    features: ArchiveItemFeatureDetails[],
     resources: ReferenceResource[],
 ) {
-    const names = new Set(features.filter(feature => feature.featureType === type).map(feature => feature.ontologyLocalName))
-    return resources.filter(resource => names.has(resource.localName))
-}
-
-function featureKey(feature: Pick<ArchiveItemFeatureDetails, 'featureType' | 'ontologyIri' | 'ontologyLocalName'>) {
-    return `${feature.featureType}\u0000${feature.ontologyIri}\u0000${feature.ontologyLocalName}`
-}
-
-function nullText(value: string | null | undefined) {
-    return value?.trim() || null
+    return features.filter(feature => feature.featureType === type).map(feature =>
+        resources.find(resource => resource.localName === feature.ontologyLocalName) ?? {
+            iri: feature.ontologyIri, localName: feature.ontologyLocalName, label: feature.ontologyLocalName,
+        })
 }

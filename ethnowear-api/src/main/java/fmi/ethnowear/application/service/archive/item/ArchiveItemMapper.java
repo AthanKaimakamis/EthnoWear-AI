@@ -34,7 +34,7 @@ public class ArchiveItemMapper {
     public ArchiveItemDetails toDetails(@NonNull ArchiveItem item) {
         return new ArchiveItemDetails(
                 item.getId(),
-                item.getSourceReference().getId(),
+                item.getSourceReference() == null ? null : item.getSourceReference().getId(),
                 item.getCollectionId(),
                 item.getInventoryNumber(),
                 item.getTitleBg(),

@@ -9,10 +9,14 @@ public record ArchiveItemDetailDetails(
         ArchiveItemDetails archiveItem,
         EntitySourceCitationDetails source,
         List<ArchiveItemFeatureDetails> features,
-        List<ArchiveItemMediaContentDetails> media
+        List<ArchiveItemMediaContentDetails> media,
+        List<fmi.ethnowear.application.dto.archive.workflow.InheritedObservationDetails> inheritedObservations,
+        List<EntitySourceCitationDetails> imageSources
 ) {
     public ArchiveItemDetailDetails {
         features = List.copyOf(features);
         media = List.copyOf(media);
+        inheritedObservations = List.copyOf(inheritedObservations);
+        imageSources = List.copyOf(imageSources);
     }
 }

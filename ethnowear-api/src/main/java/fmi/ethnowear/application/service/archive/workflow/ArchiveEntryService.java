@@ -16,8 +16,6 @@ import fmi.ethnowear.application.service.archive.media.attachment.ArchiveItemMed
 import fmi.ethnowear.application.service.archive.media.attachment.ArchiveItemMediaMapper;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemFeatureRepository;
 import fmi.ethnowear.persistence.jpa.repository.ArchiveItemMediaRepository;
-import fmi.ethnowear.domain.model.archive.ArchiveType;
-import fmi.ethnowear.domain.model.ontology.FeatureType;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
@@ -41,6 +39,7 @@ public class ArchiveEntryService {
     private final ArchiveItemMediaRepository mediaRepository;
     private final ArchiveItemFeatureMapper featureMapper;
     private final ArchiveItemMediaMapper mediaMapper;
+    private final ArchiveImageInheritance imageInheritance;
 
     public ArchiveEntryDetails findById(Long archiveItemId) {
         ArchiveItemDetails item = archiveItemService.findById(archiveItemId);
@@ -55,7 +54,7 @@ public class ArchiveEntryService {
                 .map(mediaMapper::toDetails)
                 .toList();
 
-        return new ArchiveEntryDetails(item, features, media);
+        return new ArchiveEntryDetails(item, features, media, imageInheritance.observations(archiveItemId, false));
     }
 
     @Transactional
@@ -73,7 +72,7 @@ public class ArchiveEntryService {
                 .map(itemMedia -> mediaService.create(toMediaWriteDto(archiveItemId, itemMedia)))
                 .toList();
 
-        return new ArchiveEntryDetails(item, features, media);
+        return new ArchiveEntryDetails(item, features, media, imageInheritance.observations(archiveItemId, false));
     }
 
     @Transactional
@@ -124,7 +123,7 @@ public class ArchiveEntryService {
                 .map(itemMedia -> saveMedia(archiveItemId, itemMedia))
                 .toList();
 
-        return new ArchiveEntryDetails(item, features, media);
+        return new ArchiveEntryDetails(item, features, media, imageInheritance.observations(archiveItemId, false));
     }
 
     private ArchiveItemFeatureDetails saveFeature(Long archiveItemId, @NonNull ArchiveEntryFeatureWriteDto input) {
@@ -186,26 +185,6 @@ public class ArchiveEntryService {
                 || input.media().stream().anyMatch(itemMedia -> itemMedia.id() != null)))
             throw new IllegalArgumentException("Child identifiers are not allowed when creating an archive entry");
 
-        requireSemanticFeature(input, ArchiveType.ORNAMENT_EXAMPLE, FeatureType.ORNAMENT);
-        requireSemanticFeature(input, ArchiveType.TECHNIQUE_EXAMPLE, FeatureType.TECHNIQUE);
-        requireSemanticFeature(input, ArchiveType.MOTIF_EXAMPLE, FeatureType.MOTIF);
-    }
-
-    private void requireSemanticFeature(
-            @NonNull ArchiveEntryWriteDto input,
-            ArchiveType archiveType,
-            FeatureType featureType
-    ) {
-        if(input.archiveItem().archiveType() != archiveType)
-            return;
-
-        boolean present = input.features().stream()
-                .anyMatch(feature -> feature.featureType() == featureType && feature.validated());
-        if(!present)
-            throw new IllegalArgumentException(
-                    "A validated " + featureType.name().toLowerCase() +
-                            " feature is required for " + archiveType.name().toLowerCase()
-            );
     }
 
     private void validateUniqueIds(List<Long> values, String resourceName) {

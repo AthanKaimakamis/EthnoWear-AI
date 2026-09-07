@@ -245,6 +245,10 @@ export function updateDocumentMetadata(documentId: number, command: DocumentMeta
     return apiRequest<void>(`/api/admin/documents/${documentId}/metadata`, { method: 'PUT', body: command })
 }
 
+export function updateDocumentDefaultSourceReference(documentId: number, sourceReferenceId: number, reason: string) {
+    return apiRequest(`/api/admin/documents/${documentId}/default-source-reference`, { method: 'PUT', body: { sourceReferenceId, inheritToUnassignedPages: false, reason } })
+}
+
 export function updateDocumentPageMetadata(documentId: number, pageId: number, versionToken: string, command: DocumentPageMetadataUpdateCommand) {
     return apiRequest<void>(`/api/admin/documents/${documentId}/pages/${pageId}/metadata`, {
         method: 'PATCH',

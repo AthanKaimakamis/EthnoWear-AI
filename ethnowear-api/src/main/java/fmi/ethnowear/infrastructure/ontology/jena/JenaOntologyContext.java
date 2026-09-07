@@ -231,7 +231,7 @@ public abstract class JenaOntologyContext {
         });
     }
 
-    private @org.jspecify.annotations.NonNull List<Resource> restrictionValues(@org.jspecify.annotations.NonNull OntModel model, Resource ontologyClass, Property property) {
+    private @NonNull List<Resource> restrictionValues(@org.jspecify.annotations.NonNull OntModel model, Resource ontologyClass, Property property) {
         List<Resource> result = new ArrayList<>();
         StmtIterator superClasses = model.listStatements(ontologyClass, RDFS.subClassOf, (RDFNode) null);
 

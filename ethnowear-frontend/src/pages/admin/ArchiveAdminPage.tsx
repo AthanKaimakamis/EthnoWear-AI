@@ -79,7 +79,7 @@ const sourceTypes = ['BOOK', 'SCANNED_BOOK', 'WEBSITE', 'MUSEUM_CATALOG', 'ARTIC
 const rightsStatuses = ['UNKNOWN', 'PUBLIC_DOMAIN', 'LICENSED', 'RESTRICTED']
 const publicRightsStatuses = new Set(['PUBLIC_DOMAIN', 'LICENSED'])
 const mediaRoles = ['PRIMARY', 'DETAIL', 'SOURCE_SCAN', 'THUMBNAIL', 'OTHER']
-const featureTypes = ['ORNAMENT', 'COLOR', 'TECHNIQUE', 'MOTIF']
+const featureTypes = ['ORNAMENT', 'COLOR', 'TECHNIQUE']
 const annotationTypes = ['VISIBLE_IN_IMAGE', 'PRIMARY_SUBJECT', 'DETAIL_VIEW', 'CROP_REGION']
 const chunkTypes = ['GENERAL', 'REGION', 'ORNAMENT', 'TECHNIQUE', 'MOTIF', 'COLOR', 'REGIONAL_MOTIF', 'REGIONAL_EMBROIDERY', 'SOURCE_EXCERPT']
 

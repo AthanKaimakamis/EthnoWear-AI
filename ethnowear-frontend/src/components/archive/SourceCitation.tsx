@@ -3,10 +3,11 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import type { EntitySourceCitationDetails } from '../../types/archive'
 
 type Props = {
-    source: EntitySourceCitationDetails
+    source: EntitySourceCitationDetails | null
 }
 
 function SourceCitation({ source }: Props) {
+    if (!source) return null
     const locator = [
         source.chapter,
         source.sectionTitle,

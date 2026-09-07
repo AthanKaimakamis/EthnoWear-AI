@@ -102,7 +102,8 @@ export default function MediaOntologyLinksEditor({ mediaAssetId, canEdit }: Prop
                 })),
             ])
             await Promise.all([
-                queryClient.invalidateQueries({ queryKey: linksKey }),
+                queryClient.invalidateQueries({ queryKey: ['admin', 'media-entity-links'] }),
+                queryClient.invalidateQueries({ queryKey: ['archive'] }),
                 queryClient.invalidateQueries({ queryKey: ['admin', 'media'] }),
             ])
             setOpen(false)

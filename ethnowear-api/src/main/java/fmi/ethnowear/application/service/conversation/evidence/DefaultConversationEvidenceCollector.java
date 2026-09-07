@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -69,32 +68,7 @@ public class DefaultConversationEvidenceCollector implements ConversationEvidenc
     }
 
     private String evidenceQuery(ConversationTurnExecutionContext context) {
-        String current = context.userMessage().trim();
-
-        if (!isContextualFollowUp(current))
-            return current;
-
-        var history = historyService.recent(context);
-
-        if (history.isEmpty())
-            return current;
-
-        String previous = history.getLast().userMessage().trim();
-        String combined = previous + "\n" + current;
-        return combined.length() <= 1000 ? combined : combined.substring(combined.length() - 1000);
-    }
-
-    private boolean isContextualFollowUp(String message) {
-        String normalized = message.toLowerCase(Locale.ROOT);
-        return normalized.length() <= 120 && (
-                normalized.startsWith("а ")
-                        || normalized.startsWith("и ")
-                        || normalized.startsWith("and ")
-                        || normalized.startsWith("what about ")
-                        || normalized.startsWith("which of those")
-                        || normalized.contains("тези")
-                        || normalized.contains("тях")
-                        || normalized.contains("там")
-        );
+        return fmi.ethnowear.application.service.conversation.orchestration.ConversationPolicyService.evidenceQuery(
+                context.userMessage(), historyService.recent(context));
     }
 }

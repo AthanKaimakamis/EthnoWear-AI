@@ -160,7 +160,9 @@ class ArchivePublicationServiceTest {
         ArchivePublicationValidator validator = new ArchivePublicationValidator(
                 itemRepository,
                 featureRepository,
-                mediaRepository
+                mediaRepository,
+                new fmi.ethnowear.application.service.archive.item.ArchiveItemOntologyValidator(org.mockito.Mockito.mock(fmi.ethnowear.application.port.ontology.EmbroideryOntologyClient.class)),
+                org.mockito.Mockito.mock(ArchiveImageInheritance.class)
         );
         ArchivePublicationService service = new ArchivePublicationService(
                 itemRepository,
@@ -185,6 +187,7 @@ class ArchivePublicationServiceTest {
         EntityTestUtils.setId(item, 1L);
         item.setSourceReference(reference);
         item.setPublicationStatus(status);
+        item.setArchiveType(fmi.ethnowear.domain.model.archive.ArchiveType.TEXT_REFERENCE);
         return item;
     }
 

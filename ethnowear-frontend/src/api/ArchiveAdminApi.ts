@@ -146,15 +146,22 @@ export function updateFullArchiveEntry(id: number, input: ArchiveEntryWriteDto) 
 export async function getAdminArchiveItemDetail(id: number, signal?: AbortSignal): Promise<ArchiveItemDetailDetails> {
     const entry = await apiRequest<ArchiveEntryDetails>(`/api/admin/archive-entries/${id}`, { signal })
     const { archiveItem, features, media: mediaLinks } = entry
-    const reference = await sourceReferencesApi.findById(archiveItem.sourceReferenceId, signal)
+    const reference = archiveItem.sourceReferenceId ? await sourceReferencesApi.findById(archiveItem.sourceReferenceId, signal) : null
     const [source, assets] = await Promise.all([
-        sourcesApi.findById(reference.sourceId, signal),
+        reference ? sourcesApi.findById(reference.sourceId, signal) : Promise.resolve(null),
         Promise.all(mediaLinks.map(link => mediaAssetsApi.findById(link.mediaAssetId, signal))),
     ])
+    const imageSources = await Promise.all([...new Set(assets.map(asset => asset.sourceReferenceId).filter((value): value is number => Boolean(value)))].map(async referenceId => {
+        const imageReference = await sourceReferencesApi.findById(referenceId, signal)
+        const imageSource = await sourcesApi.findById(imageReference.sourceId, signal)
+        return sourceCitation(imageReference, imageSource)
+    }))
 
     return {
         archiveItem,
-        source: sourceCitation(reference, source),
+        inheritedObservations: entry.inheritedObservations ?? [],
+        imageSources,
+        source: reference && source ? sourceCitation(reference, source) : null,
         features,
         media: mediaLinks.map((media, index) => ({ media, asset: assets[index], annotations: [] })),
     }

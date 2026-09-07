@@ -165,6 +165,7 @@ describe('conversation chat', () => {
    throw new Error(`Unhandled ${method} ${url}`)
   })
   render(<MemoryRouter><ChatPage /></MemoryRouter>)
+  expect(screen.getByRole('button', { name: 'Show conversations' })).toHaveAttribute('aria-expanded', 'true')
   fireEvent.click(await screen.findByRole('button', { name: 'Options for Old title' }))
   fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
   fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'New title' } })

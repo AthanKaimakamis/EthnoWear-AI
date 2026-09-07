@@ -66,9 +66,10 @@ public class DefaultConversationTurnProcessor implements ConversationTurnProcess
 
     private void fail(ConversationTurnQueuedEvent identity, Exception exception, String code) {
             log.error(
-                    "Conversation turn {} failed during processing: {}",
+                    "Conversation turn {} failed during processing: {} at {}",
                     identity.turnId(),
-                    exception.getClass().getSimpleName()
+                    exception.getClass().getSimpleName(),
+                    java.util.Arrays.stream(exception.getStackTrace()).limit(12).toList()
             );
             lifecycle.fail(identity, code);
     }

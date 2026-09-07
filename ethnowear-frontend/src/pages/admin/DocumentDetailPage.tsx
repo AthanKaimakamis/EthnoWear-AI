@@ -6,6 +6,9 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
+import { updateDocumentMetadata } from '../../api/DocumentAdminApi'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -53,6 +56,8 @@ export default function DocumentDetailPage() {
     const [reviewPageId, setReviewPageId] = useState<number | null>(null)
     const [thumbnailUploading, setThumbnailUploading] = useState(false)
     const [thumbnailError, setThumbnailError] = useState<string | null>(null)
+    const [titleDraft, setTitleDraft] = useState<string | null>(null)
+    const [savingTitle, setSavingTitle] = useState(false)
     const [deletePageTarget, setDeletePageTarget] = useState<DocumentPageSummary | null>(null)
     const [deletePageReason, setDeletePageReason] = useState('')
     const [deletingPage, setDeletingPage] = useState(false)
@@ -69,6 +74,7 @@ export default function DocumentDetailPage() {
     const pageRequest = { page: pagesTable.page, size: pagesTable.size, sort: `${pagesTable.sort},${pagesTable.direction}` }
     const detailQuery = useQuery({ queryKey: documentQueryKeys.detail(documentId), queryFn: ({ signal }) => getDocument(documentId, signal), enabled: Number.isInteger(documentId) && documentId > 0 })
     const pagesQuery = useQuery({ queryKey: documentQueryKeys.pages(documentId, pageRequest), queryFn: ({ signal }) => listDocumentPages(documentId, pageRequest, signal), enabled: tab === 'pages' && documentId > 0 })
+    const firstPageQuery = useQuery({ queryKey: documentQueryKeys.pages(documentId, { page: 0, size: 1, sort: 'pageSequence,asc' }), queryFn: ({ signal }) => listDocumentPages(documentId, { page: 0, size: 1, sort: 'pageSequence,asc' }, signal), enabled: documentId > 0 && Boolean(detailQuery.data) && !detailQuery.data?.summary.thumbnailMediaAssetId })
     const jobsQuery = useQuery({ queryKey: processingQueryKeys.jobs({ documentId, jobType: jobsTable.jobType || undefined, page: jobsTable.page, size: jobsTable.size, sort: `${jobsTable.sort},${jobsTable.direction}` }), queryFn: ({ signal }) => listProcessingJobs({ documentId, jobType: jobsTable.jobType || undefined, page: jobsTable.page, size: jobsTable.size, sort: `${jobsTable.sort},${jobsTable.direction}` }, signal), enabled: tab === 'jobs' && documentId > 0 })
     const pageWorkflowQueries = useQueries({ queries: (pagesQuery.data?.content ?? []).map(page => ({ queryKey: documentQueryKeys.pageWorkflow(documentId, page.id), queryFn: ({ signal }: { signal: AbortSignal }) => getDocumentPageWorkflow(documentId, page.id, signal), enabled: tab === 'pages' })) })
     const queryClient = useQueryClient()
@@ -80,6 +86,19 @@ export default function DocumentDetailPage() {
     if (detailQuery.isError) return <Alert severity="error" action={<Button onClick={() => navigate('/management/documents')}>{t('documents.detail.back')}</Button>}>{apiErrorMessage(detailQuery.error, t('documents.loadFailed'))}</Alert>
     const detail = detailQuery.data
     const summary = detail.summary
+    const thumbnailId = summary.thumbnailMediaAssetId ?? firstPageQuery.data?.content[0]?.previewMediaAssetId
+    async function saveTitle() {
+        if (!titleDraft?.trim() || savingTitle) return
+        setSavingTitle(true)
+        setThumbnailError(null)
+        try {
+            await updateDocumentMetadata(documentId, { title: titleDraft.trim(), author: summary.author, publisher: summary.publisher, publicationYear: summary.publicationYear, language: summary.language, defaultSourceReferenceId: summary.defaultSourceReferenceId, notes: detail.notes })
+            await queryClient.invalidateQueries({ queryKey: documentQueryKeys.lists() })
+            await detailQuery.refetch()
+            setTitleDraft(null)
+        } catch (error) { setThumbnailError(apiErrorMessage(error, t('documents.loadFailed'))) }
+        finally { setSavingTitle(false) }
+    }
     const visiblePages = pagesQuery.data?.content ?? []
     const reviewPageIndex = visiblePages.findIndex(page => page.id === reviewPageId)
     const hasPreviousReviewPage = reviewPageIndex > 0 || (reviewPageIndex === 0 && pagesTable.page > 0)
@@ -170,7 +189,7 @@ export default function DocumentDetailPage() {
     return <Stack spacing={3}>
         <Box><Button component={Link} to="/management/documents" startIcon={<ArrowBackIcon />}>{t('documents.detail.back')}</Button></Box>
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ justifyContent: 'space-between' }}>
-            <Box><Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>{summary.title}</Typography><Typography color="text.secondary">{[summary.author, summary.publisher, summary.publicationYear].filter(Boolean).join(' · ')}</Typography></Box>
+            <Box sx={{ minWidth: 0, flex: 1 }}>{titleDraft !== null ? <Stack spacing={1}><TextField fullWidth autoFocus label={t('documents.uploadDialog.titleField')} value={titleDraft} disabled={savingTitle} onChange={event => setTitleDraft(event.target.value)} /><Stack direction="row" spacing={1}><Button variant="contained" startIcon={<SaveOutlinedIcon />} disabled={savingTitle || !titleDraft.trim()} onClick={() => void saveTitle()}>{savingTitle ? t('forms.saving') : t('forms.save')}</Button><Button disabled={savingTitle} onClick={() => setTitleDraft(null)}>{t('admin.cancel')}</Button></Stack></Stack> : <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Typography component="h1" variant="h4" sx={{ fontWeight: 800, color: 'text.primary', overflowWrap: 'anywhere' }}>{summary.title}</Typography>{canManageProcessing && <IconButton aria-label={t('admin.edit')} onClick={() => setTitleDraft(summary.title)}><EditOutlinedIcon /></IconButton>}</Stack>}<Typography color="text.secondary">{[summary.author, summary.publisher, summary.publicationYear].filter(Boolean).join(' · ')}</Typography></Box>
             <Stack spacing={1} sx={{ alignItems: { lg: 'flex-end' } }}>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}><DocumentStatusChip kind="processing" value={summary.processingState} /><DocumentStatusChip kind="review" value={summary.reviewState} /><DocumentStatusChip kind="trust" value={summary.provenanceTrustState} /><DocumentStatusChip kind="indexing" value={summary.indexingState} /></Stack>
                 {isAdministrator && <Button color="error" variant="outlined" startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => setDeleteDocumentOpen(true)}>{t('documents.deleteDocument.action')}</Button>}
@@ -181,8 +200,8 @@ export default function DocumentDetailPage() {
         <Paper variant="outlined" sx={{ p: 2 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
                 <Box sx={{ width: 112, height: 144, flexShrink: 0, bgcolor: 'grey.100', border: '1px solid', borderColor: 'divider', display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
-                    {summary.thumbnailMediaAssetId
-                        ? <AdminMediaThumbnail mediaAssetId={summary.thumbnailMediaAssetId} alt={t('documents.detail.thumbnail')} sx={{ width: '100%', height: '100%' }} />
+                    {thumbnailId
+                        ? <AdminMediaThumbnail mediaAssetId={thumbnailId} alt={t('documents.detail.thumbnail')} sx={{ width: '100%', height: '100%' }} />
                         : <ImageOutlinedIcon color="disabled" sx={{ fontSize: 42 }} />}
                 </Box>
                 <Box sx={{ flex: 1 }}>
@@ -215,7 +234,7 @@ export default function DocumentDetailPage() {
                 <TableCell>{t('documents.columns.indexing')}</TableCell><TableCell />
             </TableRow></TableHead><TableBody>{pagesQuery.data?.content.length === 0
                 ? <TableRow><TableCell colSpan={9} align="center" sx={{ py: 7 }}><Typography color="text.secondary">{t('documents.detail.noPages')}</Typography>{summary.processingState === 'PENDING' && <Typography variant="body2" color="text.secondary">{t('documents.detail.extractionWaiting')}</Typography>}</TableCell></TableRow>
-                : pagesQuery.data?.content.map((item, index) => <TableRow hover key={item.id} tabIndex={0} aria-label={t('documents.detail.openPageNumber', { page: item.printedPageNumber ?? item.pageLabel ?? item.pageSequence })} onClick={() => setReviewPageId(item.id)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setReviewPageId(item.id) } }} sx={{ cursor: 'pointer' }}>
+                : pagesQuery.data?.content.map((item, index) => <TableRow hover key={item.id} tabIndex={0} aria-label={t('documents.detail.openPageNumber', { page: item.printedPageNumber ?? item.pageLabel ?? item.pageSequence })} onClick={() => setReviewPageId(item.id)} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setReviewPageId(item.id) } }} sx={{ cursor: 'pointer' }}>
                     <TableCell>{item.pageSequence}</TableCell><TableCell>{item.printedPageNumber ?? item.pageLabel ?? '—'}</TableCell><TableCell>{apiEnumLabel(t, 'pageKind', item.pageKind)}</TableCell>
                     <TableCell><PageWorkflowProgress progress={pageWorkflowQueries[index]?.data} loading={pageWorkflowQueries[index]?.isPending} compact /></TableCell>
                     <TableCell><DocumentStatusChip kind="processing" value={item.processingState} /></TableCell><TableCell><DocumentStatusChip kind="review" value={item.reviewState} /></TableCell><TableCell>{item.quality ? <QualityResultSummary quality={item.quality} compact /> : '—'}</TableCell><TableCell><DocumentStatusChip kind="indexing" value={item.indexingState} /></TableCell>

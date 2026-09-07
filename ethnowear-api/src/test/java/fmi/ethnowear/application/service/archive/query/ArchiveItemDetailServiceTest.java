@@ -112,7 +112,8 @@ class ArchiveItemDetailServiceTest {
                 new ArchiveItemMediaMapper(),
                 new MediaAssetMapper(),
                 new MediaFeatureAnnotationMapper(),
-                new EntitySourceCitationMapper()
+                new EntitySourceCitationMapper(),
+                org.mockito.Mockito.mock(fmi.ethnowear.application.service.archive.workflow.ArchiveImageInheritance.class)
         );
     }
 

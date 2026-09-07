@@ -1,4 +1,7 @@
 import {
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
     Alert,
     Autocomplete,
     Box,
@@ -14,10 +17,12 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined'
 import StarOutlinedIcon from '@mui/icons-material/StarOutlined'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
+import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import AdminModal from '../AdminModal'
 import AdminMediaThumbnail from '../media/AdminMediaThumbnail'
+import MediaOntologyLinksEditor from '../media/MediaOntologyLinksEditor'
 import OntologyRelationshipField from '../OntologyRelationshipField'
 import FormSelectField from '../../forms/FormSelectField'
 import type { OptionCategory, SelectOption } from '../../forms/formTypes'
@@ -33,7 +38,7 @@ import type { ReferenceData, ReferenceResource } from '../../../types/reference'
 import { regionalMotifsForRegion } from '../../../app/regionalMotifs'
 
 export type FeatureSelections = Record<
-    'ORNAMENT' | 'TECHNIQUE' | 'MOTIF' | 'COLOR',
+    'ORNAMENT' | 'TECHNIQUE' | 'COLOR',
     ReferenceResource[]
 >
 
@@ -70,12 +75,17 @@ export function BasicSection({ item, setField, t }: SectionProps) {
                     options={ARCHIVE_TYPES.map(value => ({ value, label: t(`archiveDetails.types.${value}`) }))}
                     onChange={event => setField('archiveType', event.target.value as ArchiveItemWriteDto['archiveType'])}
                 />
-                <TextField label={t('curator.fields.inventory')} value={item.inventoryNumber ?? ''} onChange={event => setField('inventoryNumber', nullText(event.target.value))} />
+            </Box>
+            <Accordion defaultExpanded={Boolean(item.inventoryNumber || item.collectionId || item.periodText || item.originText || item.currentLocation)} disableGutters elevation={0}>
+                <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>{t('archiveFast.optional')}</AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                <TextField label={t('curator.fields.inventory')} value={item.inventoryNumber ?? ''} onChange={event => setField('inventoryNumber', event.target.value)} />
                 <TextField label={t('curator.fields.collection')} value={item.collectionId ?? ''} onChange={event => setField('collectionId', nullText(event.target.value))} />
                 <TextField label={t('curator.fields.period')} value={item.periodText ?? ''} onChange={event => setField('periodText', nullText(event.target.value))} />
                 <TextField label={t('curator.fields.origin')} value={item.originText ?? ''} onChange={event => setField('originText', nullText(event.target.value))} />
                 <TextField label={t('curator.fields.location')} value={item.currentLocation ?? ''} onChange={event => setField('currentLocation', nullText(event.target.value))} />
-            </Box>
+                </AccordionDetails>
+            </Accordion>
         </Stack>
     )
 }
@@ -144,18 +154,15 @@ export function ClassificationSection({
                     setField('ontologyRegionLocalName', resource?.localName ?? null)
                     setField('ontologyRegionIri', resource?.iri ?? null)
                 }, regionCategories)}
-                {item.archiveType === 'EMBROIDERY_SAMPLE' && single(t('curator.fields.embroidery'), refs.regionalEmbroideryTypes.filter(resource =>
+                {item.archiveType === 'EMBROIDERY_SAMPLE' && <TextField label={t('curator.fields.embroidery')} value={refs.regionalEmbroideryTypes.find(resource => resource.localName === item.ontologyRegionalEmbroideryLocalName)?.label ?? ''} slotProps={{ input: { readOnly: true } }} />}
+                {item.archiveType === 'MOTIF_EXAMPLE' && single(t('curator.optionalEmbroidery'), refs.regionalEmbroideryTypes.filter(resource =>
                     refs.regionByRegionalEmbroidery[resource.localName] === item.ontologyRegionLocalName), item.ontologyRegionalEmbroideryLocalName, resource => {
                     setField('ontologyRegionalEmbroideryLocalName', resource?.localName ?? null)
                     setField('ontologyRegionalEmbroideryIri', resource?.iri ?? null)
                 }, embroideryCategories)}
-                {item.archiveType === 'MOTIF_EXAMPLE' && single(t('curator.fields.regionalMotif'), regionalMotifs, item.ontologyRegionalMotifLocalName, resource => {
-                    setField('ontologyRegionalMotifLocalName', resource?.localName ?? null)
-                    setField('ontologyRegionalMotifIri', resource?.iri ?? null)
-                })}
+                {item.archiveType === 'MOTIF_EXAMPLE' && <TextField label={t('curator.fields.regionalMotif')} value={regionalMotifs.find(resource => resource.localName === item.ontologyRegionalMotifLocalName)?.label ?? ''} slotProps={{ input: { readOnly: true } }} />}
                 {multi('TECHNIQUE', refs.techniques, techniqueCategories)}
                 {multi('ORNAMENT', refs.ornaments, ornamentCategories)}
-                {multi('MOTIF', refs.motifs)}
                 {multi('COLOR', refs.colors)}
             </Box>
         </Stack>
@@ -235,6 +242,7 @@ export function MediaSection({
                             </Stack>
                             <TextField label={t('curator.fields.captionBg')} value={link.captionBg} onChange={event => update(index, { captionBg: event.target.value })} />
                             <TextField label={t('curator.fields.captionEn')} value={link.captionEn} onChange={event => update(index, { captionEn: event.target.value })} />
+                            <MediaOntologyLinksEditor mediaAssetId={link.asset.id} canEdit />
                         </Stack>
                     </Stack>
                 </Paper>
@@ -274,7 +282,7 @@ export function SourceSection({
                     value={references.find(reference => reference.id === value) ?? null}
                     onChange={(_, next) => setValue(next?.id ?? 0)}
                     noOptionsText={t('curator.source.noCitations')}
-                    renderInput={params => <TextField {...params} required label={t('curator.fields.citation')} />}
+                    renderInput={params => <TextField {...params} label={t('curator.fields.citation')} />}
                 />
                 <Button variant="outlined" startIcon={<AddOutlinedIcon />} onClick={onCreateCitation} disabled={!canCreateCitation} sx={{ minHeight: 56 }}>
                     {t('curator.source.createCitation')}
@@ -318,7 +326,7 @@ export function MediaLibraryDialog({
 }) {
     const { t } = useTranslation()
     return (
-        <AdminModal open={open} onClose={onClose} maxWidth="md" title={t('curator.mediaLibrary.title')}>
+        <AdminModal open={open} onClose={onClose} maxWidth="md" title={t('curator.mediaLibrary.title')} actions={<Button onClick={onClose}>{t('common.close')}</Button>}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 1.5 }}>
                 {assets.map(asset => (
                     <Paper key={asset.id} variant="outlined" sx={{ overflow: 'hidden' }}>
@@ -337,5 +345,5 @@ export function MediaLibraryDialog({
 }
 
 function nullText(value: string) {
-    return value.trim() || null
+    return value || null
 }

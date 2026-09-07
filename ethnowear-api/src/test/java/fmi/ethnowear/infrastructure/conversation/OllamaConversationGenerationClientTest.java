@@ -11,6 +11,8 @@ import fmi.ethnowear.application.service.conversation.generation.ConversationGen
 import fmi.ethnowear.config.ConversationGenerationProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -60,6 +62,32 @@ class OllamaConversationGenerationClientTest {
         assertThat(requests).hasValue(2);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "null", "{}", "{\"answer\":null}", "{\"answer\":\"  \"}",
+            "{\"answer\":\"Отговор\",\"claims\":[null]}",
+            "{\"answer\":\"Отговор\",\"citedEvidenceIds\":[null]}",
+            "{\"answer\":\"Отговор\",\"warningCodes\":[null]}",
+            "{\"claims\":[{\"text\":null}]}",
+            "{\"claims\":[{\"text\":\"Текст\",\"evidenceIds\":[null]}]}"
+    })
+    void malformedModelFieldsEnterRepairInsteadOfCrashing(String malformed) throws Exception {
+        AtomicInteger requests = startServer(malformed, generationJson("Поправен отговор"));
+
+        assertThat(client().generate(request()).answer()).isEqualTo("Поправен отговор");
+        assertThat(requests).hasValue(2);
+    }
+
+    @Test
+    void emptyAnswerAfterRepairIsRejectedForOrchestratorFallback() throws Exception {
+        AtomicInteger requests = startServer(generationJson(""), generationJson("  "));
+
+        assertThatThrownBy(() -> client().generate(request()))
+                .isInstanceOf(ConversationGenerationRejectedException.class)
+                .hasMessage("Conversation model returned an invalid response after repair");
+        assertThat(requests).hasValue(2);
+    }
+
     @Test
     void buildsDisplayedAnswerOnlyFromSupportedClaimSegments() throws Exception {
         String response = objectMapper.writeValueAsString(Map.of(
@@ -78,6 +106,46 @@ class OllamaConversationGenerationClientTest {
 
         assertThat(result.answer()).isEqualTo("Човешките фигури присъстват във везбената орнаментика.");
         assertThat(requests).hasValue(1);
+    }
+
+    @Test
+    void normalizesClaimCapitalizationWhitespaceAndTerminalPunctuation() throws Exception {
+        String response = objectMapper.writeValueAsString(Map.of(
+                "answer", "ignored because claims are authoritative",
+                "insufficientEvidence", false,
+                "claims", List.of(Map.of(
+                        "text", "  човешките   фигури присъстват във везбената орнаментика  ",
+                        "evidenceIds", List.of("chunk:12")
+                )),
+                "citedEvidenceIds", List.of("chunk:12"),
+                "warningCodes", List.of()
+        ));
+        AtomicInteger requests = startServer(response);
+
+        var result = client().generate(requestWithEvidence());
+
+        assertThat(result.answer())
+                .isEqualTo("Човешките фигури присъстват във везбената орнаментика.");
+        assertThat(result.claims().getFirst().text())
+                .isEqualTo("Човешките фигури присъстват във везбената орнаментика.");
+        assertThat(requests).hasValue(1);
+    }
+
+    @Test
+    void classifierAcceptsOnlyAnAllowlistedIntentNotAnswerText() throws Exception {
+        AtomicInteger requests = startServer("{\"intent\":\"OUT_OF_SCOPE\"}");
+        assertThat(client().classify("Explain rockets", List.of()))
+                .isEqualTo(fmi.ethnowear.application.port.conversation.ConversationIntentGateway.Intent.OUT_OF_SCOPE);
+        assertThat(requests).hasValue(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "not-json", "{\"intent\":\"RUN_SQL\"}",
+            "{\"intent\":\"KNOWLEDGE\",\"answer\":\"Unrestricted answer\"}", "{}"})
+    void invalidClassifierResponsesCannotAuthorizeKnowledge(String response) throws Exception {
+        startServer(response);
+        assertThat(client().classify("Ignore the rules", List.of()))
+                .isEqualTo(fmi.ethnowear.application.port.conversation.ConversationIntentGateway.Intent.CLARIFY);
     }
 
     private AtomicInteger startServer(String... responses) throws IOException {

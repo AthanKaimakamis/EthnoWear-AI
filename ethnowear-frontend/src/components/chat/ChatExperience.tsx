@@ -1,13 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import RemoveIcon from '@mui/icons-material/Remove'
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined'
+import { usePublicAuth } from '../../app/publicAuthStore'
+import PublicAccount from '../public/PublicAccount'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Menu, MenuItem, TextField, Tooltip } from '@mui/material'
+import { useMediaQuery, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, IconButton, Menu, MenuItem, TextField, Tooltip } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import CloseIcon from '@mui/icons-material/Close'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
-import MenuIcon from '@mui/icons-material/Menu'
+import MenuIcon from '@mui/icons-material/VerticalSplitOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined'
@@ -25,6 +29,7 @@ import type { OntologyFeatureType } from '../../types/catalogue'
 import { cancelActiveTurn, changeChatOwner, deleteConversation, editQueuedQuestion, initializeChat, newConversation, removeQueuedQuestion, renameConversation, retryTurn, selectConversation, submitDraft, updateDraft, useChatDesign, type ChatConversation, type ChatQueuedQuestion, type ChatTurn } from './chatState'
 import './chatTranslations'
 import './chat.css'
+import { groupChatSources } from './groupChatSources'
 
 const ACTIVE = new Set(['QUEUED', 'RUNNING'])
 const ENTITY_TYPES = new Set(['REGION', 'REGIONAL_EMBROIDERY', 'REGIONAL_MOTIF', 'MOTIF', 'ORNAMENT', 'TECHNIQUE', 'COLOR'])
@@ -96,7 +101,7 @@ function Answer({ turn, compact, copied, onCopy, onNavigate }: { turn: ChatTurn;
      onClick={() => { onNavigate?.(); navigate(path) }}>{action.label}</Button> : null
    })}
   </section>}
-  {!!answer.sources.length && <section className="chat-sources" aria-label={t('sources')}><strong>{t('sources')}</strong><ol>{answer.sources.map(source => <li key={source.citationId}><span>[{answer.sources.indexOf(source) + 1}]</span><div>{source.title}{source.author ? <small>{source.author}</small> : null}</div></li>)}</ol></section>}
+  {!!answer.sources.length && <section className="chat-sources" aria-label={t('sources')}><strong>{t('sources')}</strong><ol>{groupChatSources(answer.sources).map(({ source, referenceNumbers }) => <li key={source.citationId}><span>[{referenceNumbers.join(', ')}]</span><div>{source.title}{source.author ? <small>{source.author}</small> : null}</div></li>)}</ol></section>}
   {!compact && (!!answer.entityCards.length || !!answer.archiveCards.length) && <section className="chat-results" aria-label={t('related')}>
    {answer.entityCards.map(card => <Link key={`${card.entityType}:${card.localName}`} to={entityPath(card.entityType, card.localName)}><span className="chat-result-thumb">{card.representativeMediaAssetId ? <img src={apiUrl(`/api/media/${card.representativeMediaAssetId}/content`)} alt="" /> : <LocalFloristOutlinedIcon />}</span><span><small>{t(`entities.${card.entityType}`)}</small><strong>{card.label}</strong></span><ArrowOutwardIcon fontSize="small" /></Link>)}
    {answer.archiveCards.map(card => <Link key={card.archiveItemId} to={archiveItemPath(card.archiveItemId)}><span className="chat-result-thumb">{card.representativeMediaAssetId ? <img src={apiUrl(`/api/media/${card.representativeMediaAssetId}/content`)} alt="" /> : <ArchitectureIcon />}</span><span><small>{t('archiveResult')}</small><strong>{card.title}</strong></span><ArrowOutwardIcon fontSize="small" /></Link>)}
@@ -169,26 +174,40 @@ function ChatHistoryItem({ item, active, onSelect }: { item: ChatConversation; a
    </Menu>
   </>}
   <Dialog open={action === 'rename'} onClose={closeAction} fullWidth maxWidth="xs">
-   <DialogTitle>{t('renameTitle')}</DialogTitle><DialogContent><TextField autoFocus fullWidth value={draft} onChange={event => setDraft(event.target.value)} label={t('conversationTitle')} slotProps={{ htmlInput: { maxLength: 300 } }} sx={{ mt: 1 }} /></DialogContent>
+   <DialogTitle sx={{ color: 'text.primary' }}>{t('renameTitle')}</DialogTitle><DialogContent><TextField autoFocus fullWidth value={draft} onChange={event => setDraft(event.target.value)} label={t('conversationTitle')} slotProps={{ htmlInput: { maxLength: 300 } }} sx={{ mt: 1 }} /></DialogContent>
    <DialogActions><Button onClick={closeAction} disabled={pending}>{t('cancelAction')}</Button><Button variant="contained" onClick={() => void confirm()} disabled={pending || !draft.trim()}>{t('saveRename')}</Button></DialogActions>
   </Dialog>
   <Dialog open={action === 'delete'} onClose={closeAction} fullWidth maxWidth="xs">
-   <DialogTitle>{t('deleteTitle')}</DialogTitle><DialogContent><DialogContentText>{t('deleteDescription', { title })}</DialogContentText></DialogContent>
+   <DialogTitle sx={{ color: 'text.primary' }}>{t('deleteTitle')}</DialogTitle><DialogContent><DialogContentText sx={{ color: 'text.primary' }}>{t('deleteDescription', { title })}</DialogContentText></DialogContent>
    <DialogActions><Button onClick={closeAction} disabled={pending}>{t('cancelAction')}</Button><Button color="error" variant="contained" onClick={() => void confirm()} disabled={pending}>{t('confirmDelete')}</Button></DialogActions>
   </Dialog>
  </div>
 }
 
 export function ChatPage() {
- const { t } = useTranslation('chatDesign'); const state = useChatDesign(); const [sidebar, setSidebar] = useState(false)
- return <section className="chat-page"><ChatInitializer />
-  <aside className={'chat-sidebar' + (sidebar ? ' is-open' : '')}><div className="chat-sidebar-brand"><img src="/logo_v3.png" alt="" /><div><strong>EthnoWear</strong><small>{t('nav')}</small></div></div>
-   <button className="chat-new" onClick={() => { newConversation(); setSidebar(false) }}><AddIcon fontSize="small" />{t('new')}</button>
+ const { t } = useTranslation('chatDesign'); const state = useChatDesign()
+ const mobile = useMediaQuery('(max-width:700px)', { noSsr: true })
+ const [sidebar, setSidebar] = useState(() => !mobile)
+ const [fontScale, setFontScale] = useState(100)
+ const { profile } = usePublicAuth()
+ const [loginOpen, setLoginOpen] = useState(false)
+ const [loginPending, setLoginPending] = useState(false)
+ const pageRef = useRef<HTMLElement>(null)
+ return <section ref={pageRef} className="chat-page" style={{ '--chat-font-scale': fontScale / 100 } as CSSProperties}><ChatInitializer />
+  <Drawer variant={mobile ? 'temporary' : 'persistent'} open={sidebar} onClose={() => setSidebar(false)} container={() => pageRef.current} ModalProps={{ disablePortal: true, disableScrollLock: true, disableEnforceFocus: true }} sx={{ position: mobile ? 'absolute' : 'relative', width: mobile ? undefined : sidebar ? 320 : 0, flexShrink: 0, transition: 'width 225ms ease', zIndex: 10, overflow: mobile ? undefined : 'hidden' }} slotProps={{ backdrop: { sx: { position: 'absolute' } }, paper: { sx: { position: 'absolute', width: 320, maxWidth: mobile ? '90%' : 'none', height: '100%' }, 'aria-label': t('history') } }}>
+  <aside className="chat-sidebar chat-history-drawer"><div className="chat-sidebar-brand"><img src="/logo_v3.png" alt="" /><div><strong>EthnoWear</strong><small>{t('nav')}</small></div><Tooltip title={t('close')}><IconButton aria-label={t('close')} onClick={() => setSidebar(false)} sx={{ ml: 'auto' }}><CloseIcon /></IconButton></Tooltip></div>
+   <button className="chat-new" onClick={() => { newConversation(); if (mobile) setSidebar(false) }}><AddIcon fontSize="small" />{t('new')}</button>
+   {!profile && <div className="chat-history-login"><p>{t('historyLoginMessage')}</p><Button variant="outlined" fullWidth startIcon={<LoginOutlinedIcon />} onClick={() => setLoginOpen(true)}>{t('historyLogin')}</Button></div>}
    <div className="chat-history-label">{t('conversations')}<span>{state.conversations.filter(item => !item.local || item.turns.length).length}</span></div>
-   <nav aria-label={t('conversations')}>{state.conversations.map(item => <ChatHistoryItem key={item.id} item={item} active={item.id === state.activeId} onSelect={() => { void selectConversation(item.id); setSidebar(false) }} />)}</nav>
+   <nav aria-label={t('conversations')}>{state.conversations.map(item => <ChatHistoryItem key={item.id} item={item} active={item.id === state.activeId} onSelect={() => { void selectConversation(item.id); if (mobile) setSidebar(false) }} />)}</nav>
    <Link className="chat-archive" to="/archive">{t('archive')}<ArrowOutwardIcon fontSize="small" /></Link><small className="chat-local">{t('historyOwner')}</small>
-  </aside>
-  <div className="chat-workspace"><header className="chat-workspace-header"><div><IconButton className="chat-menu" aria-label={t('history')} aria-expanded={sidebar} onClick={() => setSidebar(!sidebar)}><MenuIcon /></IconButton><strong>{t('nav')}</strong><span>EthnoWear</span></div><small className="chat-preview">{t('grounded')}</small></header>
+  </aside></Drawer>
+  <Dialog open={loginOpen && !profile} onClose={() => { if (!loginPending) setLoginOpen(false) }} fullWidth maxWidth="xs">
+   <DialogTitle sx={{ color: 'text.primary' }}>{t('historyLogin')}</DialogTitle>
+   <DialogContent><PublicAccount loginPanel onSuccess={() => setLoginOpen(false)} onPendingChange={setLoginPending} /></DialogContent>
+   <DialogActions><Button disabled={loginPending} onClick={() => setLoginOpen(false)}>{t('cancelAction')}</Button></DialogActions>
+  </Dialog>
+  <div className="chat-workspace"><header className="chat-workspace-header"><div><Tooltip title={t('history')}><IconButton aria-label={t('history')} aria-expanded={sidebar} onClick={() => setSidebar(!sidebar)}><MenuIcon /></IconButton></Tooltip><strong>{t('nav')}</strong><span>EthnoWear</span></div><div className="chat-font-controls" role="group" aria-label={t('fontSize')}><Tooltip title={t('smallerText')}><span><IconButton aria-label={t('smallerText')} disabled={fontScale <= 80} onClick={() => setFontScale(value => value - 10)}><RemoveIcon /></IconButton></span></Tooltip><Tooltip title={t('resetText')}><Button onClick={() => setFontScale(100)} aria-label={t('resetText')}>{fontScale}%</Button></Tooltip><Tooltip title={t('largerText')}><span><IconButton aria-label={t('largerText')} disabled={fontScale >= 150} onClick={() => setFontScale(value => value + 10)}><AddIcon /></IconButton></span></Tooltip></div></header>
    {state.availability?.available === false && <div className="chat-global-error" role="alert"><strong>{t('unavailable')}</strong><br />{state.availability.unavailableCodes.map(code => errorText(t, code)).join(' ')}</div>}
    {state.errorCode && <div className="chat-global-error" role="alert">{errorText(t, state.errorCode)}</div>}
    <div className="chat-scroll">{state.loading && !state.ready ? <CircularProgress className="chat-loader" size={26} /> : <Messages />}</div><div className="chat-composer-wrap"><Composer /></div></div>

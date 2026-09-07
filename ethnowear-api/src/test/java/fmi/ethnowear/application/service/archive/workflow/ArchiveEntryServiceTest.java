@@ -112,7 +112,8 @@ class ArchiveEntryServiceTest {
                 featureRepository,
                 mediaRepository,
                 new ArchiveItemFeatureMapper(),
-                new ArchiveItemMediaMapper()
+                new ArchiveItemMediaMapper(),
+                org.mockito.Mockito.mock(ArchiveImageInheritance.class)
         );
     }
 

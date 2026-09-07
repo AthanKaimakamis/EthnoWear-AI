@@ -28,6 +28,7 @@ import { conceptPath } from '../../app/archiveRoutes'
 import MediaGallery, { type MediaGalleryItem } from '../../components/archive/MediaGallery'
 import ArchiveWorkspaceDialog from '../../components/archive/ArchiveWorkspaceDialog'
 import SourceCitation from '../../components/archive/SourceCitation'
+import InheritedObservations from '../../components/archive/InheritedObservations'
 import { PreviewableImage } from '../../components/common/ImageViewerDialog'
 import PageLoading from '../../components/loading/PageLoading'
 import type { ArchiveItemFeatureDetails, ArchiveItemMediaContentDetails } from '../../types/archive'
@@ -182,6 +183,7 @@ function ArchiveItemDetailPage() {
             <Divider sx={{ my: { xs: 4, md: 5 } }} />
 
             <Stack spacing={{ xs: 4, md: 5 }}>
+                <InheritedObservations observations={details.inheritedObservations ?? []} labels={labels} />
                 {(item.ontologyRegionalEmbroideryLocalName || item.ontologyRegionalMotifLocalName || item.ontologyRegionLocalName) && (
                     <Box component="section">
                         <SectionHeading
@@ -255,6 +257,7 @@ function ArchiveItemDetailPage() {
                         description={t('archiveDetails.sourcesDescription')}
                     />
                     <SourceCitation source={details.source} />
+                    {(details.imageSources ?? []).filter(source => source.sourceReferenceId !== details.source?.sourceReferenceId).map(source => <SourceCitation key={source.sourceReferenceId} source={source} />)}
                 </Box>
             </Stack>
             </Box>

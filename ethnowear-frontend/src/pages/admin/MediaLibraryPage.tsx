@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-    Alert, Box, Button, Chip, CircularProgress, InputAdornment, Paper, Skeleton, Stack, TextField,
+    Alert, Box, Button, Checkbox, Chip, CircularProgress, InputAdornment, Paper, Skeleton, Stack, TextField,
     ToggleButton, ToggleButtonGroup, Tooltip, Typography,
 } from '@mui/material'
 import AppsOutlinedIcon from '@mui/icons-material/AppsOutlined'
@@ -38,6 +38,7 @@ import FormSelectField from '../../components/forms/FormSelectField'
 import type { MediaAssetDetails, MediaAssetWriteDto, SourceReferenceDetails } from '../../types/archive'
 import type { ArchiveAdminWriteDto } from '../../types/archiveAdmin'
 import { approvedLibraryAssets, canDeleteMediaAsset } from './mediaLibraryModel'
+import ArchiveEditorPage from './ArchiveEditorPage'
 
 const PAGE_SIZE = 24
 const DOCUMENT_PAGE_SIZE = 100
@@ -70,6 +71,8 @@ export default function MediaLibraryPage() {
     const [source, setSource] = useState('')
     const [view, setView] = useState<'grid' | 'list'>('grid')
     const [selected, setSelected] = useState<MediaAssetDetails | null>(null)
+    const [archiveSelection, setArchiveSelection] = useState<MediaAssetDetails[]>([])
+    const [archiveImages, setArchiveImages] = useState<MediaAssetDetails[] | null>(null)
     const [pdfPreview, setPdfPreview] = useState<MediaAssetDetails | null>(null)
     const [deleting, setDeleting] = useState<MediaAssetDetails | null>(null)
     const [deletePending, setDeletePending] = useState(false)
@@ -264,14 +267,22 @@ export default function MediaLibraryPage() {
             <ToggleButtonGroup exclusive size="small" value={view} onChange={(_, next) => next && setView(next)}><ToggleButton value="grid" aria-label={t('curator.mediaLibrary.gridView')}><AppsOutlinedIcon /></ToggleButton><ToggleButton value="list" aria-label={t('curator.mediaLibrary.listView')}><ListOutlinedIcon /></ToggleButton></ToggleButtonGroup>
         </Box></Paper>
         {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+        {archiveSelection.length > 0 && <Stack direction="row" spacing={1}>
+            <Button variant="contained" onClick={() => setArchiveImages([...archiveSelection])}>{i18n.resolvedLanguage === 'en' ? `Create archive entry (${archiveSelection.length})` : `Създай архивен запис (${archiveSelection.length})`}</Button>
+            <Button onClick={() => setArchiveSelection([])}>{t('admin.cancel')}</Button>
+        </Stack>}
         {loadError && <Alert severity="error">{apiErrorMessage(loadError)}</Alert>}
         {!initialLoading && !assetsQuery.isFetchingNextPage && filtered.length === 0 && <Paper variant="outlined" sx={{ p: 5, textAlign: 'center' }}><Typography color="text.secondary">{t('curator.mediaLibrary.empty')}</Typography></Paper>}
         <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
             {initialLoading && Array.from({ length: 8 }, (_, index) => <MediaCardSkeleton key={index} view={view} />)}
-            {filtered.map(asset => <MediaCard key={asset.id} asset={asset} view={view} sourceTitle={sourceFor(asset)?.title ?? null} documentTitle={asset.documentFigure ? documentById.get(asset.documentFigure.documentId)?.title ?? null : null} usageCount={usageCount(asset.id)} language={i18n.resolvedLanguage ?? 'bg'} onOpen={() => setSelected(asset)} onDelete={() => setDeleting(asset)} />)}
+            {filtered.map(asset => <Box key={asset.id} sx={{ position: 'relative', minWidth: 0 }}>
+                {canEditRights && asset.mediaType !== 'PDF' && <Checkbox checked={archiveSelection.some(value => value.id === asset.id)} onChange={(_, checked) => setArchiveSelection(current => checked ? [...current, asset] : current.filter(value => value.id !== asset.id))} slotProps={{ input: { 'aria-label': `${i18n.resolvedLanguage === 'en' ? 'Select image' : 'Избери изображение'} ${asset.fileName}` } }} sx={{ position: 'absolute', top: 4, left: 4, zIndex: 1, bgcolor: 'background.paper' }} />}
+                <MediaCard asset={asset} view={view} sourceTitle={sourceFor(asset)?.title ?? null} documentTitle={asset.documentFigure ? documentById.get(asset.documentFigure.documentId)?.title ?? null : null} usageCount={usageCount(asset.id)} language={i18n.resolvedLanguage ?? 'bg'} onOpen={() => setSelected(asset)} onDelete={() => setDeleting(asset)} />
+            </Box>)}
             {assetsQuery.isFetchingNextPage && Array.from({ length: filterActive ? 4 : 8 }, (_, index) => <MediaCardSkeleton key={`next-${index}`} view={view} />)}
         </Box>
         <InfiniteScrollTrigger enabled={!filterActive && Boolean(assetsQuery.hasNextPage)} loading={false} onLoadMore={loadMore} />
+        {archiveImages && <ArchiveEditorPage itemId={null} embedded initialMedia={archiveImages} onClose={() => setArchiveImages(null)} onSaved={() => { setArchiveImages(null); setArchiveSelection([]); void queryClient.invalidateQueries({ queryKey: mediaQueryKey }) }} />}
         <MediaUploadDialog open={uploadOpen} category="archive" sourceReferences={references} sources={sources} sourceReferenceLabel={referenceLabel} onClose={() => setUploadOpen(false)} onUploaded={() => { void queryClient.invalidateQueries({ queryKey: mediaQueryKey }) }} />
         <AdminModal open={Boolean(selected)} onClose={() => setSelected(null)} maxWidth="md" title={selected?.fileName ?? t('curator.media.unnamed')} actions={selected && <><Button startIcon={<EditOutlinedIcon />} disabled={!canEditRights} onClick={() => { setRightsError(null); setRightsEditing(selected) }}>{t('curator.mediaLibrary.editRights')}</Button><Button color="error" startIcon={<DeleteOutlineIcon />} disabled={!canDeleteMediaAsset(selected, usageCount(selected.id))} onClick={() => setDeleting(selected)}>{selected.documentFigure ? t('curator.mediaLibrary.deleteFigure') : t('admin.delete')}</Button><Button onClick={() => setSelected(null)}>{t('curator.actions.close')}</Button></>}>
             {selected && <Stack spacing={2}>{selected.mediaType === 'PDF' ? <Box sx={{ minHeight: 220, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', display: 'grid', placeItems: 'center' }}><Stack spacing={1.5} sx={{ alignItems: 'center' }}><PictureAsPdfOutlinedIcon color="action" sx={{ fontSize: 58 }} /><Button variant="contained" startIcon={<VisibilityOutlinedIcon />} onClick={() => setPdfPreview(selected)}>{t('pdfViewer.preview')}</Button></Stack></Box> : <AdminMediaImage asset={selected} />}

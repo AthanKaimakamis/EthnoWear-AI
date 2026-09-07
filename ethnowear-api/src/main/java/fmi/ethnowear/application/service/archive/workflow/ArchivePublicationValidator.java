@@ -3,6 +3,8 @@ package fmi.ethnowear.application.service.archive.workflow;
 import fmi.ethnowear.application.dto.archive.workflow.ArchivePublicationCheckDetails;
 import fmi.ethnowear.application.dto.archive.workflow.ArchivePublicationReadinessDetails;
 import fmi.ethnowear.application.exception.ResourceNotFoundException;
+import fmi.ethnowear.application.service.archive.item.ArchiveItemOntologyValidator;
+import fmi.ethnowear.domain.model.archive.ArchiveType;
 import fmi.ethnowear.domain.model.archive.ArchivePublicationRequirement;
 import fmi.ethnowear.domain.model.archive.MediaRole;
 import fmi.ethnowear.persistence.jpa.entity.ArchiveItem;
@@ -28,6 +30,8 @@ public class ArchivePublicationValidator {
     private final ArchiveItemRepository archiveItemRepository;
     private final ArchiveItemFeatureRepository featureRepository;
     private final ArchiveItemMediaRepository mediaRepository;
+    private final ArchiveItemOntologyValidator ontologyValidator;
+    private final ArchiveImageInheritance imageInheritance;
 
     public ArchivePublicationReadinessDetails validate(Long archiveItemId) {
         requireId(archiveItemId, "Archive item");
@@ -36,6 +40,17 @@ public class ArchivePublicationValidator {
                 .findById(archiveItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Archive item", archiveItemId));
         boolean hasFeatures = featureRepository.existsByArchiveItem_Id(archiveItemId);
+        var inherited = imageInheritance.observations(archiveItemId, true);
+        boolean classified = hasValidClassification(item) && switch (item.getArchiveType()) {
+            case MOTIF_EXAMPLE, EMBROIDERY_SAMPLE -> true;
+            case ORNAMENT_EXAMPLE -> featureRepository.findByArchiveItem_Id(archiveItemId).stream()
+                    .anyMatch(feature -> feature.getFeatureType() == fmi.ethnowear.domain.model.ontology.FeatureType.ORNAMENT && feature.isValidated())
+                    || inherited.stream().anyMatch(feature -> feature.featureType() == fmi.ethnowear.domain.model.ontology.FeatureType.ORNAMENT);
+            case TECHNIQUE_EXAMPLE -> featureRepository.findByArchiveItem_Id(archiveItemId).stream()
+                    .anyMatch(feature -> feature.getFeatureType() == fmi.ethnowear.domain.model.ontology.FeatureType.TECHNIQUE && feature.isValidated())
+                    || inherited.stream().anyMatch(feature -> feature.featureType() == fmi.ethnowear.domain.model.ontology.FeatureType.TECHNIQUE);
+            default -> hasFeatures;
+        };
 
         List<ArchivePublicationCheckDetails> checks = List.of(
                 check(
@@ -50,12 +65,12 @@ public class ArchivePublicationValidator {
                 ),
                 check(
                         ArchivePublicationRequirement.ONTOLOGY_CLASSIFICATION,
-                        hasFeatures,
+                        classified,
                         true
                 ),
                 check(
                         ArchivePublicationRequirement.FEATURES_VALIDATED,
-                        hasFeatures
+                        classified
                                 && !featureRepository.existsByArchiveItem_IdAndValidatedFalse(archiveItemId),
                         true
                 ),
@@ -97,5 +112,27 @@ public class ArchivePublicationValidator {
                 satisfied,
                 blocking
         );
+    }
+
+    private boolean hasValidClassification(ArchiveItem item) {
+        boolean needsRegion = java.util.Set.of(ArchiveType.MOTIF_EXAMPLE, ArchiveType.EMBROIDERY_SAMPLE,
+                ArchiveType.ORNAMENT_EXAMPLE, ArchiveType.TECHNIQUE_EXAMPLE).contains(item.getArchiveType());
+        if(needsRegion && (isBlank(item.getOntologyRegionIri()) || isBlank(item.getOntologyRegionLocalName())))
+            return false;
+        if(item.getArchiveType() == ArchiveType.MOTIF_EXAMPLE && (isBlank(item.getOntologyRegionalMotifIri()) || isBlank(item.getOntologyRegionalMotifLocalName())))
+            return false;
+        if(item.getArchiveType() == ArchiveType.EMBROIDERY_SAMPLE && (isBlank(item.getOntologyRegionalEmbroideryIri()) || isBlank(item.getOntologyRegionalEmbroideryLocalName())))
+            return false;
+
+        try {
+            ontologyValidator.validateClassifications(
+                    item.getOntologyRegionIri(), item.getOntologyRegionLocalName(),
+                    item.getOntologyRegionalEmbroideryIri(), item.getOntologyRegionalEmbroideryLocalName(),
+                    item.getOntologyRegionalMotifIri(), item.getOntologyRegionalMotifLocalName()
+            );
+            return true;
+        } catch(IllegalArgumentException ex) {
+            return false;
+        }
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static fmi.ethnowear.util.IdentifierUtils.requireId;
-import static fmi.ethnowear.util.TextUtils.isBlank;
 
 @Service
 @RequiredArgsConstructor
@@ -80,11 +79,12 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
     }
 
     private void apply(ArchiveItem item, @NonNull ArchiveItemWriteDto input) {
-        SourceReference reference = referenceRepository
+        SourceReference reference = input.sourceReferenceId() == null ? null : referenceRepository
                 .findById(input.sourceReferenceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Source reference", input.sourceReferenceId()));
 
         archiveItemMapper.apply(item, input, reference);
+        ontologyValidator.resolveDerivedClassifications(item);
     }
 
     private @NonNull ArchiveItem requireItem(Long id) {
@@ -98,10 +98,7 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
         if (input == null)
             throw new IllegalArgumentException("Archive item input is required");
 
-        requireId(input.sourceReferenceId(), "Source reference");
-
-        if(isBlank(input.titleBg()) && isBlank(input.titleEn()))
-            throw new IllegalArgumentException("At least one title is required");
+        if (input.sourceReferenceId() != null) requireId(input.sourceReferenceId(), "Source reference");
 
         if(input.archiveType() == null)
             throw new IllegalArgumentException("Archive type is required");
@@ -109,29 +106,8 @@ public class ArchiveItemService implements CrudService<ArchiveItemWriteDto, Arch
         if(input.trustedLevel() == null)
             throw new IllegalArgumentException("Trusted level is required");
 
-        switch(input.archiveType()) {
-            case ORNAMENT_EXAMPLE, MOTIF_EXAMPLE, TECHNIQUE_EXAMPLE, EMBROIDERY_SAMPLE ->
-                    requireRegion(input);
-            default -> {
-            }
-        }
-
-        if(input.archiveType() == fmi.ethnowear.domain.model.archive.ArchiveType.MOTIF_EXAMPLE
-                && (isBlank(input.ontologyRegionalMotifIri())
-                || isBlank(input.ontologyRegionalMotifLocalName())))
-            throw new IllegalArgumentException("Regional motif is required for a motif example");
-
-        if(input.archiveType() == fmi.ethnowear.domain.model.archive.ArchiveType.EMBROIDERY_SAMPLE
-                && (isBlank(input.ontologyRegionalEmbroideryIri())
-                || isBlank(input.ontologyRegionalEmbroideryLocalName())))
-            throw new IllegalArgumentException("Regional embroidery is required for an embroidery sample");
 
         ontologyValidator.validateClassifications(input);
-    }
-
-    private void requireRegion(@NonNull ArchiveItemWriteDto input) {
-        if(isBlank(input.ontologyRegionIri()) || isBlank(input.ontologyRegionLocalName()))
-            throw new IllegalArgumentException("Region is required for this archive item type");
     }
 
 }

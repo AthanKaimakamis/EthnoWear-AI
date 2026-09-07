@@ -11,7 +11,7 @@ export type ConversationSummary = {
     updatedAt: string
 }
 
-export type ConversationSource = { citationId: string; sourceId: number; title: string; author: string | null }
+export type ConversationSource = { citationId: string; sourceId: number | null; title: string; author: string | null }
 export type ConversationEntityCard = { entityType: string; localName: string; label: string; representativeMediaAssetId: number | null }
 export type ConversationArchiveCard = { archiveItemId: number; title: string; representativeMediaAssetId: number | null }
 export type ConversationArchiveTarget = 'REGIONAL_EMBROIDERY' | 'REGIONAL_MOTIF' | 'MOTIF' | 'TECHNIQUE' | 'ORNAMENT'

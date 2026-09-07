@@ -5,7 +5,7 @@ import fmi.ethnowear.domain.model.archive.TrustedLevel;
 import jakarta.validation.constraints.NotNull;
 
 public record ArchiveItemWriteDto(
-        @NotNull Long sourceReferenceId,
+        Long sourceReferenceId,
         String collectionId,
         String inventoryNumber,
         String titleBg,

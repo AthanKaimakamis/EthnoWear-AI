@@ -24,23 +24,21 @@ public class CatalogueController {
     }
 
     @PostMapping("/search")
-    public ConceptCatalogResultDetails search(
-            @RequestBody ConceptCatalogQueryDto query,
-            @PageableDefault(size = 24, sort = "label") Pageable pageable
+    public ConceptCatalogResultDetails search(@RequestBody ConceptCatalogQueryDto query,
+                                              @PageableDefault(size = 24, sort = "label") Pageable pageable
     ) {
         return catalogService.search(query, pageable);
     }
 
     @GetMapping("/{entityType}/{localName}")
-    public EntityDetailDetails getDetails(
-            @PathVariable FeatureType entityType,
-            @PathVariable String localName,
-            @RequestParam(defaultValue = "bg") String language,
-            @PageableDefault(
-                    size = 12,
-                    sort = "id",
-                    direction = Sort.Direction.DESC
-            ) Pageable evidencePageable
+    public EntityDetailDetails getDetails(@PathVariable FeatureType entityType,
+                                          @PathVariable String localName,
+                                          @RequestParam(defaultValue = "bg") String language,
+                                          @PageableDefault(
+                                                  size = 12,
+                                                  sort = "id",
+                                                  direction = Sort.Direction.DESC
+                                          ) Pageable evidencePageable
     ) {
         return entityDetailService.findByLocalName(
                 entityType,

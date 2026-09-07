@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material'
+import type { ReactNode } from 'react'
 import { archiveMediaUrl } from '../../api/PublicArchiveApi'
 import { PreviewableImage } from '../common/ImageViewerDialog'
 
@@ -12,9 +13,10 @@ export type MediaGalleryItem = {
 type Props = {
     title: string
     items: MediaGalleryItem[]
+    renderMedia?: (item: MediaGalleryItem) => ReactNode
 }
 
-function MediaGallery({ title, items }: Props) {
+function MediaGallery({ title, items, renderMedia }: Props) {
     if (items.length === 0) return null
 
     return (
@@ -33,7 +35,7 @@ function MediaGallery({ title, items }: Props) {
                 >
                     {items.map((item) => (
                         <Card key={item.mediaAssetId} sx={{ overflow: 'hidden' }}>
-                            {item.mimeType?.startsWith('image/') ? (
+                            {renderMedia ? renderMedia(item) : item.mimeType?.startsWith('image/') ? (
                                 <PreviewableImage
                                     src={archiveMediaUrl(item.mediaAssetId)}
                                     alt={item.title}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Box, Button, CircularProgress, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Paper, Stack, Tab, Tabs, TextField, Tooltip, Typography } from '@mui/material'
+import { Alert, Autocomplete, Box, Button, CircularProgress, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Paper, Stack, Tab, Tabs, TextField, Tooltip, Typography } from '@mui/material'
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import ReplayOutlinedIcon from '@mui/icons-material/ReplayOutlined'
@@ -178,9 +178,17 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         setPrintedPageNumber(detail.summary.printedPageNumber ?? '')
         setSourceReferenceId(String(detail.summary.sourceReferenceId ?? documentQuery.data?.summary.defaultSourceReferenceId ?? ''))
         setSourceReason(auditReason)
-        setProvenanceTrust(detail.summary.provenanceTrustState)
+        setProvenanceTrust(detail.summary.provenanceTrustState === 'UNKNOWN' ? documentQuery.data?.summary.provenanceTrustState ?? 'UNKNOWN' : detail.summary.provenanceTrustState)
         setProvenanceReason(auditReason)
-    }, [auditReason, detail?.summary.id, detail?.summary.versionToken, documentQuery.data?.summary.defaultSourceReferenceId])
+    }, [auditReason, detail?.summary.id, documentQuery.data?.summary.id])
+
+    useEffect(() => {
+        if (!detail || detail.summary.sourceReferenceId || documentQuery.data?.summary.defaultSourceReferenceId) return
+        const sourceId = documentQuery.data?.summary.sourceId
+        if (!sourceId) return
+        const matches = (sourceOptionsQuery.data?.references ?? []).filter(reference => reference.sourceId === sourceId)
+        if (matches.length === 1) setSourceReferenceId(current => current || String(matches[0].id))
+    }, [detail?.summary.id, documentQuery.data?.summary.sourceId, sourceOptionsQuery.data])
 
     function closeImmediately() {
         setDraft(null)
@@ -279,52 +287,33 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
         }
     }
 
-    async function runMetadataUpdate() {
-        if (pageId === null || !detail) return
+    async function runDetailsSave() {
+        if (pageId === null || !detail || pending !== null) return
         setPending('metadata'); setError(null); setNotice(null)
         try {
-            await updateDocumentPageMetadata(documentId, pageId, detail.summary.versionToken, {
-                printedPageNumber: printedPageNumber.trim() || null,
-                printedPageSort: detail.summary.printedPageSort,
-                pageLabel: detail.summary.pageLabel,
-            })
+            if (canProcess && printedPageNumber.trim() !== (detail.summary.printedPageNumber ?? '')) {
+                const latest = await getDocumentPage(documentId, pageId)
+                await updateDocumentPageMetadata(documentId, pageId, latest.summary.versionToken, {
+                    printedPageNumber: printedPageNumber.trim() || null,
+                    printedPageSort: latest.summary.printedPageSort,
+                    pageLabel: latest.summary.pageLabel,
+                })
+            }
+            if (canReview && sourceReferenceId && Number(sourceReferenceId) !== detail.summary.sourceReferenceId) {
+                await changePageSourceProvenance(pageId, {
+                    sourceReferenceId: Number(sourceReferenceId),
+                    provenanceStatus: 'KNOWN_SOURCE',
+                    provenanceTrustState: provenanceTrust,
+                    note: detail.provenanceNote,
+                    reason: sourceReason.trim() || auditReason,
+                })
+            } else if (canReview && provenanceTrust !== detail.summary.provenanceTrustState) {
+                await changePageProvenanceTrust(pageId, { provenanceTrustState: provenanceTrust, reason: provenanceReason.trim() || auditReason })
+            }
             await refreshPage()
             setNotice(t('documents.pageReview.metadataSaved'))
         } catch (caught) {
             setError(apiErrorMessage(caught, t('documents.pageReview.metadataFailed')))
-        } finally { setPending(null) }
-    }
-
-    async function runTrustUpdate() {
-        if (pageId === null || !detail || !provenanceReason.trim()) return
-        setPending('trust'); setError(null); setNotice(null)
-        try {
-            await changePageProvenanceTrust(pageId, {
-                provenanceTrustState: provenanceTrust,
-                reason: provenanceReason.trim(),
-            })
-            await refreshPage()
-            setNotice(t('documents.pageReview.provenanceSaved'))
-        } catch (caught) {
-            setError(apiErrorMessage(caught, t('documents.pageReview.provenanceFailed')))
-        } finally { setPending(null) }
-    }
-
-    async function runSourceUpdate() {
-        if (pageId === null || !detail || !sourceReferenceId || !sourceReason.trim()) return
-        setPending('source'); setError(null); setNotice(null)
-        try {
-            await changePageSourceProvenance(pageId, {
-                sourceReferenceId: Number(sourceReferenceId),
-                provenanceStatus: 'KNOWN_SOURCE',
-                provenanceTrustState: detail.summary.provenanceTrustState,
-                note: detail.provenanceNote,
-                reason: sourceReason.trim(),
-            })
-            await refreshPage()
-            setNotice(t('documents.pageReview.sourceSaved'))
-        } catch (caught) {
-            setError(apiErrorMessage(caught, t('documents.pageReview.sourceFailed')))
         } finally { setPending(null) }
     }
 
@@ -368,6 +357,7 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
     const alreadyApproved = summary?.transcriptionApprovalState === 'APPROVED'
     const unchangedFromOcr = Boolean(detail?.rawOcrText && displayedText === detail.rawOcrText)
     const visionQuality = qualityQuery.data?.find(item => item.assessorType === 'VISION_MODEL' || item.assessmentType.includes('VISION'))
+    const ocrQuality = qualityQuery.data?.find(item => item.assessorType === 'DETERMINISTIC' && !item.assessmentType.includes('VISION'))
 
     function openWorkflowAction(action: 'reject' | 'reprocess' | 'extract' | 'delete' | 'resetCorrectedText') {
         setMoreAnchor(null)
@@ -420,9 +410,8 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                 </MenuItem>}
             </Menu>
             <Box sx={{ flex: 1 }} />
-            {textWorkspace && canProcess && <Button variant="outlined" startIcon={<SaveOutlinedIcon />} onClick={() => void runSave()} disabled={pending !== null || !dirty || displayedText.trim() === ''}>{t('documents.pageWorkspace.save')}</Button>}
-            {textWorkspace && canReview && alreadyApproved && <Button variant="contained" startIcon={<CheckOutlinedIcon />} disabled>{t('documents.pageReview.approved')}</Button>}
-            {textWorkspace && canReview && !alreadyApproved && <Button variant="contained" startIcon={<CheckOutlinedIcon />} onClick={() => unchangedFromOcr ? setConfirmUnchangedApproval(true) : void runApproval()} disabled={pending !== null || dirty || displayedText.trim() === ''}>{t('documents.pageWorkspace.approve')}</Button>}
+            {canReview && alreadyApproved && <Button variant="contained" startIcon={<CheckOutlinedIcon />} disabled>{t('documents.pageReview.approved')}</Button>}
+            {canReview && !alreadyApproved && <Button variant="contained" startIcon={<CheckOutlinedIcon />} onClick={() => unchangedFromOcr ? setConfirmUnchangedApproval(true) : void runApproval()} disabled={pending !== null || dirty || displayedText.trim() === ''}>{t('documents.pageWorkspace.approve')}</Button>}
         </>}
     >
         {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
@@ -466,8 +455,17 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                             <Tab value="editor" label={t('documents.pageReview.editTabs.editor')} />
                             <Tab value="compare" label={t('documents.pageReview.editTabs.compare')} />
                         </Tabs>
-                        {editTab === 'editor' && <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0, p: 1.5, overflow: 'hidden' }}>
-                            <Box sx={{ height: { xs: 320, md: '42%' }, minHeight: 240, maxHeight: 420, flexShrink: 0 }}>
+                        {editTab === 'editor' && <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0, p: 1.5, overflow: 'auto' }}>
+                            {ocrQuality && <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
+                                <Tooltip title={t('documents.qualityExplanation')}>
+                                    <Button variant="outlined" onClick={() => { setSupportTab('checks'); setInspectorOpen(true) }}>
+                                        {t('documents.pageReview.tabs.checks')}
+                                    </Button>
+                                </Tooltip>
+                                <QualityResultSummary compact quality={{ assessmentId: ocrQuality.id, score: ocrQuality.overallScore, percentage: ocrQuality.percentage, qualityLevel: ocrQuality.qualityStatus, passedChecks: ocrQuality.passedChecks.length, failedChecks: ocrQuality.failedChecks.length, assessedAt: ocrQuality.createdAt }} />
+                                <Typography variant="body2" color="text.secondary">{t('documents.quality.passed', { count: ocrQuality.passedChecks.length })} · {t('documents.quality.failed', { count: ocrQuality.failedChecks.length })}</Typography>
+                            </Stack>}
+                            <Box sx={{ height: { xs: 420, md: '58%' }, minHeight: 320, maxHeight: 620, flexShrink: 0 }}>
                                 <TextField inputRef={editorRef} multiline fullWidth label={t('documents.pageWorkspace.correctedText')} value={displayedText} onChange={event => setDraft(event.target.value)} onKeyDown={event => {
                                     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
                                         event.preventDefault()
@@ -475,6 +473,7 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                                     }
                                 }} disabled={pending !== null} helperText={dirty ? t('documents.pageWorkspace.unsaved') : t('documents.pageWorkspace.editHelp')} sx={{ height: '100%', '& .MuiInputBase-root': { alignItems: 'flex-start', height: 'calc(100% - 24px)' }, '& textarea': { height: '100% !important', overflow: 'auto !important' } }} />
                             </Box>
+                            {canProcess && <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}><Button variant="contained" startIcon={<SaveOutlinedIcon />} onClick={() => void runSave()} disabled={pending !== null || !dirty || displayedText.trim() === ''}>{t('documents.pageWorkspace.save')}</Button></Box>}
                             {dirty && summary?.transcriptionApprovalState === 'APPROVED' && <Alert severity="warning">{t('documents.pageReview.approvedChangeWarning')}</Alert>}
                             {!detail.rawOcrText && <Alert severity="info">{t('documents.pageWorkspace.noOcr')}</Alert>}
                             <Divider />
@@ -517,7 +516,6 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>{t('documents.pageReview.pageIdentity')}</Typography>
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'flex-start' } }}>
                                 <TextField fullWidth size="small" label={t('documents.pageReview.printedPageNumber')} value={printedPageNumber} onChange={event => setPrintedPageNumber(event.target.value.slice(0, 50))} disabled={!canProcess || pending !== null} helperText={t('documents.pageReview.printedPageHelp')} />
-                                {canProcess && <Button variant="outlined" onClick={() => void runMetadataUpdate()} disabled={pending !== null || printedPageNumber.trim() === (detail.summary.printedPageNumber ?? '')} sx={{ whiteSpace: 'nowrap' }}>{t('documents.pageReview.saveMetadata')}</Button>}
                             </Stack>
                         </Box>
                         <Divider />
@@ -525,20 +523,24 @@ export default function DocumentPageReviewDialog({ open, documentId, pageId, onC
                             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>{t('documents.pageReview.provenanceTitle')}</Typography>
                             <Stack spacing={1.5}>
                                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'flex-start' } }}>
-                                    <TextField select fullWidth size="small" label={t('documents.pageReview.sourceReference')} value={sourceReferenceId} onChange={event => setSourceReferenceId(event.target.value)} disabled={!canReview || pending !== null || sourceOptionsQuery.isPending} helperText={detail.summary.sourceReferenceId === null && sourceReferenceId === String(documentQuery.data?.summary.defaultSourceReferenceId ?? '') ? t('documents.pageReview.sourceInheritedHelp') : t('documents.pageReview.sourceReferenceHelp')}>
-                                        <MenuItem value="" disabled>{t('documents.pageReview.selectSourceReference')}</MenuItem>
-                                        {(sourceOptionsQuery.data?.references ?? []).map(reference => <MenuItem key={reference.id} value={String(reference.id)}>{sourceReferenceLabel(reference, sourceOptionsQuery.data?.sources ?? [])}</MenuItem>)}
-                                    </TextField>
+                                    <Autocomplete fullWidth size="small"
+                                        options={(sourceOptionsQuery.data?.references ?? []).filter(reference => !documentQuery.data?.summary.sourceId || reference.sourceId === documentQuery.data.summary.sourceId || String(reference.id) === sourceReferenceId)}
+                                        value={(sourceOptionsQuery.data?.references ?? []).find(reference => String(reference.id) === sourceReferenceId) ?? null}
+                                        getOptionLabel={reference => sourceReferenceLabel(reference, sourceOptionsQuery.data?.sources ?? [])}
+                                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                                        onChange={(_, reference) => setSourceReferenceId(reference ? String(reference.id) : '')}
+                                        disabled={!canReview || pending !== null || sourceOptionsQuery.isPending}
+                                        renderInput={params => <TextField {...params} label={t('documents.pageReview.sourceReference')} helperText={detail.summary.sourceReferenceId === null && Boolean(sourceReferenceId) ? t('documents.pageReview.sourceInheritedHelp') : t('documents.pageReview.sourceReferenceHelp')} />}
+                                    />
                                     {canReview && <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setSourceReferenceCreateOpen(true)} disabled={pending !== null || sourceOptionsQuery.isPending} sx={{ whiteSpace: 'nowrap' }}>{t('curator.source.createCitation')}</Button>}
                                 </Stack>
                                 {canReview && <TextField fullWidth size="small" required label={t('documents.pageReview.sourceReason')} value={sourceReason} onChange={event => setSourceReason(event.target.value.slice(0, 1000))} disabled={pending !== null} />}
-                                {canReview && <Button variant="outlined" onClick={() => void runSourceUpdate()} disabled={pending !== null || !sourceReferenceId || !sourceReason.trim() || Number(sourceReferenceId) === detail.summary.sourceReferenceId} sx={{ alignSelf: 'flex-start' }}>{t('documents.pageReview.saveSource')}</Button>}
                                 <Divider />
                                 <TextField select fullWidth size="small" label={t('documents.pageReview.provenanceTrust')} value={provenanceTrust} onChange={event => setProvenanceTrust(event.target.value as ProvenanceTrustState)} disabled={!canReview || pending !== null}>
                                     {(['UNKNOWN', 'UNTRUSTED', 'PARTIAL', 'TRUSTED', 'VERIFIED'] as ProvenanceTrustState[]).map(value => <MenuItem key={value} value={value}>{t(`documents.pageReview.trust.${value}`)}</MenuItem>)}
                                 </TextField>
                                 {canReview && <TextField fullWidth size="small" required multiline minRows={2} label={t('documents.pageReview.provenanceReason')} value={provenanceReason} onChange={event => setProvenanceReason(event.target.value.slice(0, 1000))} disabled={pending !== null} />}
-                                {canReview && <Button variant="outlined" onClick={() => void runTrustUpdate()} disabled={pending !== null || !provenanceReason.trim() || provenanceTrust === detail.summary.provenanceTrustState} sx={{ alignSelf: 'flex-start' }}>{t('documents.pageReview.saveProvenance')}</Button>}
+                                {(canReview || canProcess) && <Button variant="contained" startIcon={<SaveOutlinedIcon />} onClick={() => void runDetailsSave()} disabled={pending !== null} sx={{ alignSelf: 'flex-end' }}>{t('forms.save')}</Button>}
                             </Stack>
                         </Box>
                     </Stack>}

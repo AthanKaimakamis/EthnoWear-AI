@@ -5,6 +5,7 @@ import {
     Tooltip, Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import SearchIcon from '@mui/icons-material/Search'
@@ -72,7 +73,7 @@ export default function ArchiveManagerPage() {
     const [pendingAction, setPendingAction] = useState<{ id: number, command: PublicationCommand } | null>(null)
     const [reloadKey, setReloadKey] = useState(0)
     const [previewItemId, setPreviewItemId] = useState<number | null>(null)
-    const [editorTarget, setEditorTarget] = useState<{ itemId: number | null } | null>(() => {
+    const [editorTarget, setEditorTarget] = useState<{ itemId: number | null, duplicateFromId?: number } | null>(() => {
         if (searchParams.get('create') === '1') return { itemId: null }
         const editId = Number(searchParams.get('edit'))
         return Number.isInteger(editId) && editId > 0 ? { itemId: editId } : null
@@ -105,7 +106,7 @@ export default function ArchiveManagerPage() {
 
     const filtered = useMemo(() => items.filter(item => {
         const itemMedia = mediaByItem.get(item.id) ?? []
-        const source = sourceByReference.get(item.sourceReferenceId)
+        const source = sourceByReference.get(item.sourceReferenceId ?? 0)
         const text = [title(item), item.titleEn, item.inventoryNumber, item.originText, item.currentLocation, source?.title].join(' ').toLocaleLowerCase()
         return (!query.trim() || text.includes(query.trim().toLocaleLowerCase()))
             && (!filters.archiveType || item.archiveType === filters.archiveType)
@@ -184,11 +185,11 @@ export default function ArchiveManagerPage() {
                     const links = mediaByItem.get(item.id) ?? []
                     const primary = links.find(link => link.role === 'PRIMARY') ?? links[0]
                     const asset = primary ? assetById.get(primary.mediaAssetId) : undefined
-                    const source = sourceByReference.get(item.sourceReferenceId)
+                    const source = sourceByReference.get(item.sourceReferenceId ?? 0)
                     return (
                         <Paper key={item.id} variant="outlined" role="button" tabIndex={0} aria-label={`${t('curator.archive.preview')}: ${title(item)}`}
                             onClick={() => setPreviewItemId(item.id)}
-                            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setPreviewItemId(item.id) } }}
+                            onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setPreviewItemId(item.id) } }}
                             sx={{ p: 1.5, cursor: 'pointer', transition: 'border-color 120ms, background-color 120ms', '&:hover': { borderColor: 'primary.main', bgcolor: '#FCF8F8' }, '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 } }}>
                             <Stack direction="row" sx={{ gap: 2, alignItems: 'center' }}>
                                 <AdminMediaThumbnail mediaAssetId={asset?.id} alt={asset?.fileName ?? ''} sx={{ width: 84, height: 68, borderRadius: 1, flexShrink: 0 }} />
@@ -204,6 +205,7 @@ export default function ArchiveManagerPage() {
                                 <Stack direction="row" sx={{ alignItems: 'center', gap: .5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                     {item.publicationStatus === 'DRAFT' && workflowPermissions.edit && <Tooltip title={t('admin.edit')}><Button size="small" startIcon={<EditOutlinedIcon />} onClick={event => { event.stopPropagation(); setEditorTarget({ itemId: item.id }) }}>{t('admin.edit')}</Button></Tooltip>}
                                     <Tooltip title={t('curator.archive.preview')}><Button size="small" startIcon={<OpenInNewOutlinedIcon />} onClick={event => { event.stopPropagation(); setPreviewItemId(item.id) }}>{t('curator.archive.preview')}</Button></Tooltip>
+                                    {workflowPermissions.edit && <Button size="small" startIcon={<ContentCopyOutlinedIcon />} onClick={event => { event.stopPropagation(); setEditorTarget({ itemId: null, duplicateFromId: item.id }) }}>{t('archiveFast.duplicate')}</Button>}
                                     <Box onClick={event => event.stopPropagation()}>
                                         <ArchiveWorkflowActions
                                             status={item.publicationStatus}
@@ -226,7 +228,7 @@ export default function ArchiveManagerPage() {
             </Stack>
             {filtered.length > pageSize && <Pagination count={Math.ceil(filtered.length / pageSize)} page={page} onChange={(_, next) => setPage(next)} sx={{ alignSelf: 'center' }} />}
             {previewItemId !== null && <ArchiveItemPreviewDialog itemId={previewItemId} onClose={() => setPreviewItemId(null)} onEdit={() => { const itemId = previewItemId; setPreviewItemId(null); setEditorTarget({ itemId }) }} />}
-            {editorTarget && <ArchiveEditorPage key={editorTarget.itemId ?? 'new'} itemId={editorTarget.itemId} embedded
+            {editorTarget && <ArchiveEditorPage key={`${editorTarget.itemId ?? 'new'}-${editorTarget.duplicateFromId ?? ''}`} itemId={editorTarget.itemId} duplicateFromId={editorTarget.duplicateFromId} embedded
                 permissions={workflowPermissions}
                 onClose={closeEditor}
                 onSaved={() => { closeEditor(); setReloadKey(value => value + 1) }}

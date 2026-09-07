@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class JenaOntologyStoreVersioningTest {
 
@@ -69,17 +72,69 @@ class JenaOntologyStoreVersioningTest {
         String original = Files.readString(path, StandardCharsets.UTF_8);
         JenaOntologyStore store = store(path, recorder);
 
+        Object originalModel = store.read(model -> model);
         assertThrows(IllegalStateException.class, () -> store.write(model -> {
             model.createClass(store.uri("Added"));
             return null;
         }));
 
         assertEquals(original, Files.readString(path, StandardCharsets.UTF_8));
+        assertSame(originalModel, store.read(model -> model));
+        assertNull(store.read(model -> model.getOntClass(store.uri("Added"))));
         assertEquals(List.of(2L), recorder.failedStaged);
         assertEquals(1, store.<Integer>read(model -> model.listClasses()
                 .filterKeep(resource -> store.uri("Example").equals(resource.getURI()))
                 .toList()
                 .size()));
+    }
+
+    @Test
+    void rejectedMutationLeavesActiveModelAndFileUntouched() throws Exception {
+        RecordingVersionRecorder recorder = new RecordingVersionRecorder();
+        Path path = ontologyPath();
+        JenaOntologyStore store = store(path, recorder);
+        Object originalModel = store.read(model -> model);
+
+        assertThrows(IllegalArgumentException.class, () -> store.write(model -> {
+            model.createClass(store.uri("Rejected"));
+            throw new IllegalArgumentException("Rejected mutation");
+        }));
+
+        assertSame(originalModel, store.read(model -> model));
+        assertNull(store.read(model -> model.getOntClass(store.uri("Rejected"))));
+        assertEquals(ONTOLOGY, Files.readString(path));
+        assertFalse(Files.exists(path.resolveSibling("ontology.owl.bak")));
+        assertTrue(recorder.staged.isEmpty());
+    }
+
+    @Test
+    void failedReloadPreservesActiveModel() throws Exception {
+        Path path = ontologyPath();
+        JenaOntologyStore store = store(path, new RecordingVersionRecorder());
+        Object originalModel = store.read(model -> model);
+        Files.writeString(path, "invalid RDF/XML");
+
+        assertThrows(IllegalStateException.class, store::reload);
+        assertSame(originalModel, store.read(model -> model));
+    }
+
+    @Test
+    void persistenceFailureDoesNotActivateCandidate() throws Exception {
+        RecordingVersionRecorder recorder = new RecordingVersionRecorder();
+        Path path = ontologyPath();
+        JenaOntologyStore store = store(path, recorder);
+        Object originalModel = store.read(model -> model);
+        Files.createDirectory(path.resolveSibling("ontology.owl.tmp"));
+
+        assertThrows(IllegalStateException.class, () -> store.write(model -> {
+            model.createClass(store.uri("Rejected"));
+            return null;
+        }));
+
+        assertSame(originalModel, store.read(model -> model));
+        assertEquals(ONTOLOGY, Files.readString(path));
+        assertTrue(recorder.activated.isEmpty());
+        assertEquals(List.of(2L), recorder.failedStaged);
     }
 
     @Test
@@ -123,6 +178,27 @@ class JenaOntologyStoreVersioningTest {
                 new OntologyChangeMetadata(7L, "Invalid restore")
         ));
         assertTrue(recorder.staged.isEmpty());
+    }
+
+    @Test
+    void failedRestoreActivationPreservesActiveInferenceAndFile() throws Exception {
+        RecordingVersionRecorder recorder = new RecordingVersionRecorder();
+        recorder.failActivation = true;
+        Path path = ontologyPath();
+        JenaOntologyStore store = store(path, recorder);
+        Object originalModel = store.read(model -> model);
+        String replacement = ONTOLOGY.replace("#Example", "#Replacement");
+        OntologySnapshot selected = new OntologySnapshot(
+                replacement, ContentHashUtils.sha256(replacement),
+                path.getFileName().toString(), NAMESPACE);
+
+        assertThrows(IllegalStateException.class, () -> store.restore(
+                selected, 41L, new OntologyChangeMetadata(7L, "Failed restore")));
+
+        assertSame(originalModel, store.read(model -> model));
+        assertNull(store.read(model -> model.getOntClass(store.uri("Replacement"))));
+        assertEquals(ONTOLOGY, Files.readString(path));
+        assertEquals(List.of(2L), recorder.failedStaged);
     }
 
     private Path ontologyPath() throws Exception {

@@ -43,7 +43,14 @@ export default function SourceReferenceCreateDialog({ sources, initialSourceId, 
         setSaving(true)
         setError(null)
         try {
-            onCreated(await sourceReferencesApi.create(form))
+            onCreated(await sourceReferencesApi.create({
+                ...form,
+                chapter: form.chapter?.trim() || null,
+                sectionTitle: form.sectionTitle?.trim() || null,
+                figureNumber: form.figureNumber?.trim() || null,
+                locator: form.locator?.trim() || null,
+                note: form.note?.trim() || null,
+            }))
         } catch (caught) {
             setError(apiErrorMessage(caught, t('curator.source.createCitationFailed')))
         } finally {
@@ -91,7 +98,7 @@ export default function SourceReferenceCreateDialog({ sources, initialSourceId, 
 }
 
 function nullable(value: string) {
-    return value.trim() || null
+    return value || null
 }
 
 function numberOrNull(value: string) {

@@ -49,7 +49,7 @@ export type SourceType =
     | 'FIELD_NOTE'
 
 export type ArchiveItemWriteDto = {
-    sourceReferenceId: number
+    sourceReferenceId: number | null
     collectionId: string | null
     inventoryNumber: string | null
     titleBg: string | null
@@ -347,8 +347,10 @@ export type ArchiveItemMediaContentDetails = {
 }
 
 export type ArchiveItemDetailDetails = {
+    imageSources?: EntitySourceCitationDetails[]
+    inheritedObservations?: InheritedObservation[]
     archiveItem: ArchiveItemDetails
-    source: EntitySourceCitationDetails
+    source: EntitySourceCitationDetails | null
     features: ArchiveItemFeatureDetails[]
     media: ArchiveItemMediaContentDetails[]
 }
@@ -376,9 +378,17 @@ export type RegionalMotifArchiveOverviewDetails = {
 }
 
 export type ArchiveEntryDetails = {
+    inheritedObservations?: InheritedObservation[]
     archiveItem: ArchiveItemDetails
     features: ArchiveItemFeatureDetails[]
     media: ArchiveItemMediaDetails[]
+}
+
+export type InheritedObservation = {
+    featureType: 'ORNAMENT' | 'TECHNIQUE' | 'COLOR'
+    ontologyIri: string
+    ontologyLocalName: string
+    origins: { mediaAssetId: number; fileName: string | null; sourceReferenceId: number | null }[]
 }
 
 export type ArchiveEntryFeatureWriteDto = Omit<ArchiveItemFeatureWriteDto, 'archiveItemId'> & {

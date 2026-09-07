@@ -3,7 +3,7 @@ import { Alert, Button, MenuItem, Stack, TextField, Typography } from '@mui/mate
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { sourceReferencesApi } from '../../../api/ArchiveAdminApi'
-import { documentQueryKeys, getDocument, updateDocumentMetadata } from '../../../api/DocumentAdminApi'
+import { documentQueryKeys, updateDocumentDefaultSourceReference } from '../../../api/DocumentAdminApi'
 import { apiErrorMessage } from '../../../api/http'
 import type { DocumentSummary } from '../../../types/document'
 import { emptySourceReference, findGeneralSourceReference } from './documentSourceReference'
@@ -43,16 +43,7 @@ export default function DocumentDefaultSourceReferenceEditor({ summary, canEdit 
                 referenceId = findGeneralSourceReference(references, summary.sourceId)?.id
                     ?? (await sourceReferencesApi.create(emptySourceReference(summary.sourceId))).id
             }
-            const currentDocument = await getDocument(summary.id)
-            await updateDocumentMetadata(summary.id, {
-                defaultSourceReferenceId: referenceId,
-                title: summary.title,
-                author: summary.author,
-                publisher: summary.publisher,
-                publicationYear: summary.publicationYear,
-                language: summary.language,
-                notes: currentDocument.notes,
-            })
+            await updateDocumentDefaultSourceReference(summary.id, referenceId, t('documents.sourceReference.title'))
             setValue(String(referenceId))
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: documentQueryKeys.detail(summary.id) }),

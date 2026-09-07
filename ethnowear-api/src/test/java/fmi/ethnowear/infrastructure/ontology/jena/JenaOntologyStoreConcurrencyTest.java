@@ -1,5 +1,7 @@
 package fmi.ethnowear.infrastructure.ontology.jena;
 
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -105,6 +107,31 @@ class JenaOntologyStoreConcurrencyTest {
         Path ontology = tempDirectory.resolve("ontology.owl");
         Files.writeString(ontology, ONTOLOGY);
         return new JenaOntologyStore(ontology, NAMESPACE);
+    }
+
+    @Test
+    void writesPublishPreparedInferenceWithoutPersistingDeductions() throws Exception {
+        JenaOntologyStore store = store();
+        store.write(model -> {
+            model.createIndividual(store.uri("Second"), model.getOntClass(store.uri("Child")));
+            return null;
+        });
+
+        assertEquals(2, store.<Integer>read(model -> model.listIndividuals(
+                model.getOntClass(store.uri("Parent"))).toList().size()));
+        var persisted = RDFDataMgr.loadModel(
+                tempDirectory.resolve("ontology.owl").toUri().toString());
+        try {
+            assertFalse(persisted.contains(
+                    persisted.getResource(store.uri("Second")),
+                    RDF.type,
+                    persisted.getResource(store.uri("Parent"))));
+        } finally {
+            persisted.close();
+        }
+        store.reload();
+        assertEquals(2, store.<Integer>read(model -> model.listIndividuals(
+                model.getOntClass(store.uri("Parent"))).toList().size()));
     }
 
     private static void await(CountDownLatch latch) {

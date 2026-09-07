@@ -65,7 +65,7 @@ public class ConversationAnswerAssembler {
         return new ConversationAnswerDetails(
                 context.conversationId(),
                 context.turnId(),
-                generation.answer(),
+                displayAnswer(generation, context.language()),
                 insufficientEvidence,
                 sources(citations, documentEvidence),
                 entityCards,
@@ -78,6 +78,21 @@ public class ConversationAnswerAssembler {
                 ),
                 warningCodes(evidence, generation, insufficientEvidence)
         );
+    }
+
+    private String displayAnswer(ConversationGenerationResult generation, String language) {
+        if (generation.claims().isEmpty()) return generation.answer();
+        // Present validated claims in short paragraphs; no free model-generated
+        // introductions can smuggle unsupported facts around claim validation.
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < generation.claims().size(); i++) {
+            if (i > 0) text.append(i % 2 == 0 ? "\n\n" : " ");
+            text.append(generation.claims().get(i).text());
+        }
+        if (generation.insufficientEvidence()) text.append("en".equals(language)
+                ? "\n\nThis covers what I can support from the available sources, but not every part of your question. Would you like to narrow it down?"
+                : "\n\nТова е частта, която мога да подкрепя с наличните източници, но не обхваща целия въпрос. Искаш ли да го уточним?");
+        return text.toString();
     }
 
     private @NonNull @Unmodifiable Map<String, GroundedPassageDetails> documentEvidence(@NonNull ConversationEvidenceBundle evidence) {
