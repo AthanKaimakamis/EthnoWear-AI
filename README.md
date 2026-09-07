@@ -3,6 +3,67 @@
 EthnoWear is an ontology-driven cultural-heritage platform for exploring,
 documenting, and interpreting traditional Bulgarian embroidery and clothing.
 
+## Screenshots
+
+Selected screenshots from the project essay, showing the Bulgarian interface.
+These are demonstration snapshots; content and processing counts vary by dataset.
+
+### Public archive
+
+Browse regional embroidery examples with ontology-based filters.
+
+![Public archive with regional filters and embroidery photographs](docs/screenshots/public-archive.png)
+
+<details>
+<summary>Grounded chat with citations and related archive results</summary>
+
+The assistant connects its answer to sources, regional concepts, and archive
+examples that the user can open.
+
+![Bulgarian chat answer with citations and related archive cards](docs/screenshots/grounded-chat.png)
+
+</details>
+
+<details>
+<summary>Archive entry details</summary>
+
+A published archive record brings together regional classification, observed
+ornaments, photography, and source attribution.
+
+![Published archive entry with classification, image, and museum citation](docs/screenshots/archive-entry.png)
+
+</details>
+
+<details>
+<summary>Media upload and rights management</summary>
+
+Curators prepare multiple images with descriptions, source references, rights
+status, and public-display settings before upload.
+
+![Batch media upload with image previews and source and rights fields](docs/screenshots/media-upload.png)
+
+</details>
+
+<details>
+<summary>Document OCR review</summary>
+
+Reviewers compare a scanned page with its transcription. Automatic check results
+assist review; human text approval and indexing readiness remain separate states.
+
+![Scanned Bulgarian book page beside corrected OCR text and review status](docs/screenshots/ocr-review.png)
+
+</details>
+
+<details>
+<summary>Ontology version history</summary>
+
+Administrators inspect saved ontology versions and access OWL preview, download,
+and restoration controls.
+
+![Ontology version history with active version and OWL actions](docs/screenshots/ontology-versions.png)
+
+</details>
+
 ## Project documentation
 
 - [EthnoWear API documentation](ethnowear-api/Ethnowear_API_Docs.md) — endpoints,
