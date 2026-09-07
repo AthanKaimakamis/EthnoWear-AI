@@ -8,9 +8,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.generator.EventType;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -57,6 +59,7 @@ public class UserInfo {
     @Column(name = "PostalCode", length = 20)
     private String postalCode;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "CountryCode", length = 2, columnDefinition = "char(2)")
     private String countryCode;
 
