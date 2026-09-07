@@ -45,6 +45,9 @@ public class ConversationGeneratedOutputValidator {
     private static final Pattern CYRILLIC = Pattern.compile("\\p{IsCyrillic}");
 
     private static final Pattern LATIN = Pattern.compile("\\p{IsLatin}");
+    private static final Pattern ENTRY_START = Pattern.compile("(?m)^\\s*\\d{1,4}[.)]\\s+[„\"“]");
+    private static final Pattern QUOTED_NAME = Pattern.compile("[„\"“]([^„\"“”\\n]+)[\"“”]");
+    private static final Pattern REGION = Pattern.compile("(?iuU)\\b([а-я]{3,})(?:ско|ски|ска)\\b");
 
     private static final Set<String> GROUNDING_STOP_WORDS = Set.of(
             "това", "този", "тази", "тези", "като", "които", "която",
@@ -131,7 +134,8 @@ public class ConversationGeneratedOutputValidator {
         Map<String, String> evidence = evidenceText(request);
         Set<String> claimCitations = new LinkedHashSet<>();
 
-        for (ConversationGeneratedClaim claim : claims) {
+        for (int claimIndex = 0; claimIndex < claims.size(); claimIndex++) {
+            ConversationGeneratedClaim claim = claims.get(claimIndex);
             if (claim == null || claim.text() == null || claim.text().isBlank())
                 throw unavailable("Generated answer contains an invalid claim segment");
 
@@ -141,8 +145,9 @@ public class ConversationGeneratedOutputValidator {
             if (claim.evidenceIds().stream().anyMatch(id -> !evidence.containsKey(id)))
                 throw unavailable("Generated factual claim references unknown evidence");
 
-            if (!isSupported(claim, evidence))
-                throw unavailable("Generated factual claim is not supported by its cited evidence");
+            if (!isSupported(claim, evidence, request.question()))
+                throw unavailable("Generated factual claim is not supported by its cited evidence; claim="
+                        + (claimIndex + 1) + "; rule=SINGLE_ENTRY_SUPPORT; citations=" + claim.evidenceIds().size());
 
             claimCitations.addAll(claim.evidenceIds());
         }
@@ -158,7 +163,7 @@ public class ConversationGeneratedOutputValidator {
 
         request.evidence().documentPassages().forEach(passage -> result.put(
                 "chunk:" + passage.chunkId(),
-                String.join(" ", safe(passage.excerpt()), safe(passage.documentTitle()))
+                safe(passage.excerpt())
         ));
         request.evidence().ontologyEvidence().forEach(item -> result.put(
                 item.citationId(),
@@ -188,13 +193,60 @@ public class ConversationGeneratedOutputValidator {
 
     private boolean isSupported(
             @NonNull ConversationGeneratedClaim claim,
-            @NonNull Map<String, String> evidence
+            @NonNull Map<String, String> evidence,
+            @NonNull String question
     ) {
-        Set<String> claimTokens = groundingTokens(claim.text());
-        Set<String> evidenceTokens = claim.evidenceIds().stream()
+        // Never pool unrelated list entries or documents to manufacture support.
+        Set<String> mentionedRegionRoots = new HashSet<>();
+        Set<String> requestedRegionRoots = new HashSet<>();
+        for (String text : evidence.values()) {
+            var matcher = REGION.matcher(text);
+            while (matcher.find()) {
+                String root = matcher.group(1).toLowerCase(Locale.ROOT);
+                if (Pattern.compile("(?iuU)\\b" + Pattern.quote(root) + "\\b").matcher(claim.text()).find())
+                    mentionedRegionRoots.add(root);
+                if (Pattern.compile("(?iuU)\\b" + Pattern.quote(root) + "(?:ско|ски|ска)?\\b").matcher(question).find())
+                    requestedRegionRoots.add(root);
+            }
+        }
+        return claim.evidenceIds().stream()
                 .map(evidence::get)
-                .flatMap(value -> groundingTokens(value).stream())
-                .collect(java.util.stream.Collectors.toSet());
+                .flatMap(value -> supportUnits(value).stream())
+                .filter(unit -> requestedRegionRoots.isEmpty() || requestedRegionRoots.stream().anyMatch(root ->
+                        Pattern.compile("(?iuU)\\b" + Pattern.quote(root) + "(?:ско|ски|ска)?\\b").matcher(unit).find()))
+                .anyMatch(unit -> supportsUnit(claim.text(), unit, mentionedRegionRoots));
+    }
+
+    private List<String> supportUnits(String text) {
+        var matcher = ENTRY_START.matcher(text);
+        List<Integer> starts = new java.util.ArrayList<>();
+        while (matcher.find()) starts.add(matcher.start());
+        if (starts.isEmpty()) return List.of(text);
+        List<String> units = new java.util.ArrayList<>();
+        if (starts.getFirst() > 0) units.add(text.substring(0, starts.getFirst()));
+        for (int i = 0; i < starts.size(); i++)
+            units.add(text.substring(starts.get(i), i + 1 < starts.size() ? starts.get(i + 1) : text.length()));
+        return units;
+    }
+
+    private boolean supportsUnit(String claim, String unit, Set<String> mentionedRegionRoots) {
+        String normalizedUnit = TextUtils.normalizeSearchText(unit);
+        var names = QUOTED_NAME.matcher(claim);
+        while (names.find())
+            if (!normalizedUnit.contains(TextUtils.normalizeSearchText(names.group(1)))) return false;
+        var regions = REGION.matcher(claim);
+        while (regions.find()) {
+            String root = regions.group(1).toLowerCase(Locale.ROOT);
+            if (!Pattern.compile("(?iuU)\\b" + Pattern.quote(root) + "(?:ско|ски|ска)?\\b")
+                    .matcher(unit).find()) return false;
+        }
+        // Match short place names to region forms discovered in the evidence,
+        // without a document-specific or city-specific allowlist.
+        for (String root : mentionedRegionRoots)
+            if (!Pattern.compile("(?iuU)\\b" + Pattern.quote(root) + "(?:ско|ски|ска)?\\b")
+                    .matcher(unit).find()) return false;
+        Set<String> claimTokens = groundingTokens(claim);
+        Set<String> evidenceTokens = groundingTokens(unit);
 
         if (claimTokens.isEmpty() || evidenceTokens.isEmpty())
             return false;

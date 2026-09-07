@@ -60,7 +60,7 @@ class ConversationAnswerAssemblerTest {
     }
 
     @Test
-    void exposesOnlyCitedAuthoritativeSourcesAndCards() {
+    void keepsDocumentSourcesCitedButDoesNotRequireCitationForRelatedEntityCard() {
         GroundedSourceCitationDetails source = new GroundedSourceCitationDetails(
                 11L, "Българска народна шевица", "Автор", null, null,
                 21L, null, null, null, null, null, null
@@ -108,7 +108,7 @@ class ConversationAnswerAssemblerTest {
                         "Отговор",
                         false,
                         List.of(),
-                        List.of("chunk:31", "ontology:TECHNIQUE:ChainTechnique"),
+                        List.of("chunk:31"),
                         List.of("MODEL_WARNING")
                 )
         );
@@ -147,7 +147,7 @@ class ConversationAnswerAssemblerTest {
     }
 
     @Test
-    void exposesOnlyCitedArchiveCardsAndTheirMedia() {
+    void retainsRetrievedArchiveCardsAndMediaWithoutRequiringModelCitations() {
         ConversationArchiveEvidence cited = archiveEvidence(7L, "Цитирана находка");
         ConversationArchiveEvidence unrelated = archiveEvidence(8L, "Несвързана находка");
         ConversationEvidenceBundle evidence = new ConversationEvidenceBundle(
@@ -178,8 +178,61 @@ class ConversationAnswerAssemblerTest {
                 )
         );
 
-        assertThat(answer.archiveCards()).extracting("archiveItemId").containsExactly(7L);
-        assertThat(answer.media()).extracting("mediaAssetId").containsExactly(70L);
+        assertThat(answer.archiveCards()).extracting("archiveItemId").containsExactly(7L, 8L);
+        assertThat(answer.media()).extracting("mediaAssetId").containsExactly(70L, 80L);
+        assertThat(answer.sources()).isEmpty();
+    }
+
+    @Test
+    void listsEveryRegisteredTechniqueWithoutReassigningRegionFactsToStyle() {
+        var region = new ConversationOntologyEvidence("ontology:REGION:Example", FeatureType.REGION,
+                "urn:example", "Example", "Примерен регион", null,
+                java.util.stream.IntStream.rangeClosed(1, 8)
+                        .mapToObj(i -> "TECHNIQUE: Бод " + i + " [Stitch" + i + "]").toList());
+        var style = new ConversationOntologyEvidence("ontology:REGIONAL_EMBROIDERY:Style", FeatureType.REGIONAL_EMBROIDERY,
+                "urn:style", "Style", "Примерна шевица", null, List.of("REGION: Примерен регион [Example]"));
+        var evidence = new ConversationEvidenceBundle(List.of(), List.of(region, style), List.of(), List.of(), List.of());
+        var listContext = new ConversationTurnExecutionContext(context.conversationId(), context.turnId(), "bg", "кой техники използват там");
+        var answer = assembler.assemble(listContext, evidence,
+                new ConversationGenerationResult("Кратък отговор.", false, List.of(), List.of(region.citationId()), List.of()));
+        assertThat(answer.answer()).contains("Записани връзки за Примерен регион — техники (8)")
+                .doesNotContain("Записани връзки за Примерна шевица", "[Stitch");
+        for (int i = 1; i <= 8; i++) assertThat(answer.answer()).contains("• Бод " + i);
+        String complete = "Примерен регион: " + java.util.stream.IntStream.rangeClosed(1, 8)
+                .mapToObj(i -> "Бод " + i).collect(java.util.stream.Collectors.joining(", ")) + ".";
+        var completeAnswer = assembler.assemble(listContext, evidence,
+                new ConversationGenerationResult(complete, false, List.of(), List.of(region.citationId()), List.of()));
+        assertThat(completeAnswer.answer()).isEqualTo(complete);
+    }
+
+    @Test
+    void relatedCardsRequireRetrievedEvidenceAndMediaRequireAnEligibleCard() {
+        var ontology = new ConversationOntologyEvidence("ontology:REGION:R", FeatureType.REGION,
+                "urn:r", "R", "Region", null, List.of());
+        var evidence = new ConversationEvidenceBundle(List.of(), List.of(ontology), List.of(),
+                List.of(new ConversationEntityCardDetails(FeatureType.REGION, "R", "Region", 1L),
+                        new ConversationEntityCardDetails(FeatureType.REGION, "Unknown", "Unknown", 2L)),
+                List.of(), List.of(new ConversationMediaDetails(1L, MediaType.IMAGE, "Related", "/api/media/1/content", null, FeatureType.REGION, "R"),
+                        new ConversationMediaDetails(2L, MediaType.IMAGE, "Unknown", "/api/media/2/content", null, FeatureType.REGION, "Unknown")), List.of());
+        var answer = assembler.assemble(context, evidence,
+                new ConversationGenerationResult("Partial.", true, List.of(), List.of(), List.of()));
+        assertThat(answer.entityCards()).extracting("localName").containsExactly("R");
+        assertThat(answer.media()).extracting("mediaAssetId").containsExactly(1L);
+        assertThat(answer.sources()).isEmpty();
+    }
+
+    @Test
+    void englishListIncludesOnlyRequestedRelationshipTypes() {
+        var ontology = new ConversationOntologyEvidence("ontology:REGION:R", FeatureType.REGION,
+                "urn:r", "R", "Region", null, List.of("COLOR: Red [Red]", "COLOR: Blue [Blue]", "TECHNIQUE: Cross stitch [Cross]"));
+        var evidence = new ConversationEvidenceBundle(List.of(), List.of(ontology), List.of(), List.of(), List.of());
+        var answer = assembler.assemble(new ConversationTurnExecutionContext(context.conversationId(), context.turnId(), "en", "Which colors are used there?"),
+                evidence, new ConversationGenerationResult("Summary.", false, List.of(), List.of(ontology.citationId()), List.of()));
+        assertThat(answer.answer()).contains("Registered relationships for Region — colors (2)", "• Red", "• Blue")
+                .doesNotContain("Cross stitch");
+        var ordinary = assembler.assemble(context, evidence,
+                new ConversationGenerationResult("Summary.", false, List.of(), List.of(ontology.citationId()), List.of()));
+        assertThat(ordinary.answer()).isEqualTo("Summary.");
     }
 
     private ConversationArchiveEvidence archiveEvidence(Long id, String title) {

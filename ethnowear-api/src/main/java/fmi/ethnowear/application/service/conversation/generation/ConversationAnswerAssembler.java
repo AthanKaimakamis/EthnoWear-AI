@@ -61,11 +61,12 @@ public class ConversationAnswerAssembler {
         List<ConversationArchiveCardDetails> archiveCards = archiveCards(citations, archiveEvidence, evidence);
 
         List<ConversationMediaDetails> media = media(entityCards, archiveCards, evidence);
+        String narrative = displayAnswer(generation, context.language());
 
         return new ConversationAnswerDetails(
                 context.conversationId(),
                 context.turnId(),
-                displayAnswer(generation, context.language()),
+                narrative + ConversationRelationshipSummary.forQuestion(context.userMessage(), context.language(), evidence, narrative),
                 insufficientEvidence,
                 sources(citations, documentEvidence),
                 entityCards,
@@ -185,9 +186,9 @@ public class ConversationAnswerAssembler {
             @NonNull Map<String, ConversationOntologyEvidence> ontology,
             @NonNull ConversationEvidenceBundle evidence
     ) {
-        Set<EntityIdentity> selected = citations.stream()
-                .map(ontology::get)
-                .filter(item -> item != null)
+        // Related browsing results come from authoritative retrieval, not model citations.
+        // Document sources remain strictly citation-scoped.
+        Set<EntityIdentity> selected = ontology.values().stream()
                 .map(item -> new EntityIdentity(
                         item.entityType(),
                         item.localName()
@@ -214,9 +215,7 @@ public class ConversationAnswerAssembler {
             @NonNull Map<String, ConversationArchiveEvidence> archiveEvidence,
             @NonNull ConversationEvidenceBundle evidence
     ) {
-        Set<Long> selected = citations.stream()
-                .map(archiveEvidence::get)
-                .filter(java.util.Objects::nonNull)
+        Set<Long> selected = archiveEvidence.values().stream()
                 .map(ConversationArchiveEvidence::archiveItemId)
                 .collect(java.util.stream.Collectors.toSet());
 

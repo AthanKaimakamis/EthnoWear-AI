@@ -99,7 +99,8 @@ public class ConversationPolicyService {
     }
 
     private static boolean isPureFollowUp(String normalized) {
-        return normalized.matches("(why|why is that|защо|защо така|tell me more|разкажи още|продължи|continue|"
+        return normalized.matches("((я |моля )?провери (пак|отново)|check again|try again|"
+                + "why|why is that|защо|защо така|tell me more|разкажи още|продължи|continue|"
                 + "(обясни|кажи|разкажи)( го| това)? по (просто|кратко|подробно)|"
                 + "(explain|say)( it| that)? (more simply|in simpler terms)|make it shorter)");
     }

@@ -20,12 +20,14 @@ i18n.addResourceBundle('en', 'chatDesign', {
  errors: { CONVERSATION_VALIDATION: 'The question is empty, too long, or invalid.', CONVERSATION_OWNER_REQUIRED: 'An active guest session or public profile is required.', CONVERSATION_NOT_FOUND: 'This conversation is no longer available.', CONVERSATION_TURN_NOT_FOUND: 'This request is no longer available.', CONVERSATION_REQUEST_CONFLICT: 'This request was already processed with different data.', CONVERSATION_TURN_ACTIVE: 'Wait for the current answer to finish.', CONVERSATION_TURN_NOT_CANCELLABLE: 'This request can no longer be cancelled.', CONVERSATION_RATE_LIMITED: 'Too many requests were sent. Try again shortly.', CONVERSATION_UNSAFE_INPUT: 'This question cannot be processed safely.', CONVERSATION_OUT_OF_SCOPE: 'Ask about Bulgarian embroidery, motifs, techniques, or archive sources.', CONVERSATION_PROCESSING_FAILED: 'A temporary problem occurred while preparing the answer.', PUBLIC_AUTH_REQUIRED: 'A public session is required.', PUBLIC_ACCESS_DENIED: 'The public session cannot access this conversation.' }
 })
 i18n.addResources('bg', 'chatDesign', {
+ relatedNotice: 'Свързани записи за разглеждане. Показването им не означава, че подкрепят всяко твърдение в отговора.',
  unavailable: 'Разговорът не е достъпен',
  'errors.CONVERSATION_OLLAMA_UNAVAILABLE': 'Услугата за генериране на отговори (Ollama) не е достъпна.',
  'errors.CONVERSATION_RAG_UNAVAILABLE': 'Търсенето в проверените източници (RAG) не е достъпно.'
  , 'errors.CONVERSATION_GROUNDING_FAILED': 'Отговорът не премина проверката спрямо източниците. Опитайте да уточните въпроса.'
 })
 i18n.addResources('en', 'chatDesign', {
+ relatedNotice: 'Related records to explore. Their inclusion does not mean they support every claim in the answer.',
  unavailable: 'Chat unavailable',
  'errors.CONVERSATION_OLLAMA_UNAVAILABLE': 'The answer generation service (Ollama) is unavailable.',
  'errors.CONVERSATION_RAG_UNAVAILABLE': 'Verified-source retrieval (RAG) is unavailable.'

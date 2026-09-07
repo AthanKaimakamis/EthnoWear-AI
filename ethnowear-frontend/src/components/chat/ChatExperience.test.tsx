@@ -85,6 +85,7 @@ describe('conversation chat', () => {
   FakeEventSource.instances[0].emit({ eventId: 2, conversationId: 'c1', turnId: 't1', status: 'COMPLETED', stage: 'VALIDATING_ANSWER', errorCode: null, occurredAt: '' })
   expect(await screen.findByText('Grounded answer')).toBeInTheDocument(); expect(screen.getByText('· answered in 2.5 s')).toBeInTheDocument(); expect(screen.getByText('There is not enough verified evidence for a complete answer.')).toBeInTheDocument()
   expect(screen.getByText('Book')).toBeInTheDocument(); expect(screen.getByRole('link', { name: /Chain stitch/ })).toHaveAttribute('href', '/archive/techniques/ChainTechnique')
+  expect(screen.getByText('Related records to explore. Their inclusion does not mean they support every claim in the answer.')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Archive example/ })).toHaveAttribute('href', '/archive/items/7'); expect(screen.getByAltText('Approved image')).toHaveAttribute('src', '/api/media/52/content')
   expect(screen.getByRole('button', { name: 'Show bird ornaments' })).toBeInTheDocument()
  })

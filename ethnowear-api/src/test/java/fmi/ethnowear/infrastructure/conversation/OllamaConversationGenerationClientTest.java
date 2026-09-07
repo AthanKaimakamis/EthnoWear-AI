@@ -28,6 +28,40 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OllamaConversationGenerationClientTest {
+    @Test
+    void retainsOnlyIndividuallyValidatedClaimsAfterRepair() throws Exception {
+        String response = objectMapper.writeValueAsString(Map.of("insufficientEvidence", false,
+                "claims", List.of(
+                        Map.of("text", "Човешките фигури присъстват във везбената орнаментика.", "evidenceIds", List.of("chunk:12")),
+                        Map.of("text", "Измислена информация за ракети.", "evidenceIds", List.of("chunk:999999"))),
+                "warningCodes", List.of()));
+        var calls = startServer(response, response);
+        var result = client().generate(requestWithEvidence());
+        assertThat(result.insufficientEvidence()).isTrue();
+        assertThat(result.claims()).hasSize(1);
+        assertThat(result.answer()).doesNotContain("ракети");
+        assertThat(result.citedEvidenceIds()).containsExactly("chunk:12");
+        assertThat(calls).hasValue(2);
+    }
+    @Test
+    void compactContractNeedsNoDuplicatedAnswerOrCitationSummary() throws Exception {
+        startServer(objectMapper.writeValueAsString(Map.of("insufficientEvidence", false,
+                "claims", List.of(Map.of("text", "Човешките фигури присъстват във везбената орнаментика.",
+                        "evidenceIds", List.of("chunk:12"))), "warningCodes", List.of())));
+        var result = client().generate(requestWithEvidence());
+        assertThat(result.answer()).isEqualTo("Човешките фигури присъстват във везбената орнаментика.");
+        assertThat(result.citedEvidenceIds()).containsExactly("chunk:12");
+    }
+
+    @Test
+    void compactInsufficientEvidenceUsesControlledPlaceholder() throws Exception {
+        var calls = startServer("{\"insufficientEvidence\":true,\"claims\":[],\"warningCodes\":[]}");
+        var result = client().generate(requestWithEvidence());
+        assertThat(result.insufficientEvidence()).isTrue();
+        assertThat(result.claims()).isEmpty();
+        assertThat(result.citedEvidenceIds()).isEmpty();
+        assertThat(calls).hasValue(1);
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private HttpServer server;
@@ -88,8 +122,9 @@ class OllamaConversationGenerationClientTest {
         assertThat(requests).hasValue(2);
     }
 
-    @Test
-    void buildsDisplayedAnswerOnlyFromSupportedClaimSegments() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"chunk:999999", ""})
+    void buildsDisplayedAnswerOnlyFromSupportedClaimSegments(String redundantCitation) throws Exception {
         String response = objectMapper.writeValueAsString(Map.of(
                 "answer", "An extra sentence that is not part of the grounded claims.",
                 "insufficientEvidence", false,
@@ -97,7 +132,7 @@ class OllamaConversationGenerationClientTest {
                         "text", "Човешките фигури присъстват във везбената орнаментика.",
                         "evidenceIds", List.of("chunk:12")
                 )),
-                "citedEvidenceIds", List.of("chunk:12"),
+                "citedEvidenceIds", redundantCitation.isEmpty() ? List.of() : List.of(redundantCitation),
                 "warningCodes", List.of()
         ));
         AtomicInteger requests = startServer(response);
@@ -105,7 +140,22 @@ class OllamaConversationGenerationClientTest {
         var result = client().generate(requestWithEvidence());
 
         assertThat(result.answer()).isEqualTo("Човешките фигури присъстват във везбената орнаментика.");
+        assertThat(result.citedEvidenceIds()).containsExactly("chunk:12");
         assertThat(requests).hasValue(1);
+    }
+
+    @Test
+    void forgedClaimCitationStillFailsEvenWithAValidSummaryCitation() throws Exception {
+        String response = objectMapper.writeValueAsString(Map.of(
+                "answer", "Човешките фигури присъстват във везбената орнаментика.",
+                "insufficientEvidence", false,
+                "claims", List.of(Map.of("text", "Човешките фигури присъстват във везбената орнаментика.",
+                        "evidenceIds", List.of("chunk:999999"))),
+                "citedEvidenceIds", List.of("chunk:12"), "warningCodes", List.of()));
+        var requests = startServer(response, response);
+        assertThatThrownBy(() -> client().generate(requestWithEvidence()))
+                .isInstanceOf(ConversationGenerationRejectedException.class);
+        assertThat(requests).hasValue(2);
     }
 
     @Test

@@ -51,7 +51,44 @@ class ConversationGeneratedOutputValidatorTest {
                 result("Този бод произхожда от Япония и се използва за метални изделия.")
         ))
                 .isInstanceOf(ConversationGenerationRejectedException.class)
-                .hasMessage("Generated factual claim is not supported by its cited evidence");
+                .hasMessageContaining("claim=1; rule=SINGLE_ENTRY_SUPPORT");
+    }
+
+    private static final String REGIONAL_ENTRIES = "110. „Лози“ — везбени орнаменти върху пола на риза, с. Котеновци, Ломско.\n\n"
+            + "111. „Лузъ със грозди“ — везбен орнамент върху пазва на женска риза, с. Девня, Провадийско.\n\n"
+            + "114. „Бадемчета“ — кене от Копривщица.";
+
+    @Test
+    void acceptsAnAtomicRegionalParaphrase() {
+        assertThatCode(() -> validator.validate(request(REGIONAL_ENTRIES),
+                result("В Ломско „Лози“ е везбен орнамент върху риза."))).doesNotThrowAnyException();
+    }
+
+    @Test
+    void rejectsRegionBorrowedFromAnotherEntryDespiteHighWordOverlap() {
+        assertThatThrownBy(() -> validator.validate(request(REGIONAL_ENTRIES),
+                result("В Ломско „Лузъ със грозди“ е везбен орнамент върху пазва на женска риза.")))
+                .isInstanceOf(ConversationGenerationRejectedException.class)
+                .hasMessageContaining("SINGLE_ENTRY_SUPPORT");
+    }
+
+    @Test
+    void rejectsBundlingCorrectAndIncorrectMotifsIntoOneRegionalClaim() {
+        assertThatThrownBy(() -> validator.validate(request(REGIONAL_ENTRIES),
+                result("В Ломско се срещат „Лози“ и „Бадемчета“.")))
+                .isInstanceOf(ConversationGenerationRejectedException.class);
+    }
+
+    @Test
+    void rejectsCorrectButUnrelatedRegionalEntryForLomOnlyQuestion() {
+        var original = request(REGIONAL_ENTRIES);
+        var scoped = new ConversationGenerationRequest("Орнаменти от ломски регион", "bg", List.of(),
+                original.evidence(), original.reasoning());
+        assertThatThrownBy(() -> validator.validate(scoped,
+                result("„Лузъ със грозди“ е везбен орнамент върху риза от Провадийско.")))
+                .isInstanceOf(ConversationGenerationRejectedException.class);
+        assertThatCode(() -> validator.validate(scoped,
+                result("„Лози“ е везбен орнамент върху риза от Ломско."))).doesNotThrowAnyException();
     }
 
     @Test
