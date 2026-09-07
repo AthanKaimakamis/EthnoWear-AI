@@ -3,11 +3,6 @@
 EthnoWear is an ontology-driven cultural-heritage platform for exploring,
 documenting, and interpreting traditional Bulgarian embroidery and clothing.
 
-## Screenshots
-
-Selected screenshots from the project essay, showing the Bulgarian interface.
-These are demonstration snapshots; content and processing counts vary by dataset.
-
 ### Public archive
 
 Browse regional embroidery examples with ontology-based filters.
