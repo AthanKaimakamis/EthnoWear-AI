@@ -81,7 +81,7 @@ function AdminLayout() {
     const visibleArchiveItems = archiveItems.filter(item => admin && hasAnyRole(admin.roles, item.roles))
 
     const navigation = (
-        <Box sx={{ width: drawerWidth, minHeight: 'calc(100dvh - 68px)', py: 2, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ width: drawerWidth, py: 2, display: 'flex', flexDirection: 'column' }}>
             <List sx={{ px: 1.25 }}>
                 {visiblePrimaryItems.map((item) => {
                     const Icon = item.icon
@@ -163,9 +163,9 @@ function AdminLayout() {
     )
 
     return (
-        <ManagementEventsProvider><Box sx={{ display: 'flex', minHeight: 'calc(100dvh - 68px)' }}>
+        <ManagementEventsProvider><Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
             {desktop ? (
-                <Box component="aside" sx={{ width: drawerWidth, flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
+                <Box component="aside" sx={{ width: drawerWidth, flexShrink: 0, overflowY: 'auto', bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
                     {navigation}
                 </Box>
             ) : (
@@ -178,7 +178,7 @@ function AdminLayout() {
                     <Drawer open={open} onClose={() => setOpen(false)}>{navigation}</Drawer>
                 </>
             )}
-            <Box component="main" sx={{ minWidth: 0, flex: 1, px: { xs: 2, sm: 3, lg: 5 }, py: { xs: 3, md: 4 } }}>
+            <Box component="main" sx={{ minWidth: 0, minHeight: 0, flex: 1, overflowY: 'auto', overscrollBehaviorY: 'contain', scrollbarGutter: 'stable', px: { xs: 2, sm: 3, lg: 5 }, py: { xs: 3, md: 4 } }}>
                 <Outlet />
             </Box>
         </Box></ManagementEventsProvider>

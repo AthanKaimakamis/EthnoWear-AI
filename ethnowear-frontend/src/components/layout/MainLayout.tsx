@@ -28,7 +28,7 @@ import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined'
 import MenuIcon from '@mui/icons-material/Menu'
 import type { SelectChangeEvent } from '@mui/material/Select'
-import { NavLink, Outlet, useNavigate } from 'react-router'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminAuth } from '../../app/adminAuth'
 import AdminLoginDialog from '../admin/AdminLoginDialog'
@@ -42,6 +42,8 @@ type NavItem = {
 }
 
 function MainLayout() {
+    const { pathname } = useLocation()
+    const managementPage = pathname === '/management' || pathname.startsWith('/management/')
     const { t, i18n } = useTranslation()
     const language = i18n.resolvedLanguage === 'en' ? 'en' : 'bg'
     const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false)
@@ -73,6 +75,7 @@ function MainLayout() {
         <Box
             sx={{
                 minHeight: '100dvh',
+                ...(managementPage && { height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }),
                 bgcolor: 'background.default',
             }}
         >
@@ -82,6 +85,7 @@ function MainLayout() {
                 elevation={0}
                 sx={{
                     bgcolor: '#FFFFFF',
+                    flexShrink: 0,
                     color: 'text.primary',
                     borderBottom: 1,
                     borderColor: 'divider',
@@ -380,6 +384,7 @@ function MainLayout() {
                 component="main"
                 sx={{
                     minHeight: 'calc(100dvh - 72px)',
+                    ...(managementPage && { minHeight: 0, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }),
                     backgroundColor: 'background.default',
                     backgroundImage: `
                         linear-gradient(rgba(90, 98, 90, 0.055) 1px, transparent 1px),
