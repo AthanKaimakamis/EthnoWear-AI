@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+DEPLOYMENT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$DEPLOYMENT_DIR/common"
+MODE="$(require_mode "${1:-container}" "$0")"
+
+run_stage() {
+  local number="$1"
+  local name="$2"
+  local script="$3"
+  local log_file="$LOG_DIR/${number}_${name}.log"
+
+  set_status "${name}_STATUS" running
+  set_status "${name}_LOG" "$log_file"
+  if "$script" "$MODE" 2>&1 | tee "$log_file"; then
+    set_status "${name}_STATUS" complete
+  else
+    set_status "${name}_STATUS" failed
+    set_status DEPLOYMENT_STATUS failed
+    return 1
+  fi
+}
+
+mkdir -p "$LOG_DIR"
+set_status DEPLOYMENT_STATUS running
+set_status DEMO_VERSION "$(demo_version)"
+set_status OLLAMA_MODE "$MODE"
+set_status STARTED_AT "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+run_stage 1 PREPARE "$DEPLOYMENT_DIR/1_prepare"
+run_stage 2 COMPOSE "$DEPLOYMENT_DIR/2_compose"
+run_stage 3 MIGRATION "$DEPLOYMENT_DIR/3_migrate"
+run_stage 4 CLEANUP "$DEPLOYMENT_DIR/4_cleanup"
+
+set_status DEPLOYMENT_STATUS complete
+set_status FINISHED_AT "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+echo "EthnoWear demo deployment is ready."
+echo "Frontend: http://$(compose port frontend 80)"
+echo "Login: admin / admin"
+echo "Deployment status: $STATE_FILE"

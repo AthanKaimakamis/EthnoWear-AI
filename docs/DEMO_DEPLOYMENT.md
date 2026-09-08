@@ -33,6 +33,50 @@ git clone <repository-url>
 cd FinalProject
 ```
 
+Run the complete deployment with containerized Ollama:
+
+```bash
+./scripts/deployment/macos/run
+```
+
+Or, when the required models already exist in a native Ollama installation:
+
+```bash
+./scripts/deployment/macos/run-local
+```
+
+On the first run, this executes the complete numbered lifecycle. Later runs
+read `.deployment/status.env`; when the same demo version was deployed
+successfully, they only compose the persistent application services and do not
+recreate migration/bootstrap containers. Use `deploy-full` or
+`deploy-ollama-local` to force all stages. Existing `.env` files are never
+overwritten.
+
+On Windows, run the equivalent PowerShell entry points:
+
+```powershell
+.\scripts\deployment\windows\run.ps1
+.\scripts\deployment\windows\run-local.ps1
+```
+
+If the machine's PowerShell execution policy blocks local scripts, start the
+entry point for that process with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\deployment\windows\run.ps1
+```
+
+The stages can also be run individually:
+
+```bash
+./scripts/deployment/macos/1_prepare
+./scripts/deployment/macos/2_compose container
+./scripts/deployment/macos/3_migrate container
+./scripts/deployment/macos/4_cleanup
+```
+
+The commands below describe the equivalent manual process.
+
 Create the local demo configuration:
 
 ```bash

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+source "$(cd "$(dirname "$0")" && pwd)/common"
+
+[[ -f "$ENV_FILE" ]] || { echo "Missing deployment environment: $ENV_FILE" >&2; exit 1; }
+
+# All services below are one-shot containers and have already been verified by
+# 3_migrate. Persistent SQL, Qdrant, media, and Ollama data are not removed.
+compose --profile demo --profile container-ai rm -f \
+  database-migration \
+  demo-media-bootstrap \
+  demo-qdrant-bootstrap \
+  demo-bootstrap \
+  ollama-models
+
+echo "Completed migration and bootstrap containers removed."

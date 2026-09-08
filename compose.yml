@@ -332,6 +332,10 @@ services:
       ETHNOWEAR_PUBLIC_AUTH_SECURE_COOKIES: "${ETHNOWEAR_PUBLIC_AUTH_SECURE_COOKIES:-true}"
       ETHNOWEAR_PUBLIC_SESSION_TTL: "${ETHNOWEAR_PUBLIC_SESSION_TTL:-7d}"
       ETHNOWEAR_PUBLIC_AUTH_ORIGINS: "${ETHNOWEAR_PUBLIC_AUTH_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}"
+      ETHNOWEAR_SECURITY_PUBLIC_AUTH_ALLOWED_ORIGINS_0: "http://localhost:${FRONTEND_PORT:-5173}"
+      ETHNOWEAR_SECURITY_PUBLIC_AUTH_ALLOWED_ORIGINS_1: "http://127.0.0.1:${FRONTEND_PORT:-5173}"
+      ETHNOWEAR_CORS_ALLOWED_ORIGINS_0: "http://localhost:${FRONTEND_PORT:-5173}"
+      ETHNOWEAR_CORS_ALLOWED_ORIGINS_1: "http://127.0.0.1:${FRONTEND_PORT:-5173}"
       ETHNOWEAR_RETRIEVAL_ENABLED: "${ETHNOWEAR_RETRIEVAL_ENABLED:-true}"
       ETHNOWEAR_RETRIEVAL_MINIMUM_SIMILARITY: "${ETHNOWEAR_RETRIEVAL_MINIMUM_SIMILARITY:-0.42}"
       ETHNOWEAR_OLLAMA_BASE_URL: "${ETHNOWEAR_OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
@@ -404,6 +408,9 @@ services:
         condition: service_started
       indexing-worker:
         condition: service_started
+      ollama-models:
+        condition: service_completed_successfully
+        required: false
     restart: "no"
 
   frontend:

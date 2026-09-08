@@ -81,9 +81,16 @@ sessions, or public identities. The demonstration administrator is
 Start it on a clean Docker environment with:
 
 ```bash
-cp .env.demo.example .env
-docker compose --profile demo --profile container-ai up -d --build
+./scripts/deployment/macos/run
 ```
+
+To use an existing native Ollama installation instead, run
+`./scripts/deployment/macos/run-local`. On Windows PowerShell, use
+`./scripts/deployment/windows/run.ps1` or
+`./scripts/deployment/windows/run-local.ps1`. To force the full deployment
+lifecycle, use the platform's `deploy-full` or `deploy-ollama-local`. See the
+[demo deployment guide](docs/DEMO_DEPLOYMENT.md) for the individual stages and
+manual commands.
 
 The first containerized Ollama startup downloads the configured models. When
 the `demo-bootstrap` service completes successfully, the database, media,

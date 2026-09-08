@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+source "$(cd "$(dirname "$0")" && pwd)/common"
+
+MODE="$(require_mode "${1:-container}" "$0")"
+[[ -f "$ENV_FILE" ]] || { echo "Run scripts/deployment/1_prepare first." >&2; exit 1; }
+
+for service in database-migration demo-media-bootstrap demo-qdrant-bootstrap; do
+  [[ -n "$(compose --profile demo ps -aq "$service")" ]] || {
+    echo "Missing Compose service container: $service" >&2
+    exit 1
+  }
+  compose --profile demo wait "$service"
+done
+
+if [[ "$MODE" == "container" ]]; then
+  [[ -n "$(compose --profile container-ai ps -aq ollama-models)" ]] || {
+    echo "Missing Compose service container: ollama-models" >&2
+    exit 1
+  }
+  echo "Waiting for the required Ollama models..."
+  compose --profile container-ai wait ollama-models
+fi
+
+[[ -n "$(compose --profile demo ps -aq demo-bootstrap)" ]] || {
+  echo "Missing Compose service container: demo-bootstrap" >&2
+  exit 1
+}
+compose --profile demo wait demo-bootstrap
+
+echo "Database migration, demo restoration, and readiness completed successfully."

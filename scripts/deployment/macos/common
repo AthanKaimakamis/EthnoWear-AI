@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DEPLOYMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$DEPLOYMENT_DIR/../../.." && pwd)"
+ENV_FILE="${ETHNOWEAR_DEPLOY_ENV_FILE:-$PROJECT_ROOT/.env}"
+STATE_DIR="$PROJECT_ROOT/.deployment"
+STATE_FILE="$STATE_DIR/status.env"
+LOG_DIR="$STATE_DIR/logs"
+
+compose() {
+  docker compose --project-directory "$PROJECT_ROOT" --env-file "$ENV_FILE" "$@"
+}
+
+require_mode() {
+  case "${1:-container}" in
+    container|local) printf '%s\n' "${1:-container}" ;;
+    *)
+      echo "Usage: $2 [container|local]" >&2
+      exit 2
+      ;;
+  esac
+}
+
+set_status() {
+  local key="$1"
+  local value="$2"
+  local temporary
+  mkdir -p "$STATE_DIR" "$LOG_DIR"
+  temporary="$STATE_FILE.tmp"
+  if [[ -f "$STATE_FILE" ]]; then
+    grep -v "^${key}=" "$STATE_FILE" >"$temporary" || true
+  else
+    : >"$temporary"
+  fi
+  printf '%s=%s\n' "$key" "$value" >>"$temporary"
+  mv "$temporary" "$STATE_FILE"
+}
+
+status_value() {
+  [[ -f "$STATE_FILE" ]] || return 1
+  sed -n "s/^$1=//p" "$STATE_FILE" | tail -n 1
+}
+
+demo_version() {
+  sed -n 's/^ETHNOWEAR_DEMO_VERSION=//p' "$PROJECT_ROOT/demo-state/manifest.env" | tail -n 1
+}
+
+deployment_is_complete() {
+  [[ "$(status_value DEPLOYMENT_STATUS || true)" == "complete" ]] &&
+    [[ "$(status_value DEMO_VERSION || true)" == "$(demo_version)" ]]
+}

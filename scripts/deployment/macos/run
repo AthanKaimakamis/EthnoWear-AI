@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+DEPLOYMENT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$DEPLOYMENT_DIR/common"
+MODE="$(require_mode "${1:-container}" "$0")"
+
+if deployment_is_complete; then
+  echo "Deployment $(demo_version) is already complete; composing existing state."
+  mkdir -p "$LOG_DIR"
+  set_status OLLAMA_MODE "$MODE"
+  set_status LAST_STARTED_AT "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  "$DEPLOYMENT_DIR/2_compose" "$MODE" resume 2>&1 | tee "$LOG_DIR/run.log"
+else
+  echo "No completed deployment state found; running the full lifecycle."
+  "$DEPLOYMENT_DIR/deploy" "$MODE"
+fi

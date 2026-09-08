@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+source "$(cd "$(dirname "$0")" && pwd)/common"
+
+MODE="$(require_mode "${1:-container}" "$0")"
+ACTION="${2:-deploy}"
+[[ -f "$ENV_FILE" ]] || { echo "Run scripts/deployment/1_prepare first." >&2; exit 1; }
+[[ "$ACTION" == "deploy" || "$ACTION" == "resume" ]] || {
+  echo "Usage: $0 [container|local] [deploy|resume]" >&2
+  exit 2
+}
+
+if [[ "$MODE" == "local" ]]; then
+  curl --fail --silent --show-error http://localhost:11434/api/tags >/dev/null || {
+    echo "Local Ollama is not reachable at http://localhost:11434." >&2
+    exit 1
+  }
+  export ETHNOWEAR_OLLAMA_BASE_URL=http://host.docker.internal:11434
+  compose --profile container-ai stop ollama ollama-models >/dev/null 2>&1 || true
+  PROFILES=(--profile demo)
+else
+  PROFILES=(--profile demo --profile container-ai)
+fi
+
+if [[ "$ACTION" == "resume" ]]; then
+  infrastructure=(sqlserver qdrant)
+  [[ "$MODE" == "container" ]] && infrastructure+=(ollama)
+  compose "${PROFILES[@]}" up -d --build --no-deps "${infrastructure[@]}"
+  compose "${PROFILES[@]}" up -d --build --no-deps \
+    api document-worker indexing-worker quality-worker figure-worker vision-worker frontend
+else
+  compose "${PROFILES[@]}" up -d --build
+fi
+
+echo "Compose $ACTION complete for Ollama mode: $MODE"

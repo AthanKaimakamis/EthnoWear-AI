@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+source "$(cd "$(dirname "$0")" && pwd)/common"
+
+command -v docker >/dev/null 2>&1 || { echo "Docker is required." >&2; exit 1; }
+docker compose version >/dev/null
+docker info >/dev/null
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  cp "$PROJECT_ROOT/.env.demo.example" "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+  echo "Created $ENV_FILE from .env.demo.example"
+else
+  echo "Using existing $ENV_FILE"
+fi
+
+mkdir -p "$PROJECT_ROOT/media"
+
+if command -v sha256sum >/dev/null 2>&1; then
+  CHECKSUM=(sha256sum -c)
+else
+  CHECKSUM=(shasum -a 256 -c)
+fi
+
+(cd "$PROJECT_ROOT" && "${CHECKSUM[@]}" demo-state/artifacts.sha256)
+(cd "$PROJECT_ROOT/demo-state" && "${CHECKSUM[@]}" media.sha256)
+
+compose --profile demo config --quiet
+echo "Preparation complete."
