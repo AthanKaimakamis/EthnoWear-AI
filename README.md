@@ -69,32 +69,49 @@ and restoration controls.
   commands.
 - [Frontend project](ethnowear-frontend/README.md) — frontend setup and usage.
 
-## Run Microsoft SQL Server with Docker
-
-### Run the prepared demonstration
+## Run the prepared demonstration
 
 The repository includes a sanitized `demo-v1` database, managed media, and a
 Qdrant collection snapshot. It contains no saved conversations, public login
 sessions, or public identities. The demonstration administrator is
 `admin` / `admin`.
 
-Start it on a clean Docker environment with:
+On macOS, start it with containerized Ollama:
 
 ```bash
 ./scripts/deployment/macos/run
 ```
 
-To use an existing native Ollama installation instead, run
-`./scripts/deployment/macos/run-local`. On Windows PowerShell, use
-`./scripts/deployment/windows/run.ps1` or
-`./scripts/deployment/windows/run-local.ps1`. To force the full deployment
-lifecycle, use the platform's `deploy-full` or `deploy-ollama-local`. See the
-[demo deployment guide](docs/DEMO_DEPLOYMENT.md) for the individual stages and
-manual commands.
+Use an existing native Ollama installation instead:
+
+```bash
+./scripts/deployment/macos/run-local
+```
+
+On Windows PowerShell, use:
+
+```powershell
+.\scripts\deployment\windows\run.ps1
+.\scripts\deployment\windows\run-local.ps1
+```
+
+The first run creates `.env` when missing, validates all packaged artifacts,
+builds the stack, imports and migrates SQL Server, restores media and Qdrant,
+checks administrator login and chat readiness, and removes completed one-shot
+containers. Persistent application containers, volumes, and media remain.
+
+Deployment progress is stored under `.deployment/`. If the same demo version
+has already completed, a later `run` only composes the persistent services and
+does not repeat migration or restoration. Use the platform's `deploy-full` or
+`deploy-ollama-local` entry point to force the complete lifecycle.
 
 The first containerized Ollama startup downloads the configured models. When
-the `demo-bootstrap` service completes successfully, the database, media,
-retrieval collection, and grounded chat availability have been checked.
+deployment completes, the prepared state contains two documents, 259 SQL
+knowledge chunks, and 258 Qdrant points. Sign in with `admin` / `admin`.
+
+See the [demo deployment guide](docs/DEMO_DEPLOYMENT.md) for the numbered
+stages, status/log files, platform details, verification, troubleshooting, and
+safe reset instructions.
 
 To capture a newer approved live state as `demo-v1`, run:
 

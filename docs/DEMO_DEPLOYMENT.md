@@ -30,32 +30,38 @@ Clone the repository and enter its root directory:
 
 ```bash
 git clone <repository-url>
-cd FinalProject
+cd EthnoWear-AI
 ```
 
-Run the complete deployment with containerized Ollama:
+### macOS
+
+Run with containerized Ollama:
 
 ```bash
 ./scripts/deployment/macos/run
 ```
 
-Or, when the required models already exist in a native Ollama installation:
+Run with an existing native Ollama installation:
 
 ```bash
 ./scripts/deployment/macos/run-local
 ```
 
-On the first run, this executes the complete numbered lifecycle. Later runs
-read `.deployment/status.env`; when the same demo version was deployed
-successfully, they only compose the persistent application services and do not
-recreate migration/bootstrap containers. Use `deploy-full` or
-`deploy-ollama-local` to force all stages. Existing `.env` files are never
-overwritten.
+`run` starts containerized Ollama by default. `run-local` requires the three
+models in the host Ollama installation on port `11434` and does not start the
+Ollama Compose services.
 
-On Windows, run the equivalent PowerShell entry points:
+### Windows
+
+Run the equivalent PowerShell entry point with containerized Ollama:
 
 ```powershell
 .\scripts\deployment\windows\run.ps1
+```
+
+Or use host Ollama:
+
+```powershell
 .\scripts\deployment\windows\run-local.ps1
 ```
 
@@ -66,7 +72,19 @@ entry point for that process with:
 powershell -ExecutionPolicy Bypass -File .\scripts\deployment\windows\run.ps1
 ```
 
-The stages can also be run individually:
+## Deployment lifecycle
+
+On the first run, the main entry point executes these numbered stages:
+
+1. `1_prepare` creates `.env` from `.env.demo.example` when it is missing,
+   verifies Docker and checks every packaged SQL, Qdrant, and media checksum.
+2. `2_compose` builds and starts the existing `compose.yml` stack.
+3. `3_migrate` waits for the one-shot migration and restoration containers and
+   requires successful exit codes. It does not run them a second time.
+4. `4_cleanup` removes completed migration, restoration, model-initialization,
+   and readiness containers without deleting persistent data.
+
+The stages can be run individually on macOS:
 
 ```bash
 ./scripts/deployment/macos/1_prepare
@@ -75,40 +93,52 @@ The stages can also be run individually:
 ./scripts/deployment/macos/4_cleanup
 ```
 
-The commands below describe the equivalent manual process.
+Windows provides matching `1_prepare.ps1`, `2_compose.ps1`, `3_migrate.ps1`,
+and `4_cleanup.ps1` scripts.
 
-Create the local demo configuration:
+Deployment state is recorded in:
 
-```bash
-cp .env.demo.example .env
+```text
+.deployment/status.env
+.deployment/logs/1_PREPARE.log
+.deployment/logs/2_COMPOSE.log
+.deployment/logs/3_MIGRATION.log
+.deployment/logs/4_CLEANUP.log
 ```
 
-Do not run this command over an existing `.env` without backing it up. The real
-`.env` remains local and must never be committed.
+The directory is excluded from Git. A successful run records every stage and
+`DEPLOYMENT_STATUS=complete`. If a stage fails, the next main run retries the
+full lifecycle. When the same demo version is already complete, the main run
+only composes the persistent services; it does not recreate migration or
+bootstrap containers.
 
-Start the application with the demo and containerized-AI profiles:
+To force the complete lifecycle again, use:
 
 ```bash
-docker compose --profile demo --profile container-ai up -d --build
+./scripts/deployment/macos/deploy-full
+./scripts/deployment/macos/deploy-ollama-local
 ```
 
-On first startup, Ollama downloads these models into its persistent volume:
+The corresponding Windows commands are `deploy-full.ps1` and
+`deploy-ollama-local.ps1`.
+
+The generated `.env` remains local and is never overwritten by later runs.
+Review it before exposing the application beyond a local demonstration.
+
+## Ollama models
+
+Containerized Ollama downloads these models into its persistent volume:
 
 - `bge-m3` for embeddings;
 - `qwen3:8b` for grounded chat generation;
 - `qwen3-vl:8b` for optional vision-assisted OCR review.
 
-Monitor the model initializer:
+The lifecycle waits for the model initializer before declaring success. Its
+output is retained in `.deployment/logs/2_COMPOSE.log` and
+`.deployment/logs/3_MIGRATION.log`.
 
 ```bash
 docker compose logs -f ollama-models
-```
-
-After the models are ready, rerun the final readiness service if its first run
-reported that chat was unavailable:
-
-```bash
-docker compose --profile demo run --rm demo-bootstrap
 ```
 
 ## What Compose restores
@@ -131,26 +161,34 @@ the distributable state.
 
 ## Verify the deployment
 
-Inspect service state:
+Inspect the persistent service state:
 
 ```bash
-docker compose --profile demo --profile container-ai ps
+docker compose ps
 ```
 
-Inspect the important one-shot services:
+The successful cleanup stage removes one-shot containers, so inspect their
+preserved lifecycle logs rather than expecting them in Docker Desktop:
 
 ```bash
-docker compose logs database-migration
-docker compose logs demo-media-bootstrap
-docker compose logs demo-qdrant-bootstrap
-docker compose logs demo-bootstrap
+cat .deployment/status.env
+tail -n 50 .deployment/logs/3_MIGRATION.log
+tail -n 50 .deployment/logs/4_CLEANUP.log
 ```
 
-A successful final check reports:
+A successful deployment records:
 
 ```text
-Demo bootstrap complete: 2 documents reconciled and chat is available
+PREPARE_STATUS=complete
+COMPOSE_STATUS=complete
+MIGRATION_STATUS=complete
+CLEANUP_STATUS=complete
+DEPLOYMENT_STATUS=complete
 ```
+
+The clean macOS/native-Ollama verification produced two restored documents,
+259 SQL knowledge chunks, 258 Qdrant points, a successful `admin` login, and
+available grounded chat.
 
 Open:
 
@@ -183,19 +221,22 @@ prepared local demonstration.
 
 ## Use a native Ollama installation
 
-If all required models already exist in a host Ollama installation, set this in
-`.env`:
-
-```dotenv
-ETHNOWEAR_OLLAMA_BASE_URL=http://host.docker.internal:11434
-```
-
-Then start without the `container-ai` profile:
+Before using the local entry point, verify the host installation:
 
 ```bash
-docker compose --profile demo up -d --build
-docker compose --profile demo run --rm demo-bootstrap
+ollama list
+curl -f http://localhost:11434/api/tags
 ```
+
+Required models are `bge-m3`, `qwen3:8b`, and `qwen3-vl:8b`. Then run:
+
+```bash
+./scripts/deployment/macos/run-local
+```
+
+The script configures application containers to use
+`http://host.docker.internal:11434` and stops an old Compose-managed Ollama
+container when switching modes.
 
 ## Stop and restart
 
@@ -205,11 +246,13 @@ Stop containers while preserving database, Qdrant, Ollama, and media state:
 docker compose --profile demo --profile container-ai down
 ```
 
-Restart the same state:
+Restart the same state through the lifecycle-aware entry point:
 
 ```bash
-docker compose --profile demo --profile container-ai up -d
+./scripts/deployment/macos/run
 ```
+
+Use `run-local` instead when the deployment should continue with host Ollama.
 
 Do not use `docker compose down --volumes` against a development environment.
 That command removes persistent database, Qdrant, and Ollama volumes. A complete
@@ -248,25 +291,27 @@ shasum -a 256 -c demo-state/artifacts.sha256
 
 ### Chat is unavailable
 
-Check whether model initialization finished:
+Inspect the recorded migration/readiness output:
 
 ```bash
-docker compose logs ollama-models
-docker compose exec ollama ollama list
+tail -n 100 .deployment/logs/3_MIGRATION.log
 ```
 
-Then rerun:
+For host Ollama, verify the models with `ollama list`. For containerized Ollama,
+force the lifecycle to recreate and verify its initializer:
 
 ```bash
-docker compose --profile demo run --rm demo-bootstrap
+./scripts/deployment/macos/deploy-full
 ```
 
 ### Database contains no demo data
 
-The BACPAC is imported only when the `EthnoWear` database does not exist. Check:
+The BACPAC is imported only when the `EthnoWear` database does not exist. Check
+the preserved Compose and migration logs:
 
 ```bash
-docker compose logs database-migration
+rg -n "Importing EthnoWear demo database|database-migration" \
+  .deployment/logs/2_COMPOSE.log .deployment/logs/3_MIGRATION.log
 ```
 
 Use a separate disposable SQL volume when validating a fresh import. Do not
@@ -274,10 +319,11 @@ delete the main development volume just to force demo initialization.
 
 ### Qdrant collection was not restored
 
-Check:
+Check the preserved Compose log:
 
 ```bash
-docker compose logs demo-qdrant-bootstrap
+rg -n "Restored Qdrant collection|demo-qdrant-bootstrap" \
+  .deployment/logs/2_COMPOSE.log
 ```
 
 The bootstrap intentionally skips restoration when the configured collection
