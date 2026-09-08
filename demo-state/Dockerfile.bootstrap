@@ -1,0 +1,5 @@
+FROM python:3.13-alpine
+COPY scripts/demo-bootstrap.py /usr/local/bin/ethnowear-demo-bootstrap
+COPY scripts/demo-qdrant-restore.py /usr/local/bin/ethnowear-demo-qdrant-restore
+RUN chmod 0555 /usr/local/bin/ethnowear-demo-bootstrap /usr/local/bin/ethnowear-demo-qdrant-restore
+ENTRYPOINT ["/usr/local/bin/ethnowear-demo-bootstrap"]

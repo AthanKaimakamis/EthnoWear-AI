@@ -14,6 +14,7 @@ RUN dotnet tool install \
 
 WORKDIR /app
 COPY --from=build /out/EthnoWearDB.dacpac /app/EthnoWearDB.dacpac
+COPY Demo /app/demo
 COPY docker/migrate.sh /usr/local/bin/ethnowear-db-migrate
 
 RUN chmod 0555 /usr/local/bin/ethnowear-db-migrate

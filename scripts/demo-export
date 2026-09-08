@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+state_root="${project_root}/demo-state"
+database_dir="${project_root}/EthnoWearDB/Demo"
+media_source="${ETHNOWEAR_MEDIA_ROOT:-${project_root}/media}"
+media_target="${state_root}/media"
+qdrant_target="${state_root}/qdrant/collection.snapshot"
+qdrant_url="${ETHNOWEAR_QDRANT_EXPORT_URL:-http://localhost:6333}"
+qdrant_collection="${ETHNOWEAR_QDRANT_COLLECTION:-ethnowear_chunks_bge_m3_v1}"
+dataset_version="${ETHNOWEAR_DEMO_VERSION:-demo-v1}"
+sql_container="${ETHNOWEAR_SQL_CONTAINER:-ethnowear-sqlserver-local}"
+source_database="${ETHNOWEAR_DB_NAME:-EthnoWear}"
+export_database="EthnoWearDemoExport"
+container_backup="/var/opt/mssql/backup/ethnowear-demo-export.bak"
+bacpac_name="EthnoWear-${dataset_version}.bacpac"
+
+command -v docker >/dev/null
+command -v rsync >/dev/null
+[[ -d "${media_source}" ]] || { echo "Media root not found: ${media_source}" >&2; exit 1; }
+docker inspect "${sql_container}" >/dev/null
+
+db_password="$(docker inspect "${sql_container}" --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^MSSQL_SA_PASSWORD=//p')"
+[[ -n "${db_password}" ]] || { echo "Could not read SQL password from ${sql_container}" >&2; exit 1; }
+sql_network="$(docker inspect "${sql_container}" --format '{{range $name, $network := .NetworkSettings.Networks}}{{$name}}{{end}}')"
+[[ -n "${sql_network}" ]] || { echo "Could not determine the SQL container network" >&2; exit 1; }
+
+mkdir -p "${database_dir}" "${media_target}" "${state_root}/qdrant"
+
+cleanup() {
+  docker exec -e SQLCMDPASSWORD="${db_password}" "${sql_container}" \
+    /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q \
+    "IF DB_ID(N'${export_database}') IS NOT NULL BEGIN ALTER DATABASE [${export_database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [${export_database}]; END" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+echo "Creating an isolated copy of ${source_database}"
+docker exec -e SQLCMDPASSWORD="${db_password}" "${sql_container}" \
+  /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q \
+  "IF DB_ID(N'${export_database}') IS NOT NULL BEGIN ALTER DATABASE [${export_database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [${export_database}]; END; BACKUP DATABASE [${source_database}] TO DISK=N'${container_backup}' WITH COPY_ONLY, INIT, CHECKSUM; RESTORE DATABASE [${export_database}] FROM DISK=N'${container_backup}' WITH MOVE N'EthnoWear' TO N'/var/opt/mssql/data/${export_database}.mdf', MOVE N'EthnoWear_log' TO N'/var/opt/mssql/data/${export_database}_log.ldf', REPLACE, RECOVERY;"
+
+docker cp "${state_root}/sanitize.sql" "${sql_container}:/tmp/ethnowear-demo-sanitize.sql"
+docker exec -e SQLCMDPASSWORD="${db_password}" "${sql_container}" \
+  /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -d "${export_database}" \
+  -i /tmp/ethnowear-demo-sanitize.sql
+
+echo "Building the database tooling image"
+docker compose -f "${project_root}/compose.yml" build database-migration
+
+echo "Exporting sanitized BACPAC"
+docker run --rm --network "${sql_network}" --entrypoint /tools/sqlpackage \
+  -v "${database_dir}:/export" ethnowear-database-migrator:local \
+  /Action:Export "/SourceServerName:${sql_container},1433" \
+  "/SourceDatabaseName:${export_database}" /SourceUser:sa \
+  "/SourcePassword:${db_password}" /SourceEncryptConnection:True \
+  /SourceTrustServerCertificate:True "/TargetFile:/export/${bacpac_name}"
+
+echo "Copying managed media"
+rsync -a --delete --exclude '.DS_Store' "${media_source}/" "${media_target}/"
+(
+  cd "${state_root}"
+  find media -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 > media.sha256
+)
+
+echo "Capturing rebuildable Qdrant cache"
+snapshot_name="$(curl -fsS -X POST "${qdrant_url}/collections/${qdrant_collection}/snapshots" | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["name"])')"
+curl -fsS -o "${qdrant_target}" \
+  "${qdrant_url}/collections/${qdrant_collection}/snapshots/${snapshot_name}"
+
+file_count="$(find "${media_target}" -type f | wc -l | tr -d ' ')"
+{
+  echo "ETHNOWEAR_DEMO_VERSION=${dataset_version}"
+  echo "ETHNOWEAR_DEMO_BACPAC=${bacpac_name}"
+  echo "ETHNOWEAR_DEMO_MEDIA_FILES=${file_count}"
+  echo "ETHNOWEAR_QDRANT_COLLECTION=${qdrant_collection}"
+  echo "ETHNOWEAR_EMBEDDING_MODEL=${ETHNOWEAR_EMBEDDING_MODEL:-bge-m3}"
+  echo "ETHNOWEAR_EMBEDDING_DIMENSIONS=${ETHNOWEAR_EMBEDDING_DIMENSIONS:-1024}"
+} > "${state_root}/manifest.env"
+
+(
+  cd "${project_root}"
+  shasum -a 256 \
+    "EthnoWearDB/Demo/${bacpac_name}" \
+    "demo-state/qdrant/collection.snapshot" \
+    > "demo-state/artifacts.sha256"
+)
+
+echo "Demo state ${dataset_version} exported to ${state_root}"

@@ -55,9 +55,9 @@ export default function ImageViewerDialog({ open, src, alt, caption, onClose }: 
             maxWidth="xl"
             slotProps={{ paper: { sx: { height: { xs: '100%', sm: '92vh' }, maxHeight: { xs: '100%', sm: '92vh' }, m: { xs: 0, sm: 2 } } } }}
         >
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1.25, pr: 1 }}>
+            <DialogTitle component="div" sx={{ color: 'text.primary', display: 'flex', alignItems: 'center', gap: 2, py: 1.25, pr: 1 }}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography component="span" sx={{ display: 'block', fontWeight: 800 }} noWrap>{alt}</Typography>
+                    <Typography component="h2" color="text.primary" sx={{ display: 'block', fontWeight: 800 }} noWrap>{alt}</Typography>
                     {caption && <Typography component="span" variant="body2" color="text.secondary" noWrap>{caption}</Typography>}
                 </Box>
                 <Stack

@@ -92,7 +92,8 @@ public class OllamaConversationGenerationClient implements ConversationGeneratio
                     "required", List.of("intent"), "properties", Map.of("intent", Map.of(
                             "type", "string", "enum", List.of("KNOWLEDGE", "HELP", "CLARIFY", "OUT_OF_SCOPE")))));
             var node = objectMapper.readTree(result);
-            if (node == null || !node.isObject() || node.size() != 1 || !node.path("intent").isTextual()) return Intent.CLARIFY;
+            if (node == null || !node.isObject() || node.size() != 1 || !node.path("intent").isTextual())
+                return Intent.CLARIFY;
             return Intent.valueOf(node.path("intent").asText());
         } catch (RestClientException exception) {
             throw unavailable("Conversation intent service is unavailable", exception);
@@ -197,7 +198,7 @@ public class OllamaConversationGenerationClient implements ConversationGeneratio
                 ? exception.getMessage() : exception.getClass().getSimpleName();
     }
 
-    private static Map<String, Object> generationFormat() {
+    private static @NonNull Map<String, Object> generationFormat() {
         Map<String, Object> strings = Map.of("type", "array", "items", Map.of("type", "string"));
         return Map.of("type", "object", "additionalProperties", false,
                 "required", List.of("insufficientEvidence", "claims", "warningCodes"),
@@ -238,17 +239,17 @@ public class OllamaConversationGenerationClient implements ConversationGeneratio
         List<ConversationGeneratedClaim> claims = raw.claims() == null
                 ? List.of()
                 : raw.claims().stream()
-                        .map(claim -> new ConversationGeneratedClaim(
-                                normalizeClaimText(claim.text()),
-                                claim.evidenceIds()
-                        ))
-                        .toList();
+                .map(claim -> new ConversationGeneratedClaim(
+                        normalizeClaimText(claim.text()),
+                        claim.evidenceIds()
+                ))
+                .toList();
         String answer = claims.isEmpty()
                 ? (raw.insufficientEvidence() && raw.answer() == null
-                    ? ("bg".equals(request.language()) ? "Недостатъчно сведения." : "Insufficient evidence.") : raw.answer())
+                ? ("bg".equals(request.language()) ? "Недостатъчно сведения." : "Insufficient evidence.") : raw.answer())
                 : claims.stream()
-                        .map(ConversationGeneratedClaim::text)
-                        .collect(Collectors.joining(" "));
+                .map(ConversationGeneratedClaim::text)
+                .collect(Collectors.joining(" "));
 
         if (answer == null || answer.isBlank())
             throw new ConversationGenerationRejectedException("Conversation model returned an empty answer");
@@ -257,9 +258,8 @@ public class OllamaConversationGenerationClient implements ConversationGeneratio
                 answer,
                 raw.insufficientEvidence(),
                 claims,
-                // Claim-level IDs are the single citation authority. They are checked
-                // against supplied evidence below; the redundant model summary is not.
-                claims.stream().flatMap(claim -> claim.evidenceIds().stream()).distinct().toList(),
+                claims.stream().flatMap(claim ->
+                        claim.evidenceIds().stream()).distinct().toList(),
                 raw.warningCodes() == null ? List.of() : raw.warningCodes()
         );
 

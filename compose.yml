@@ -36,8 +36,36 @@ services:
       MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}"
       ETHNOWEAR_DB_SERVER: "sqlserver,1433"
       ETHNOWEAR_DB_NAME: "EthnoWear"
+      ETHNOWEAR_DEMO_ENABLED: "${ETHNOWEAR_DEMO_ENABLED:-false}"
+      ETHNOWEAR_DEMO_BACPAC: "/app/demo/EthnoWear-${ETHNOWEAR_DEMO_VERSION:-demo-v1}.bacpac"
     depends_on:
       sqlserver:
+        condition: service_healthy
+    restart: "no"
+
+  demo-media-bootstrap:
+    profiles: ["demo"]
+    image: alpine:3.22
+    volumes:
+      - ./demo-state:/demo:ro
+      - ${ETHNOWEAR_MEDIA_ROOT:-./media}:/media
+    command: ["/bin/sh", "-c", "set -eu; cd /demo; sha256sum -c media.sha256; cp -a media/. /media/"]
+    restart: "no"
+
+  demo-qdrant-bootstrap:
+    profiles: ["demo"]
+    build:
+      context: .
+      dockerfile: demo-state/Dockerfile.bootstrap
+    entrypoint: ["/usr/local/bin/ethnowear-demo-qdrant-restore"]
+    environment:
+      ETHNOWEAR_QDRANT_URL: http://qdrant:6333
+      ETHNOWEAR_QDRANT_COLLECTION: "${ETHNOWEAR_QDRANT_COLLECTION:-ethnowear_chunks_bge_m3_v1}"
+      ETHNOWEAR_DEMO_QDRANT_SNAPSHOT: /demo/qdrant/collection.snapshot
+    volumes:
+      - ./demo-state:/demo:ro
+    depends_on:
+      qdrant:
         condition: service_healthy
     restart: "no"
 
@@ -155,6 +183,9 @@ services:
         condition: service_started
       qdrant:
         condition: service_healthy
+      demo-qdrant-bootstrap:
+        condition: service_completed_successfully
+        required: false
     init: true
     read_only: true
     tmpfs:
@@ -346,6 +377,9 @@ services:
     depends_on:
       database-migration:
         condition: service_completed_successfully
+      demo-media-bootstrap:
+        condition: service_completed_successfully
+        required: false
       qdrant:
         condition: service_healthy
     ports:
@@ -354,6 +388,23 @@ services:
       - backend-ontology:/app/Ontology
       - ${ETHNOWEAR_MEDIA_ROOT:-./media}:/app/media
     restart: unless-stopped
+
+  demo-bootstrap:
+    profiles: ["demo"]
+    build:
+      context: .
+      dockerfile: demo-state/Dockerfile.bootstrap
+    environment:
+      ETHNOWEAR_DEMO_API_URL: http://api:8080
+      ETHNOWEAR_DEMO_ADMIN_USERNAME: "${ETHNOWEAR_DEMO_ADMIN_USERNAME:-admin}"
+      ETHNOWEAR_DEMO_ADMIN_PASSWORD: "${ETHNOWEAR_DEMO_ADMIN_PASSWORD:-admin}"
+      ETHNOWEAR_DEMO_BOOTSTRAP_TIMEOUT_SECONDS: "${ETHNOWEAR_DEMO_BOOTSTRAP_TIMEOUT_SECONDS:-900}"
+    depends_on:
+      api:
+        condition: service_started
+      indexing-worker:
+        condition: service_started
+    restart: "no"
 
   frontend:
     build:
@@ -372,4 +423,4 @@ volumes:
   qdrant-data:
   ollama-data:
   sqlserver-data:
-    name: ethnowear_sqlserver_data
+    name: ${ETHNOWEAR_SQLSERVER_VOLUME:-ethnowear_sqlserver_data}

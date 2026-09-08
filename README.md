@@ -61,6 +61,8 @@ and restoration controls.
 
 ## Project documentation
 
+- [Demo deployment guide](docs/DEMO_DEPLOYMENT.md) — clean installation,
+  automatic data/media/vector restoration, verification, and demo refresh.
 - [EthnoWear API documentation](ethnowear-api/Ethnowear_API_Docs.md) — endpoints,
   authentication, roles, request examples, errors, and administrative workflows.
 - [Backend project](ethnowear-api/README.md) — backend overview and local development
@@ -68,6 +70,35 @@ and restoration controls.
 - [Frontend project](ethnowear-frontend/README.md) — frontend setup and usage.
 
 ## Run Microsoft SQL Server with Docker
+
+### Run the prepared demonstration
+
+The repository includes a sanitized `demo-v1` database, managed media, and a
+Qdrant collection snapshot. It contains no saved conversations, public login
+sessions, or public identities. The demonstration administrator is
+`admin` / `admin`.
+
+Start it on a clean Docker environment with:
+
+```bash
+cp .env.demo.example .env
+docker compose --profile demo --profile container-ai up -d --build
+```
+
+The first containerized Ollama startup downloads the configured models. When
+the `demo-bootstrap` service completes successfully, the database, media,
+retrieval collection, and grounded chat availability have been checked.
+
+To capture a newer approved live state as `demo-v1`, run:
+
+```bash
+./scripts/demo-export
+```
+
+The exporter works on an isolated SQL database copy, sanitizes identities and
+conversation data there, packages managed media with checksums, and snapshots
+only the rebuildable Qdrant collection. See [demo-state/README.md](demo-state/README.md)
+for the artifact boundaries.
 
 Create the local environment file and choose a strong SQL Server administrator
 password:
