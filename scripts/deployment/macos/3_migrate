@@ -4,29 +4,45 @@ set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common"
 
 MODE="$(require_mode "${1:-container}" "$0")"
-[[ -f "$ENV_FILE" ]] || { echo "Run scripts/deployment/1_prepare first." >&2; exit 1; }
+[[ -f "$ENV_FILE" ]] || { echo "Run scripts/deployment/macos/1_prepare first." >&2; exit 1; }
 
-for service in database-migration demo-media-bootstrap demo-qdrant-bootstrap; do
-  [[ -n "$(compose --profile demo ps -aq "$service")" ]] || {
+wait_for_success() {
+  local service="$1"
+  local profile="$2"
+  local container_id
+  local exit_code
+  local running
+
+  container_id="$(compose --profile "$profile" ps -aq "$service")"
+  [[ -n "$container_id" ]] || {
     echo "Missing Compose service container: $service" >&2
     exit 1
   }
-  compose --profile demo wait "$service"
+
+  running="$(docker inspect --format '{{.State.Running}}' "$container_id")"
+  if [[ "$running" == "true" ]]; then
+    exit_code="$(docker wait "$container_id")"
+  else
+    exit_code="$(docker inspect --format '{{.State.ExitCode}}' "$container_id")"
+  fi
+
+  if [[ "$exit_code" != "0" ]]; then
+    compose --profile "$profile" logs "$service" >&2 || true
+    echo "$service failed with exit code $exit_code" >&2
+    exit 1
+  fi
+  echo "$service completed successfully."
+}
+
+for service in database-migration demo-media-bootstrap demo-qdrant-bootstrap; do
+  wait_for_success "$service" demo
 done
 
 if [[ "$MODE" == "container" ]]; then
-  [[ -n "$(compose --profile container-ai ps -aq ollama-models)" ]] || {
-    echo "Missing Compose service container: ollama-models" >&2
-    exit 1
-  }
   echo "Waiting for the required Ollama models..."
-  compose --profile container-ai wait ollama-models
+  wait_for_success ollama-models container-ai
 fi
 
-[[ -n "$(compose --profile demo ps -aq demo-bootstrap)" ]] || {
-  echo "Missing Compose service container: demo-bootstrap" >&2
-  exit 1
-}
-compose --profile demo wait demo-bootstrap
+wait_for_success demo-bootstrap demo
 
 echo "Database migration, demo restoration, and readiness completed successfully."
